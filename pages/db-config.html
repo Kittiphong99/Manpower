@@ -1,0 +1,59 @@
+<div class="page" id="page-db-config">
+  <div class="adm-header" style="padding-bottom:0">
+    <div>
+      <h1 class="adm-title" data-i18n="shift_factor_data">Shift Factor Data</h1>
+      <p class="adm-subtitle" data-i18n="db_subtitle_config">จัดการข้อมูล Config สำหรับ dropdown ในระบบ</p>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:6px;padding:18px 32px 0">
+    <button class="cfg-tab active" onclick="switchConfigTab('POSType', this)" data-i18n="cfg_postype">POS Type</button>
+    <button class="cfg-tab" onclick="switchConfigTab('Detail', this)" data-i18n="cfg_detail">Detail</button>
+    <button class="cfg-tab" onclick="switchConfigTab('Risk_Factor', this)" data-i18n="cfg_riskfactor">Risk Factor</button>
+    <button class="cfg-tab" onclick="switchConfigTab('Need', this)" data-i18n="cfg_need">Need</button>
+    <button class="cfg-tab" onclick="switchConfigTab('Shift', this)" data-i18n="cfg_shift">Shift</button>
+  </div>
+
+  <div style="padding:16px 32px">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <button onclick="openConfigForm(null)" class="adm-btn-primary"><i class="fa-solid fa-plus"></i> <span data-i18n="btn_add_item">Add Item</span></button>
+    </div>
+
+    <div class="adm-card" style="max-height: calc(100vh - 250px);">
+      <div style="overflow:auto; flex:1;">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th class="adm-th" style="width:140px" data-i18n="th_config_key">Config Key</th>
+              <th id="configValueHeader" class="adm-th" data-i18n="th_value">Value</th>
+              <th class="adm-th" style="text-align:right;width:140px" data-i18n="th_actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="configTableBody">
+            <tr><td colspan="3" class="adm-empty" data-i18n="loading">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="configFormModal" class="adm-modal-bg" onclick="if(event.target===this)closeConfigForm()">
+    <div class="adm-modal" style="width:420px">
+      <div class="adm-modal-head">
+        <div id="configFormTitle" class="adm-modal-title" data-i18n="modal_add_item_default">Add Item</div>
+        <button onclick="closeConfigForm()" class="adm-modal-close">✕</button>
+      </div>
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+        <input type="hidden" id="configFormKey">
+        <div>
+          <label id="configValueLabel" class="adm-label" data-i18n="th_value">Value</label>
+          <input type="text" id="configFormValue" class="adm-input">
+        </div>
+      </div>
+      <div class="adm-modal-foot">
+        <button onclick="closeConfigForm()" class="adm-btn-cancel"><i class="fa-solid fa-xmark"></i> <span data-i18n="btn_cancel">Cancel</span></button>
+        <button onclick="saveConfigForm()" class="adm-btn-primary"><i class="fa-solid fa-floppy-disk"></i> <span data-i18n="btn_save">Save</span></button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,206 @@
+<div class="page" id="page-report-analytics">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">Manpower Analytics</div>
+        <div class="brand-sub" id="last-update">Last update: —</div>
+      </div>
+    </div>
+    <div class="filters">
+      <div class="fg">
+        <span class="flabel" data-i18n="filter_code">Code</span>
+        <select class="fselect" id="sel-code" onchange="applyFilters()">
+          <option value="" data-i18n="opt_all_codes">All codes</option>
+        </select>
+      </div>
+      <div class="fg">
+        <span class="flabel" data-i18n="filter_factory">Factory</span>
+        <select class="fselect" id="sel-factory" onchange="applyFilters()">
+          <option value="" data-i18n="opt_all_factories">All factories</option>
+        </select>
+      </div>
+      <div class="fg">
+        <span class="flabel" data-i18n="filter_shift">Shift</span>
+        <div class="shift-group">
+          <button class="sbtn active" onclick="setShift('',this)">ALL</button>
+          <button class="sbtn" onclick="setShift('A',this)">A</button>
+          <button class="sbtn" onclick="setShift('B',this)">B</button>
+          <button class="sbtn" onclick="setShift('C',this)">C</button>
+        </div>
+      </div>
+      <div class="fg">
+        <span class="flabel">&nbsp;</span>
+        <button class="panel-btn" onclick="refreshAll()">
+          <i class="ti ti-refresh" style="font-size:14px"></i> <span data-i18n="btn_refresh">Refresh</span>
+        </button>
+      </div>
+      <!-- 📌 NEW: primary CTA, margin-left:auto pins it to the far right
+           corner of the topbar (inside .filters so .topbar's own
+           space-between layout between .brand/.filters stays untouched) —
+           jumps to the Report Adjustment page. switchPage() is the app's
+           real page-switch function (see app.js). -->
+      <button class="btn-report-adjustment" onclick="switchPage('report-adjustment')">
+        <i class="ti ti-file-spreadsheet" style="font-size:14px"></i>
+        <span data-i18n="btn_report_adjustment">Report Adjustment</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="content" id="main-content">
+    <div class="section-row">
+      <div class="section-title"><span class="section-dot"></span><span data-i18n="section_overview">Manpower overview</span></div>
+      <div class="total-pill">
+        <i class="ti ti-users" style="font-size:14px"></i>
+        <span id="grand-total">Total: — persons</span>
+      </div>
+    </div>
+    <div class="cards-grid">
+      <div class="kpi-card c-ope"><div class="kpi-label">OPE</div><div class="kpi-num"><span class="kpi-val" id="v-ope">—</span><span class="kpi-pct" id="p-ope">—</span></div><div class="kpi-meta"><span id="m-ope">—</span> meta · <span id="s-ope">—</span> sub</div></div>
+      <div class="kpi-card c-gl"><div class="kpi-label">GL</div><div class="kpi-num"><span class="kpi-val" id="v-gl">—</span><span class="kpi-pct" id="p-gl">—</span></div><div class="kpi-meta"><span id="m-gl">—</span> meta · <span id="s-gl">—</span> sub</div></div>
+      <div class="kpi-card c-spare"><div class="kpi-label">Spare</div><div class="kpi-num"><span class="kpi-val" id="v-spare">—</span><span class="kpi-pct" id="p-spare">—</span></div><div class="kpi-meta"><span id="m-spare">—</span> meta · <span id="s-spare">—</span> sub</div></div>
+      <div class="kpi-card c-pregnant"><div class="kpi-label">Pregnant(คนท้อง)</div><div class="kpi-num"><span class="kpi-val" id="v-pregnant">—</span><span class="kpi-pct" id="p-pregnant">—</span></div><div class="kpi-meta"><span id="m-pregnant">—</span> meta · <span id="s-pregnant">—</span> sub</div></div>
+      <div class="kpi-card c-sick"><div class="kpi-label">Sick(คนป่วย)</div><div class="kpi-num"><span class="kpi-val" id="v-sick">—</span><span class="kpi-pct" id="p-sick">—</span></div><div class="kpi-meta"><span id="m-sick">—</span> meta · <span id="s-sick">—</span> sub</div></div>
+      <div class="kpi-card c-posfree"><div class="kpi-label">POS free</div><div class="kpi-num"><span class="kpi-val" id="v-posfree">—</span><span class="kpi-pct" id="p-posfree">—</span></div><div class="kpi-meta"><span id="m-posfree">—</span> meta · <span id="s-posfree">—</span> sub</div></div>
+      <div class="kpi-card c-other"><div class="kpi-label">Other</div><div class="kpi-num"><span class="kpi-val" id="v-other">—</span><span class="kpi-pct" id="p-other">—</span></div><div class="kpi-meta"><span id="m-other">—</span> meta · <span id="s-other">—</span> sub</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title" data-i18n="section_summary_code">Summary By code</div>
+          <div class="panel-sub" data-i18n="section_summary_code_sub">Stacked headcount per category</div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>OPE</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#7c3aed"></div>GL</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div>Spare</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#db2777"></div>Pregnant</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>Sick</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>POS free</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#059669"></div>Other</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title" data-i18n="section_emp_status">Employee status</div>
+          <div class="panel-sub" data-i18n="section_emp_status_sub">New joins and resignations this month</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge-new-lg"><span data-i18n="badge_new">NEW</span> <span id="cnt-new">—</span></span>
+          <span class="badge-res-lg"><span data-i18n="badge_resign">RESIGN</span> <span id="cnt-resign">—</span></span>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:90px" data-i18n="th_emp_id">Emp ID</th>
+            <th style="width:160px" data-i18n="th_name">Name</th>
+            <th style="width:80px" class="ta-c" data-i18n="th_type">Type</th>
+            <th style="width:110px" data-i18n="th_date">Date</th>
+            <th style="width:70px" data-i18n="th_code">Code</th>
+            <th data-i18n="th_line_name">Line Name</th>
+          </tr></thead>
+          <tbody id="tbody-movement"><tr><td colspan="6" class="empty-state"><i class="ti ti-loader"></i> Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:32px">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title" data-i18n="section_monthly_compare">Monthly comparison</div>
+          <div class="panel-sub" data-i18n="section_monthly_compare_sub">Last month vs this month</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <!-- 🔧 ใหม่: สลับ Summary (รวมทุก Code) / All (แยกราย Code เหมือน Detailed
+               breakdown modal แต่ดูได้ในหน้าเดียวกันเลย ไม่ต้องเปิด popup) -->
+          <div class="compare-view-toggle" id="compareViewToggle" style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:2px;gap:2px">
+            <button type="button" class="compare-view-btn active" data-view="summary" onclick="setComparisonView('summary')" data-i18n="btn_view_summary">Summary</button>
+            <button type="button" class="compare-view-btn" data-view="all" onclick="setComparisonView('all')" data-i18n="btn_view_all">All</button>
+          </div>
+          <button class="panel-btn" onclick="openModal()">
+            <i class="ti ti-table" style="font-size:14px"></i> <span data-i18n="btn_detail_breakdown">Detailed breakdown</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="tbl-wrap" id="compare-summary-wrap">
+        <table>
+         <thead><tr>
+  <th style="width:120px" data-i18n="th_category">Category</th>
+  <th class="ta-r" style="text-align:right" data-i18n="th_last_month">Last month</th>
+  <th class="ta-r" style="text-align:right" data-i18n="th_this_month">This month</th>
+  <th class="ta-r" style="text-align:right" data-i18n="th_variance">Variance</th>
+  <th class="ta-r" style="text-align:right" data-i18n="th_change">Change</th>
+</tr></thead>
+          <tbody id="tbody-compare"><tr><td colspan="5" class="empty-state"><i class="ti ti-loader"></i> Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="tbl-wrap" id="compare-all-wrap" style="display:none">
+        <table>
+         <thead><tr>
+  <th data-i18n="th_code">Code</th>
+  <th data-i18n="th_category">Category</th>
+  <th class="ta-r" style="text-align:right" data-i18n="th_last_month">Last month</th>
+  <th class="ta-r" style="text-align:right" data-i18n="th_this_month">This month</th>
+  <th class="ta-r" style="text-align:right" data-i18n="th_variance">Variance</th>
+  <th class="ta-r" style="text-align:right" data-i18n="th_change">Change</th>
+</tr></thead>
+          <tbody id="tbody-compare-all"><tr><td colspan="6" class="empty-state"><i class="ti ti-loader"></i> Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <style>
+    .compare-view-btn {
+      border: none; background: none; padding: 6px 14px; font-size: 12.5px;
+      font-weight: 700; color: var(--muted); border-radius: 6px; cursor: pointer;
+      font-family: 'Sarabun', sans-serif; transition: all .15s;
+    }
+    .compare-view-btn.active { background: var(--accent); color: #fff; }
+    .compare-view-btn:hover:not(.active) { color: var(--text); }
+  </style>
+
+  <div class="modal-bg" id="modal-bg" onclick="closeModalOutside(event)">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title" data-i18n="modal_breakdown_title">Detailed breakdown by code</div>
+          <div class="modal-sub" data-i18n="modal_breakdown_sub">Category comparison per employee code</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="fg">
+            <span class="flabel" data-i18n="filter_code_label">Filter code</span>
+            <select class="fselect" id="modal-sel-code" onchange="renderModal()">
+              <option value="" data-i18n="opt_all_codes">All codes</option>
+            </select>
+          </div>
+          <button class="btn-close-icon" onclick="closeModal()" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th style="width:80px" data-i18n="th_code">Code</th>
+              <th style="width:120px" data-i18n="th_category">Category</th>
+              <th class="ta-r" data-i18n="th_last_month">Last month</th>
+              <th class="ta-r" data-i18n="th_this_month">This month</th>
+              <th class="ta-r" data-i18n="th_variance">Variance</th>
+              <th class="ta-r" data-i18n="th_change">Change</th>
+            </tr></thead>
+            <tbody id="tbody-modal"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-foot"><button class="btn-close" onclick="closeModal()" data-i18n="btn_close">Close</button></div>
+    </div>
+  </div>
+</div>

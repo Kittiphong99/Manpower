@@ -1,0 +1,74 @@
+<div class="page" id="page-bp-plan-overview">
+    <div class="left-panel">
+        <div class="table-main-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgb(27, 100, 78)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> <span data-i18n="bpo_title">BP Plan Overview</span>
+        </div>
+        <p class="bp-subtitle" data-i18n="bpo_subtitle">ภาพรวม Plan vs Actual ทุก Department/Position ในปีงบประมาณเดียว (เม.ย.-มี.ค.)</p>
+
+        <div class="filter-group" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-top:12px;">
+            <div>
+                <label class="filter-label" data-i18n="bpo_fiscal_year">ปีงบประมาณ (Apr-Mar)</label>
+                <select id="bpoFiscalYear" class="bp-select"></select>
+            </div>
+            <button id="bpoImportBtn" class="btn btn-secondary" style="display:none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="M7 14l5-5 5 5"/><path d="M4 19h16"/></svg> <span data-i18n="bpo_btn_import">Import Position Master</span>
+            </button>
+            <input type="file" id="bpoImportFile" accept=".csv,.xlsx,.xls" style="display:none;">
+            <button id="bpoExportBtn" class="btn btn-export">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg> <span data-i18n="bpo_btn_export">ส่งออก Excel</span>
+            </button>
+            <button id="bpoClearFiltersBtn" class="btn-cancel" style="display:none;">
+                <span data-i18n="bpo_btn_clear_filters">ล้างตัวกรอง</span>
+            </button>
+        </div>
+
+        <div class="table-wrap" id="bpoTableWrap" style="overflow-x:auto; margin-top:14px;">
+            <table class="main-data-table" id="bpoTable">
+                <thead style="position:sticky; top:0; background:#fff; z-index:2;">
+                    <tr id="bpoHeaderRow1">
+                        <th colspan="8" style="text-align:center;"></th>
+                        <th class="bpo-group-plan" style="text-align:center;" data-i18n="bpo_th_plan_group">Plan</th>
+                        <th colspan="13" class="bpo-group-actual" style="text-align:center;" data-i18n="bpo_th_actual_group">Actual (Fiscal Year)</th>
+                    </tr>
+                    <tr id="bpoHeaderRow2"></tr>
+                </thead>
+                <tbody id="bpoTableBody">
+                    <tr>
+                        <td colspan="21" style="text-align:center;padding:40px;color:#999;font-size:15px;" data-i18n="bpo_empty_loading">
+                            ⏳ กำลังโหลดข้อมูล...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination" id="bpoPagination" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- Import: modal เลือกปีก่อนอัปโหลด -->
+    <div id="bpoImportYearModal" class="standby-modal-overlay">
+        <div class="standby-modal-box" style="max-width:380px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="margin:0; font-family:'Sarabun',sans-serif;" data-i18n="bpo_import_modal_title">Import Position Master</h3>
+                <button id="bpoImportYearCloseBtn" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+            </div>
+            <label class="filter-label" data-i18n="bpo_import_year_label">ปี (ค.ศ.) สำหรับเขียนค่า Plan</label>
+            <select id="bpoImportYear" class="bp-select" style="width:100%; margin-bottom:16px;"></select>
+            <div class="emp-modal-actions">
+                <button class="btn-cancel" id="bpoImportYearCancelBtn" data-i18n="emp_export_cancel">ยกเลิก</button>
+                <button class="btn btn-primary" id="bpoImportYearNextBtn" data-i18n="bpo_btn_choose_file">เลือกไฟล์...</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import: preview modal -->
+    <div id="bpoImportPreviewModal" class="standby-modal-overlay">
+        <div class="standby-modal-box" style="max-width:560px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 id="bpoImportPreviewTitle" style="margin:0; font-family:'Sarabun',sans-serif;" data-i18n="bpo_import_preview_title">ตรวจสอบก่อน Import</h3>
+                <button id="bpoImportPreviewCloseBtn" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+            </div>
+            <div id="bpoImportPreviewBody" style="font-size:13px;"></div>
+            <div class="emp-modal-actions" id="bpoImportPreviewFoot" style="margin-top:16px;"></div>
+        </div>
+    </div>
+</div>

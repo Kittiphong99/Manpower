@@ -1,0 +1,219 @@
+<div class="page" id="page-db-lines">
+  <div class="adm-header">
+    <div>
+      <h1 class="adm-title" data-i18n="line_master_data">Line Master Data</h1>
+      <p class="adm-subtitle" data-i18n="db_subtitle_lines">จัดการข้อมูล Line, Code, Division</p>
+    </div>
+    <div style="display:flex;gap:10px">
+      <!-- 🔧 เพิ่มใหม่: Import Line Master Data จากไฟล์ Excel/CSV (Update+Insert
+           ตัดสินด้วยคอลัมน์ LineID — ดู dbImportLines ใน db-manager.js) ใช้ไฟล์
+           ที่ได้จากปุ่ม Export Excel (ตัวเดียวกัน — เปลี่ยนจาก .csv เป็น .xlsx
+           สวยงามแล้ว ยังใช้เป็น Template ได้เหมือนเดิม) ไม่มีปุ่ม Template แยก -->
+      <button onclick="document.getElementById('lineImportInput').click()" class="adm-btn-secondary"><i class="fa-solid fa-file-import"></i> <span data-i18n="btn_import">Import</span></button>
+      <input type="file" id="lineImportInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="dbImportLines(this.files[0])">
+      <button onclick="dbExportLines()" class="adm-btn-secondary"><i class="fa-solid fa-file-export"></i> <span data-i18n="btn_export_excel">Export Excel</span></button>
+      <!-- 🔧 แก้ไข (2026-08): จัดการ POS CT แยกจากตารางหลัก — POS CT เป็นค่าเดียวต่อ
+           Sub Line เก็บแยกในตาราง SubLinePosCt แล้ว (ดู
+           db/2026-08-sublinepos-ct-normalize.sql) โมดัลนี้ list ทุกกลุ่ม Sub Line
+           แก้ค่าได้ทีละกลุ่มโดยไม่ต้องเปิด Edit Line ทีละแถว (ดู
+           openSubLinePosCtManager ใน db-manager.js + modal #subLinePosCtModal
+           ท้ายไฟล์นี้) -->
+      <button onclick="openSubLinePosCtManager()" class="adm-btn-secondary"><i class="fa-solid fa-gauge-high"></i> <span data-i18n="btn_manage_pos_ct">Manage POS CT</span></button>
+      <button onclick="openLineForm(null)" class="adm-btn-primary"><i class="fa-solid fa-plus"></i> <span data-i18n="btn_add_line">Add Line</span></button>
+    </div>
+  </div>
+
+  <div style="padding:20px 32px">
+    <!-- 🔧 เพิ่มใหม่: แถว Filter — ค้นหา + Factory + Division + Show inactive
+         (ดู dbApplyLineFilters ใน db-manager.js — รวมทุกตัวกรองเป็นชุดเดียว) -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+      <input type="text" id="lineSearchInput" onkeyup="dbApplyLineFilters()" placeholder="Search line..." class="adm-search" style="flex:1;min-width:200px;margin-bottom:0" data-i18n-placeholder="search_placeholder_line">
+      <select id="lineFilterFactory" onchange="dbApplyLineFilters()" class="adm-input" style="width:auto;min-width:160px">
+        <option value="" data-i18n="opt_all_factory">All Factory</option>
+      </select>
+      <select id="lineFilterDiv" onchange="dbApplyLineFilters()" class="adm-input" style="width:auto;min-width:140px">
+        <option value="" data-i18n="opt_all_division">All Division</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);white-space:nowrap;cursor:pointer">
+        <input type="checkbox" id="lineShowInactive" onchange="loadLineMasterData()">
+        <span data-i18n="show_inactive_lines">Show inactive</span>
+      </label>
+    </div>
+
+    <div class="adm-card" style="max-height: calc(100vh - 260px);">
+      <div style="overflow:auto; flex:1;">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th class="adm-th" data-i18n="th_id">ID</th>
+              <th class="adm-th" data-i18n="filter_factory">Factory</th>
+              <th class="adm-th" data-i18n="th_div">Div</th>
+              <th class="adm-th" data-i18n="th_code">Code</th>
+              <th class="adm-th" data-i18n="th_code_display_name">Code Display Name</th>
+              <th class="adm-th" data-i18n="th_product">Product</th>
+              <th class="adm-th" data-i18n="th_line_name">Line Name</th>
+              <th class="adm-th" data-i18n="th_sub_line">Sub Line</th>
+              <th class="adm-th" data-i18n="th_process">Process</th>
+              <th class="adm-th" style="text-align:center" data-i18n="th_status">Status</th>
+              <th class="adm-th" style="text-align:right" data-i18n="th_actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="lineTableBody">
+            <tr><td colspan="11" class="adm-empty" data-i18n="loading">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- 🔧 เปลี่ยนมาใช้ Pagination แบบเดียวกับหน้า Assign Employees (Premium
+           Pagination — เลขหน้าคลิกได้ + ... เมื่อหน้าเยอะ, เลือกจำนวนแถว/หน้า,
+           ช่อง Go to page) ดู dbLinesRenderPagination() ใน db-manager.js —
+           ตัด "Showing X-Y of Z" เดิมออก (หน้า Assign Employees เองก็ไม่มี) -->
+      <div class="pagination" id="linePagination" style="margin-top:0;padding:12px 16px;border-top:1px solid var(--border);justify-content:center"></div>
+    </div>
+  </div>
+
+  <div id="lineFormModal" class="adm-modal-bg" onclick="if(event.target===this)closeLineForm()">
+    <div class="adm-modal">
+      <div class="adm-modal-head">
+        <div id="lineFormTitle" class="adm-modal-title" data-i18n="modal_add_line">Add Line</div>
+        <button onclick="closeLineForm()" class="adm-modal-close">✕</button>
+      </div>
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+        <input type="hidden" id="lineFormId">
+        <div>
+          <label class="adm-label" data-i18n="form_factory_id">Factory ID</label>
+          <select id="lineFormFactory" class="adm-input"></select>
+        </div>
+        <div>
+          <label class="adm-label" data-i18n="ie_filter_division">Division</label>
+          <input type="text" id="lineFormDiv" placeholder="Alt, CM, MC, ST" class="adm-input">
+        </div>
+        <div>
+          <label class="adm-label" data-i18n="th_code">Code</label>
+          <input type="text" id="lineFormCode" placeholder="E011" class="adm-input">
+        </div>
+        <div>
+          <label class="adm-label" data-i18n="th_code_display_name">Code Display Name</label>
+          <input type="text" id="lineFormCodeDisplay" placeholder="E011: Alternator Assembly Line" class="adm-input">
+        </div>
+        <div>
+          <label class="adm-label" data-i18n="th_product">Product</label>
+          <input type="text" id="lineFormProduct" placeholder="Alternator" class="adm-input">
+        </div>
+        <div>
+          <label class="adm-label" data-i18n="th_line_name">Line Name</label>
+          <input type="text" id="lineFormLineName" class="adm-input">
+        </div>
+        <div>
+          <label class="adm-label" data-i18n="th_sub_line">Sub Line</label>
+          <input type="text" id="lineFormSubLine" class="adm-input">
+        </div>
+        <div>
+          <label class="adm-label" data-i18n="th_process">Process</label>
+          <input type="text" id="lineFormProcess" class="adm-input">
+        </div>
+        <!-- 🔧 แก้ไข (2026-08): เอาช่อง POS CT ออกจากฟอร์มนี้แล้ว — POS CT ผูกกับ
+             กลุ่ม Factory+Code+LineName+SubLine ไม่ใช่ต่อแถว Process เก็บแยกใน
+             ตาราง SubLinePosCt (ดู db/2026-08-sublinepos-ct-normalize.sql) แก้ได้
+             ที่เดียวผ่านปุ่ม "Manage POS CT" ด้านบนเท่านั้น — เอาออกจากฟอร์มนี้กัน
+             ผู้ใช้แก้ Line field อื่นแล้วเผลอ NULL ทับค่า POS CT ของกลุ่มโดยไม่รู้ตัว -->
+      </div>
+      <div class="adm-modal-foot">
+        <button onclick="closeLineForm()" class="adm-btn-cancel"><i class="fa-solid fa-xmark"></i> <span data-i18n="btn_cancel">Cancel</span></button>
+        <button onclick="saveLineForm()" class="adm-btn-primary"><i class="fa-solid fa-floppy-disk"></i> <span data-i18n="btn_save">Save</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔧 เพิ่มใหม่: Modal พรีวิว Import ก่อน commit จริง — เรียก
+       POST /api/lines/import/preview (parse+validate อย่างเดียว ไม่เขียน DB)
+       แล้วโชว์ 3 กลุ่ม: เพิ่มใหม่/แก้ไข/ข้าม ให้ผู้ดูแลตรวจก่อนกด "ยืนยัน
+       Import" ถึงจะยิง POST /api/lines/import จริง (ดู dbImportLines/
+       openImportPreviewModal/confirmImportLines ใน db-manager.js) ใช้ modal
+       เดียวกันนี้โชว์ผลลัพธ์หลัง commit สำเร็จด้วย (สลับ footer เป็นปุ่มปิด) -->
+  <div id="lineImportPreviewModal" class="adm-modal-bg" onclick="if(event.target===this)closeImportPreviewModal()">
+    <div class="adm-modal" style="width:640px">
+      <div class="adm-modal-head">
+        <div class="adm-modal-title" id="lineImportPreviewTitle" data-i18n="import_preview_title">ตรวจสอบก่อน Import</div>
+        <button onclick="closeImportPreviewModal()" class="adm-modal-close">✕</button>
+      </div>
+      <div style="padding:16px 24px;max-height:60vh;overflow:auto" id="lineImportPreviewBody"></div>
+      <div class="adm-modal-foot" id="lineImportPreviewFoot">
+        <button onclick="closeImportPreviewModal()" class="adm-btn-cancel" data-i18n="btn_cancel">ยกเลิก</button>
+        <button onclick="confirmImportLines()" class="adm-btn-primary" id="lineImportConfirmBtn" data-i18n="btn_confirm_import">ยืนยัน Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔧 เพิ่มใหม่: Modal ยืนยันลบถาวร (permanent delete) — เปิดได้เฉพาะแถวที่
+       Inactive อยู่แล้วเท่านั้น (สอง step: soft-delete ก่อน แล้วค่อยลบจริงได้
+       ทีหลัง) จำกัดสิทธิ์แค่ superadmin (ดู requireRole ฝั่ง backend) ต้อง
+       พิมพ์คำว่า DELETE ให้ตรงก่อนปุ่มยืนยันถึงจะกดได้ — กันกดผิดโดยไม่ตั้งใจ
+       เพราะ action นี้กู้คืนไม่ได้แล้ว (ต่างจาก soft-delete ที่ยัง Restore ได้) -->
+  <div id="linePermanentDeleteModal" class="adm-modal-bg" onclick="if(event.target===this)closePermanentDeleteModal()">
+    <div class="adm-modal" style="width:440px">
+      <div class="adm-modal-head">
+        <div class="adm-modal-title" data-i18n="permanent_delete_title">ลบถาวร (กู้คืนไม่ได้)</div>
+        <button onclick="closePermanentDeleteModal()" class="adm-modal-close">✕</button>
+      </div>
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:12px">
+        <p style="margin:0;font-size:13px;color:#dc2626" data-i18n="permanent_delete_warning">
+          การลบนี้ถาวร ไม่สามารถกู้คืนได้อีก (ต่างจากการปิดใช้งานปกติ)
+        </p>
+        <p style="margin:0;font-size:13px;color:var(--text)" id="linePermanentDeleteTarget"></p>
+        <div>
+          <label class="adm-label" data-i18n="permanent_delete_type_confirm">พิมพ์ DELETE เพื่อยืนยัน</label>
+          <input type="text" id="linePermanentDeleteInput" class="adm-input" oninput="_syncPermanentDeleteBtn()" autocomplete="off">
+        </div>
+      </div>
+      <div class="adm-modal-foot">
+        <button onclick="closePermanentDeleteModal()" class="adm-btn-cancel" data-i18n="btn_cancel">ยกเลิก</button>
+        <button onclick="confirmPermanentDeleteLine()" class="adm-btn-primary" id="linePermanentDeleteBtn" disabled style="background:#dc2626;opacity:.5" data-i18n="btn_delete_permanently">ลบถาวร</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔧 เพิ่มใหม่ (2026-08): Modal "Manage POS CT" — list ทุกกลุ่ม Factory+Code+
+       LineName+SubLine ที่มีอยู่จริง (คำนวณจาก dbLinesAll ที่โหลดไว้แล้ว ไม่ยิง
+       request ใหม่) แก้ค่าได้ทีละกลุ่ม แต่ละแถวมีปุ่ม Save ของตัวเอง ยิง
+       PUT /api/lines/pos-ct-by-subline ทันทีเมื่อกด (ดู openSubLinePosCtManager /
+       saveSubLinePosCtRow ใน db-manager.js) -->
+  <div id="subLinePosCtModal" class="adm-modal-bg" onclick="if(event.target===this)closeSubLinePosCtManager()">
+    <div class="adm-modal" style="width:680px">
+      <div class="adm-modal-head">
+        <div class="adm-modal-title" data-i18n="manage_pos_ct_title">Manage POS CT</div>
+        <button onclick="closeSubLinePosCtManager()" class="adm-modal-close">✕</button>
+      </div>
+      <div style="padding:16px 24px">
+        <p style="margin:0 0 12px;font-size:12px;color:var(--muted)" data-i18n="manage_pos_ct_hint">
+          POS CT is one value per Sub Line — editing it here updates every Process row under that Sub Line at once.
+        </p>
+        <div style="display:flex;gap:10px;margin-bottom:10px">
+          <input type="text" id="subLinePosCtSearch" oninput="renderSubLinePosCtList()" placeholder="Search..." class="adm-search" style="flex:1;margin-bottom:0" data-i18n-placeholder="search_placeholder_line">
+          <!-- 🔧 เพิ่มใหม่ (2026-08): Export CSV ของรายการ POS CT ทั้งหมด (ทุกกลุ่ม
+               Factory+Code+LineName+SubLine ที่เห็นในโมดัลนี้) — ดู dbExportSubLinePosCt ใน db-manager.js -->
+          <button onclick="dbExportSubLinePosCt()" class="adm-btn-secondary"><i class="fa-solid fa-file-export"></i> <span data-i18n="btn_export">Export Excel</span></button>
+        </div>
+        <div style="max-height:50vh;overflow:auto">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th class="adm-th" data-i18n="filter_factory">Factory</th>
+                <th class="adm-th" data-i18n="th_code">Code</th>
+                <th class="adm-th" data-i18n="th_line_name">Line Name</th>
+                <th class="adm-th" data-i18n="th_sub_line">Sub Line</th>
+                <th class="adm-th" style="text-align:center" data-i18n="th_pos_ct">POS CT</th>
+                <th class="adm-th" style="text-align:right" data-i18n="th_actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="subLinePosCtBody">
+              <tr><td colspan="6" class="adm-empty" data-i18n="loading">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="adm-modal-foot">
+        <button onclick="closeSubLinePosCtManager()" class="adm-btn-cancel" data-i18n="btn_cancel">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+</div>

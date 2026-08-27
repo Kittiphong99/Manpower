@@ -1,0 +1,27 @@
+<div class="page" id="page-log">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px; padding:20px;">
+    <div>
+      <h2 style="font-family:'Space Mono',monospace;font-size:18px">📋 <span style="color:var(--accent)" data-i18n="activity_log">Activity Log</span></h2>
+      <p style="color:var(--muted);font-size:12px;margin-top:3px" data-i18n="log_subtitle">บันทึกการใช้งานระบบ</p>
+    </div>
+    <div style="display:flex;gap:7px">
+      <select id="logFilterUser" onchange="renderLog()" style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:7px 11px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none">
+        <option value="" data-i18n="opt_all_users">👤 ทุกผู้ใช้</option>
+      </select>
+      <select id="logFilterAction" onchange="renderLog()" style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:7px 11px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none">
+        <option value="" data-i18n="opt_all_actions">📋 ทุก Action</option>
+        <option value="login" data-i18n="action_login">🔐 Login</option>
+        <option value="logout" data-i18n="action_logout">⏏ Logout</option>
+        <option value="login_failed" data-i18n="action_login_failed">⛔ Login ล้มเหลว</option>
+        <option value="add" data-i18n="action_add">➕ เพิ่ม</option>
+        <option value="edit" data-i18n="action_edit">✏️ แก้ไข</option>
+        <option value="delete" data-i18n="action_delete">🗑 ลบ</option>
+        <option value="view" data-i18n="action_view">👁 ดู</option>
+
+      </select>
+      <button class="btn btn-sm btn-secondary" onclick="clearActivityLog()" title="ล้างเฉพาะมุมมองนี้ ไม่ได้ลบข้อมูลจริงในระบบ — ข้อมูลจริงถูกลบอัตโนมัติตาม retention policy"><i class="fa-solid fa-eraser"></i> <span data-i18n="btn_clear_log">ล้างมุมมอง</span></button>
+    </div>
+  </div>
+  <div id="logCount" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:10px; padding:0 20px;"></div>
+  <div id="logList" style="padding:20px;"></div>
+</div>

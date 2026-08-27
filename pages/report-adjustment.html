@@ -1,0 +1,80 @@
+<div class="page" id="page-report-adjustment">
+  <div class="wrap">
+    <div class="masthead">
+      <div class="brand-row">
+        <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M11 20V4M18 20V13" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></div>
+        <div>
+          <h1 data-i18n="ra_title">Report Adjustment</h1>
+          <div class="subtitle" data-i18n="ra_subtitle">Export-ready manpower breakdown for production adjustment</div>
+        </div>
+      </div>
+      <div class="pill-meta"><span data-i18n="ra_period_label">Period:</span> <span id="ra-periodLabel">MMM-YY</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-pad">
+        <div class="filter-row">
+          <div class="ffield"><label data-i18n="ie_filter_month">Month</label><input type="month" id="ra-selMonth"></div>
+          <div class="ffield"><label data-i18n="ra_filter_factory">Factory</label><select id="ra-selFactory"><option value="" data-i18n="ra_opt_all">All</option></select></div>
+          <div class="ffield"><label data-i18n="ra_filter_product">Product</label><select id="ra-selProduct"><option value="" data-i18n="ra_opt_all">All</option></select></div>
+          <div class="ffield"><label data-i18n="ie_th_line">Line</label><select id="ra-selLine"><option value="" data-i18n="opt_all_lines">All</option></select></div>
+          <div class="ffield"><label data-i18n="th_sub_line">Sub Line</label><select id="ra-selSubLine"><option value="" data-i18n="ra_opt_all">All</option></select></div>
+          <div class="spacer"></div>
+          <button class="btn-export" id="ra-btnExport" onclick="ReportAdjustment.exportExcel()">
+            <svg id="ra-exportIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            <span id="ra-exportLabel" data-i18n="ra_btn_export">Export .xlsx</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label" data-i18n="ra_stat_sublines">Sub lines</div><div class="stat-val" id="ra-statLines">0</div></div>
+      <div class="stat-card"><div class="stat-label" data-i18n="ra_stat_offtotal">Off-line total</div><div class="stat-val" id="ra-statOff">0</div></div>
+      <div class="stat-card"><div class="stat-label" data-i18n="ra_stat_intotal">In-line total</div><div class="stat-val" id="ra-statIn">0</div></div>
+      <div class="stat-card hi"><div class="stat-label" data-i18n="ra_stat_grandtotal">Grand total</div><div class="stat-val" id="ra-statGrand">0</div></div>
+    </div>
+
+    <!-- 🔧 แก้ไข (ตามที่ผู้ใช้ยืนยัน): เอาคอลัมน์ OPE ออก — OPE ถือเป็น In-line
+         โดยนิยามอยู่แล้ว ไม่ใช่หมวดที่ต้อง "ปรับ" ตารางนี้เหลือแค่ GL/Meta/
+         Subcon/Pregnant (Off tot + In tot จะไม่เท่ายอดคนจริงทั้งหมดของ SubLine
+         อีกต่อไปโดยตั้งใจ — ดูคอมเมนต์เต็มใน routes/reports.js) -->
+    <div class="card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+             
+            <tr class="grp-row">
+              <th colspan="3"></th>
+              <th colspan="4" class="off" data-i18n="ra_group_offline">Off-line (Support)</th>
+              <th></th>
+              <th colspan="4" class="in" data-i18n="ra_group_inline">Total in line</th>
+              <th></th><th></th>
+            </tr>
+            <tr class="col-row">
+              <th class="label-col" data-i18n="ra_th_product">Product</th><th class="label-col" data-i18n="ie_th_line">Line</th><th class="label-col" data-i18n="th_sub_line">Sub Line</th>
+              <th>GL</th><th data-i18n="ra_th_meta">Meta</th><th data-i18n="ra_th_subcon">Subcon</th><th data-i18n="th_pregnant_full">Pregnant</th><th data-i18n="ra_th_offtot">Off. tot</th>
+              <th>GL</th><th data-i18n="ra_th_actgl">Act. GL</th><th data-i18n="ra_th_meta">Meta</th><th data-i18n="ra_th_subcon">Subcon</th><th data-i18n="ra_th_intot">In. tot</th><th data-i18n="ra_th_grand">Grand</th>
+            </tr>
+          </thead>
+          <tbody id="ra-tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td class="label" colspan="3" data-i18n="ra_footer_total">Total</td>
+              <td class="num" id="ra-fOffGl">0</td><td class="num" id="ra-fOffMeta">0</td><td class="num" id="ra-fOffSub">0</td><td class="num" id="ra-fOffPreg">0</td><td class="num" id="ra-fOffTot">0</td>
+              <td class="num" id="ra-fInGl">0</td><td class="num" id="ra-fInActGl">0</td><td class="num" id="ra-fInMeta">0</td><td class="num" id="ra-fInSub">0</td><td class="num" id="ra-fInTot">0</td>
+              <td class="num" id="ra-fGrand">0</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <!-- 🔧 เพิ่มใหม่: Pagination แบบเดียวกับหน้า Line Master Data (Premium
+           Pagination — เลขหน้าคลิกได้ + ... เมื่อหน้าเยอะ, เลือกจำนวนแถว/หน้า,
+           ช่อง Go to page) ดู ReportAdjustment.goPage/setPageSize ใน
+           report-adjustment.js -->
+      <div class="pagination" id="ra-pagination" style="margin-top:0;padding:12px 16px;border-top:1px solid var(--ra-border);justify-content:center"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="ra-toast"></div>
+</div>

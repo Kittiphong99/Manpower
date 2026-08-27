@@ -1,0 +1,240 @@
+<div class="page" id="page-Manpower Dashboard">
+  <div class="adm-header">
+    <div>
+      <div class="mpd-eyebrow">รายงานภาพรวมกำลังคน</div>
+      <h1 class="adm-title"><span class="mpd-title-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M11 20V4M18 20V13" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></span> <span data-i18n="mpd_title">Manpower Dashboard</span></h1>
+      <p class="adm-subtitle">ข้อมูลกำลังคนตามตัวกรองที่เลือก</p>
+    </div>
+    <div class="mpd-toolbar">
+      <button id="mpdTabDashboardBtn" class="mpd-tab-btn mpd-tab-active" onclick="mpdShowView('dashboard')" data-i18n="mpd_tab_dashboard">Dashboard</button>
+      <button id="mpdTabReportBtn" class="mpd-tab-btn" onclick="mpdShowView('report')" data-i18n="mpd_tab_report">Report</button>
+      <span class="mpd-toolbar-divider"></span>
+      <button class="mpd-pill-btn" onclick="mpdOpenExportModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        <span data-i18n="mpd_btn_export_csv">Export CSV</span>
+      </button>
+      <button class="mpd-pill-btn" onclick="mpdLoadRecords()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        <span data-i18n="mpd_btn_refresh">Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mpd-layout">
+    <!-- Filters -->
+    <aside class="mpd-filters adm-card">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <h3 style="font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em;" data-i18n="mpd_filters">Filters</h3>
+        <button class="mpd-clear-btn" onclick="mpdClearFilters()" data-i18n="mpd_clear">Clear</button>
+      </div>
+
+      <div class="mpd-filter-group">
+        <label data-i18n="mpd_filter_year">Year</label>
+        <select id="mpdYearFilter" onchange="mpdOnYearChange()"></select>
+      </div>
+      <div class="mpd-filter-group">
+        <label data-i18n="mpd_filter_month">Month</label>
+        <select id="mpdMonthFilter" onchange="mpdApplyFilters()"></select>
+      </div>
+      <div class="mpd-filter-group">
+        <label data-i18n="mpd_filter_group">Group</label>
+        <select id="mpdGroupFilter" onchange="mpdApplyFilters()">
+          <option value="" data-i18n="mpd_opt_all_groups">All Groups</option>
+          <option value="Direct" data-i18n="mpd_group_direct">Direct</option>
+          <option value="In-Direct" data-i18n="mpd_group_indirect">In-Direct</option>
+        </select>
+      </div>
+      <div class="mpd-filter-group">
+        <label data-i18n="mpd_filter_type">Employee Type</label>
+        <select id="mpdTypeFilter" onchange="mpdApplyFilters()">
+          <option value="" data-i18n="mpd_opt_all_types">All Types</option>
+          <option value="Regular" data-i18n="mpd_type_regular">Regular</option>
+          <option value="Subcontract" data-i18n="mpd_type_subcontract">Subcontract</option>
+        </select>
+      </div>
+      <div class="mpd-filter-group">
+        <label data-i18n="mpd_filter_status">Status</label>
+        <select id="mpdStatusFilter" onchange="mpdApplyFilters()"></select>
+      </div>
+
+      <div class="mpd-filter-group">
+        <label data-i18n="mpd_filter_division">Division / Factory</label>
+        <input type="text" class="mpd-search" data-i18n-placeholder="mpd_search_placeholder" placeholder="ค้นหา..." oninput="mpdFilterCheckboxSearch(this,'mpdDivisionCheckboxes')">
+        <div id="mpdDivisionCheckboxes" class="mpd-checkbox-list"></div>
+      </div>
+      <div class="mpd-filter-group">
+        <label data-i18n="mpd_filter_product_group">Product Group</label>
+        <input type="text" class="mpd-search" data-i18n-placeholder="mpd_search_placeholder" placeholder="ค้นหา..." oninput="mpdFilterCheckboxSearch(this,'mpdProductGroupCheckboxes')">
+        <div id="mpdProductGroupCheckboxes" class="mpd-checkbox-list"></div>
+      </div>
+      <div class="mpd-filter-group">
+        <label data-i18n="mpd_filter_department">Department</label>
+        <input type="text" class="mpd-search" data-i18n-placeholder="mpd_search_placeholder" placeholder="ค้นหา..." oninput="mpdFilterCheckboxSearch(this,'mpdDepartmentCheckboxes')">
+        <div id="mpdDepartmentCheckboxes" class="mpd-checkbox-list"></div>
+      </div>
+      <div class="mpd-filter-group">
+        <label data-i18n="mpd_filter_position">Position</label>
+        <input type="text" class="mpd-search" data-i18n-placeholder="mpd_search_placeholder" placeholder="ค้นหา..." oninput="mpdFilterCheckboxSearch(this,'mpdPositionCheckboxes')">
+        <div id="mpdPositionCheckboxes" class="mpd-checkbox-list"></div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="mpd-main">
+      <div id="mpdDashboardContent">
+      <!-- KPI Cards (self-contained styles — see 14-page-manpower-dashboard.css) -->
+      <div class="mpd-kpi-grid">
+        <div class="mpd-kpi-card">
+          <div class="mpd-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+          <div class="mpd-kpi-label" data-i18n="mpd_kpi_employees">Employees</div>
+          <div class="mpd-kpi-value" id="mpdKpiCount">—</div>
+          <div class="mpd-kpi-meta" id="mpdKpiCountMeta">—</div>
+        </div>
+        <div class="mpd-kpi-card c-type">
+          <div class="mpd-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div>
+          <div class="mpd-kpi-label" data-i18n="mpd_filter_type">Employee Type</div>
+          <div id="mpdKpiType" class="mpd-kpi-breakdown">—</div>
+        </div>
+        <div class="mpd-kpi-card c-status">
+          <div class="mpd-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+          <div class="mpd-kpi-label" data-i18n="mpd_filter_status">Status</div>
+          <div id="mpdKpiStatus" class="mpd-kpi-breakdown">—</div>
+        </div>
+        <div class="mpd-kpi-card c-pos">
+          <div class="mpd-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></div>
+          <div class="mpd-kpi-label" data-i18n="mpd_kpi_position">By Position</div>
+          <div id="mpdKpiPosition" class="mpd-kpi-breakdown">—</div>
+          <div id="mpdKpiPositionMore" style="margin-top:4px;"></div>
+        </div>
+      </div>
+
+      <!-- Trend charts -->
+      <div class="mpd-chart-row3">
+        <div class="adm-card mpd-chart-card">
+          <div class="mpd-chart-head"><span class="mpd-chart-dot"></span><h4 data-i18n="mpd_chart_bymonth">Total Employees by Month</h4></div>
+          <div class="mpd-chart-box"><canvas id="mpdChartByMonth"></canvas></div>
+        </div>
+        <div class="adm-card mpd-chart-card">
+          <div class="mpd-chart-head"><span class="mpd-chart-dot" style="background:#dc2626"></span><h4 style="color:#dc2626" data-i18n="mpd_chart_sick">Sick Status by Month</h4></div>
+          <div class="mpd-chart-box"><canvas id="mpdChartSick"></canvas></div>
+        </div>
+        <div class="adm-card mpd-chart-card">
+          <div class="mpd-chart-head"><span class="mpd-chart-dot" style="background:#db2777"></span><h4 style="color:#db2777" data-i18n="mpd_chart_pregnancy">Pregnancy &amp; Maternity by Month</h4></div>
+          <div class="mpd-chart-box"><canvas id="mpdChartPregnancy"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Distribution doughnuts — donut (left, center = total+100%) + a
+           legend list (right, per-category value/%) split, instead of
+           a full-bleed ring with numbers crammed onto the arc itself. -->
+      <div class="mpd-chart-row2">
+        <div class="adm-card mpd-chart-card mpd-donut-card">
+          <div class="mpd-chart-head"><span class="mpd-chart-dot"></span><h4 data-i18n="mpd_chart_type_dist">Employee Type Distribution</h4></div>
+          <div class="mpd-donut-body">
+            <div class="mpd-donut-wrap">
+              <canvas id="mpdChartType"></canvas>
+              <div class="mpd-donut-center"><div class="n" id="mpdChartTypeCenterN">—</div><div class="p" id="mpdChartTypeCenterP"></div></div>
+            </div>
+            <div class="mpd-donut-legend" id="mpdChartTypeLegend"></div>
+          </div>
+        </div>
+        <div class="adm-card mpd-chart-card mpd-donut-card">
+          <div class="mpd-chart-head"><span class="mpd-chart-dot"></span><h4 data-i18n="mpd_chart_group_dist">Group Distribution</h4></div>
+          <div class="mpd-donut-body">
+            <div class="mpd-donut-wrap">
+              <canvas id="mpdChartGroup"></canvas>
+              <div class="mpd-donut-center"><div class="n" id="mpdChartGroupCenterN">—</div><div class="p" id="mpdChartGroupCenterP"></div></div>
+            </div>
+            <div class="mpd-donut-legend" id="mpdChartGroupLegend"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="adm-card">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; flex-wrap:wrap; gap:8px;">
+          <h4 style="margin:0;" data-i18n="mpd_table_title">Employee Details</h4>
+          <input type="text" id="mpdTableSearch" data-i18n-placeholder="mpd_search_all" placeholder="Search all columns..." oninput="mpdOnTableSearch(this.value)"
+                 style="background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:7px 11px; color:var(--text); font-size:13px; outline:none; width:240px;">
+        </div>
+        <div style="overflow:auto;">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th class="adm-th" data-i18n="mpd_th_empcode">Employee Code</th>
+                <th class="adm-th" data-i18n="mpd_th_startdate">Start Date</th>
+                <th class="adm-th" data-i18n="mpd_th_experience">Experience</th>
+                <th class="adm-th" data-i18n="mpd_th_fullname">Full Name</th>
+                <th class="adm-th" data-i18n="mpd_filter_position">Position</th>
+                <th class="adm-th" data-i18n="mpd_filter_department">Department</th>
+                <th class="adm-th" data-i18n="mpd_filter_status">Status</th>
+                <th class="adm-th" data-i18n="mpd_th_note">Note</th>
+                <th class="adm-th" data-i18n="mpd_filter_month">Month</th>
+                <th class="adm-th" data-i18n="mpd_filter_year">Year</th>
+                <th class="adm-th" data-i18n="mpd_th_type">Type</th>
+              </tr>
+            </thead>
+            <tbody id="mpdTableBody">
+              <tr><td colspan="11" class="adm-empty">⏳ <span data-i18n="mpd_loading">กำลังโหลดข้อมูล...</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:12px 16px; border-top:1px solid var(--border); display:flex; justify-content:center;">
+          <div id="mpdPagination" class="pagination" style="margin-top:0"></div>
+        </div>
+      </div>
+      </div>
+      <!-- /#mpdDashboardContent -->
+
+      <!-- Report view — Product Group × LINE summary table (sibling of
+           #mpdDashboardContent, NOT nested inside it, so the Filters
+           sidebar to the left stays visible & usable on both tabs) -->
+      <div id="mpdReportView" style="display:none;">
+        <div class="adm-card" style="overflow:hidden; margin-bottom:16px;">
+          <div style="padding:16px 18px;">
+            <h3 id="mpdReportTitle" style="margin:0; font-size:15px; color:var(--text);">Manpower Report Summary</h3>
+          </div>
+          <div style="overflow:auto; max-height:calc(100vh - 260px);">
+            <table class="mpd-report-table">
+              <thead id="mpdReportTableHead"></thead>
+              <tbody id="mpdReportTableBody"></tbody>
+              <tfoot id="mpdReportTableFooter"></tfoot>
+            </table>
+          </div>
+        </div>
+        <div id="mpdReportDetailContainer" style="display:flex; flex-direction:column; gap:16px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export CSV modal — เลือก scope ก่อนดาวน์โหลด (ตามตัวกรองปัจจุบัน/ทั้งหมด) -->
+  <div class="mpd-modal-overlay" id="mpdExportModalOverlay" style="display:none;" onclick="if(event.target===this) mpdCloseExportModal()">
+    <div class="mpd-modal">
+      <h2 data-i18n="mpd_export_modal_title">Export CSV</h2>
+      <p class="mpd-export-modal-sub" data-i18n="mpd_export_modal_sub">เลือกข้อมูลที่ต้องการ Export</p>
+      <div class="mpd-export-options">
+        <button class="mpd-export-option" onclick="mpdExportExcel('filtered')">
+          <span class="mpd-export-icon ice">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+          </span>
+          <span class="mpd-export-option-text">
+            <span class="mpd-export-option-title" data-i18n="mpd_export_opt_filtered">ตามตัวกรองปัจจุบัน</span>
+            <span class="mpd-export-option-sub" id="mpdExportFilteredMeta">—</span>
+          </span>
+        </button>
+        <button class="mpd-export-option" onclick="mpdExportExcel('all')">
+          <span class="mpd-export-icon violet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/></svg>
+          </span>
+          <span class="mpd-export-option-text">
+            <span class="mpd-export-option-title" data-i18n="mpd_export_opt_all">ข้อมูลทั้งหมด</span>
+            <span class="mpd-export-option-sub" id="mpdExportAllMeta">—</span>
+          </span>
+        </button>
+      </div>
+      <div class="mpd-modal-actions">
+        <button class="btn-cancel" onclick="mpdCloseExportModal()" data-i18n="mpd_export_cancel">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+</div>

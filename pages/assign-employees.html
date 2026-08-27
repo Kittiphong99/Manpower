@@ -1,0 +1,300 @@
+   <div class="page" id="page-emp">
+    <div class="left-panel">
+        <div class="summary-header-row">
+    <div style="display: flex; align-items: center; gap: 8px;"></div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="shift-control-box">
+            <span class="shift-label" data-i18n="filter_shift">SHIFT</span>
+            <div class="shift-btn-group">
+                <button class="shift-btn active">All</button>
+                <button class="shift-btn">A</button>
+                <button class="shift-btn">B</button>
+                <button class="shift-btn">C</button>
+            </div>
+        </div>
+        <button id="toggleSummaryBtn" class="summary-toggle-btn" title="ซ่อน/แสดง">
+            <svg id="toggleSummaryIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s"><path d="M6 15l6-6 6 6"/></svg>
+        </button>
+    </div>
+</div>
+
+        <div class="summary-content-grid">
+            <div class="left-sections">
+                <div>
+                    <h4 class="section-title" data-i18n="section_inline">In Line</h4>
+                    <div class="cards-row-grid">
+                        <div class="status-card card-emerald-dark" style="justify-content: center;">
+                            <p class="status-card-title">POS of CT</p>
+                            <p class="status-card-value">0</p>
+                        </div>
+                        <div class="status-card card-rose">
+                            <p class="status-card-title">Diff. POS</p>
+                            <p class="status-card-value">0</p>
+                        </div>
+                        <div class="status-card card-emerald-dark">
+                            <div>
+                                <p class="status-card-title">POS</p>
+                                <p class="status-card-value">0</p>
+                            </div>
+                            <div class="status-card-footer">
+                                <span>meta: 0</span><span>sub: 0</span>
+                            </div>
+                        </div>
+                        <div class="status-card card-gray">
+                            <div>
+                                <p class="status-card-title">OPE</p>
+                                <p class="status-card-value">0</p>
+                            </div>
+                            <div class="status-card-footer">
+                                <span>meta: 0</span><span>sub: 0</span>
+                            </div>
+                        </div>
+                        <div class="status-card card-gray">
+                            <div>
+                                <p class="status-card-title">GL</p>
+                                <p class="status-card-value">0</p>
+                            </div>
+                            <div class="status-card-footer">
+                                <span>meta: 0</span><span>sub: 0</span>
+                            </div>
+                        </div>
+                    </div>             
+                </div>
+
+                <div>
+                    <h4 class="section-title" data-i18n="section_offline">Off Line</h4>
+                    <div class="cards-row-grid cards-row-grid-6col">
+                        <div class="status-card card-emerald-light">
+                            <div><p class="status-card-title">Spare</p><p class="status-card-value">0</p></div>
+                            <div class="status-card-footer"><span>meta: 0</span><span>sub: 0</span></div>
+                        </div>
+                        <div class="status-card card-emerald-light">
+                            <div><p class="status-card-title">POS free</p><p class="status-card-value">0</p></div>
+                            <div class="status-card-footer"><span>meta: 0</span><span>sub: 0</span></div>
+                        </div>
+                        <div class="status-card card-emerald-light">
+                            <div><p class="status-card-title">Other</p><p class="status-card-value">0</p></div>
+                            <div class="status-card-footer"><span>meta: 0</span><span>sub: 0</span></div>
+                        </div>
+                        <div class="status-card card-emerald-light">
+                            <div><p class="status-card-title" data-i18n="th_pregnant_full">คนท้อง</p><p class="status-card-value">0</p></div>
+                            <div class="status-card-footer"><span>meta: 0</span><span>sub: 0</span></div>
+                        </div>
+                        <div class="status-card card-emerald-light">
+                            <div><p class="status-card-title" data-i18n="th_sick_full">คนป่วย</p><p class="status-card-value">0</p></div>
+                            <div class="status-card-footer"><span>meta: 0</span><span>sub: 0</span></div>
+                        </div>
+                        <div class="status-card card-rose">
+                            <div><p class="status-card-title" data-i18n="th_resigned_full">คนลาออก</p><p class="status-card-value">0</p></div>
+                            <div class="status-card-footer"><span>meta: 0</span><span>sub: 0</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-total-panel">
+                <div class="cards-row-grid-2">
+                    <div class="total-sub-card">
+                        <span class="total-card-title" data-i18n="label_total">Total</span>
+                        <span class="total-card-value">0</span>
+                        <div class="status-card-footer"><span>meta: 0</span><span>sub: 0</span></div>
+                    </div>
+                    <div class="total-sub-card">
+                        <span class="total-card-title" data-i18n="label_men">Men</span>
+                        <span class="total-card-value">0</span>
+                        <div class="status-card-footer"><span>meta: 0</span><span>sub: 0</span></div>
+                    </div>
+                    <div class="total-sub-card">
+                        <span class="total-card-title" data-i18n="label_women">Women</span>
+                        <span class="total-card-value">0</span>
+                        <div class="status-card-footer"><span>meta: 0</span><span>sub: 0</span></div>
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <div class="header header-dark">
+                        <h3 style="text-align: center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><circle cx="9" cy="8" r="3" stroke="#fff" stroke-width="1.8"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5M18 8v6M15 11h6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg> <span data-i18n="label_new_pending">New / Pending</span></h3>
+                    </div>
+                    <div>
+                        <br>
+                        <div class="status-number" id="pendingCount" style="text-align: center;">0</div> 
+                    </div>
+                    <button class="btn btn-primary btn-sm" id="incompleteBtn" style="padding:8px 10px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(248, 61, 61)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> <span data-i18n="btn_view_incomplete_list">ดูรายชื่อที่ยังกรอกไม่ครบ</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="left-panel">
+        <div class="table-main-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgb(27, 100, 78)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.4 2.7-5.6 6-5.6M16 8a3 3 0 1 0 0-6M14 20c0-3 2.2-5 5-5"/></svg> <span data-i18n="title_employee_db_mgmt">Employee Database Management</span>
+            <span id="lockBadge" class="badge badge-saved" style="display:none; background:#0f766e; color:white; padding:2px 8px; border-radius:4px; font-size:11px;" data-i18n="badge_locked_saved">🔒 บันทึก</span>
+        </div> 
+        <br>
+
+        <div class="filter-group" style="display:flex; gap:12px; align-items:flex-end;">
+            <div style="flex:1;">
+                <label class="filter-label" data-i18n="label_select_code">Select Code</label>
+                <div id="filterCodeMulti" class="code-multiselect" style="width:20%; min-width:220px;">
+                    <button type="button" id="filterCodeBtn" class="code-ms-btn" onclick="_codeMsOpen()">
+                        <span class="code-ms-label" id="filterCodeLabel" data-i18n="opt_select_code">Select Code</span>
+                        <svg class="code-ms-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <button id="openStandbyModal" class="btn btn-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> <span data-i18n="btn_add_employee">เพิ่มพนักงาน</span></button>
+            <button id="saveBtn" class="btn btn-edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> <span data-i18n="btn_save_data">บันทึก</span></button>
+            <button id="openExportModal" class="btn btn-export" onclick="empOpenExportModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg> <span data-i18n="emp_btn_export">ส่งออก Excel</span></button>
+        </div>
+
+        <div id="standbyModal" class="standby-modal-overlay">
+            <div class="standby-modal-box">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h3 style="margin:0; font-family:'Sarabun',sans-serif;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgb(27, 100, 78)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.4 2.7-5.6 6-5.6M16 8a3 3 0 1 0 0-6M14 20c0-3 2.2-5 5-5"/></svg> <span data-i18n="title_standby_employees">พนักงาน (Employees)</span></h3>
+                    <button id="closeStandbyModalBtn" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+                </div>
+                <div id="standbyList" style="font-family:'Sarabun',sans-serif;">
+                    <p style="text-align:center; color:#94a3b8;" data-i18n="loading">กำลังโหลด...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Excel modal — เลือก scope ก่อนดาวน์โหลด (ตามตัวกรองปัจจุบัน/ทั้งหมด),
+             ตามแบบ #mpdExportModalOverlay ในหน้า Manpower Dashboard -->
+        <div class="emp-modal-overlay" id="empExportModalOverlay" onclick="if(event.target===this) empCloseExportModal()">
+            <div class="emp-modal">
+                <h2 data-i18n="emp_export_modal_title">ส่งออก Excel</h2>
+                <p class="emp-export-modal-sub" data-i18n="emp_export_modal_sub">เลือกข้อมูลที่ต้องการ Export</p>
+                <div class="emp-export-options">
+                    <button class="emp-export-option" onclick="empExportExcel('filtered')">
+                        <span class="emp-export-icon ice"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 5h16l-6 8v6l-4 2v-8L4 5z"/></svg></span>
+                        <span class="emp-export-option-text">
+                            <span class="emp-export-option-title" data-i18n="emp_export_opt_filtered">ตามตัวกรองปัจจุบัน</span>
+                            <span class="emp-export-option-sub" id="empExportFilteredMeta">—</span>
+                        </span>
+                    </button>
+                    <button class="emp-export-option" onclick="empExportExcel('all')">
+                        <span class="emp-export-icon violet"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/></svg></span>
+                        <span class="emp-export-option-text">
+                            <span class="emp-export-option-title" data-i18n="emp_export_opt_all">ข้อมูลทั้งหมด</span>
+                            <span class="emp-export-option-sub" id="empExportAllMeta">—</span>
+                        </span>
+                    </button>
+                </div>
+                <div class="emp-modal-actions">
+                    <button class="btn-cancel" onclick="empCloseExportModal()" data-i18n="emp_export_cancel">ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar-row" style="justify-content: flex-end; gap: 12px; margin-top: 16px;">
+            <div class="search-wrapper">
+                <input type="text" id="searchInput" placeholder="Search..." data-i18n-placeholder="search_placeholder_generic">
+                <span class="search-icon-inside"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(46, 136, 109)" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg></span>
+            </div>
+            <button class="filter-trigger-btn" id="toggleFiltersBtn">
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 5h16l-6 8v6l-4 2v-8L4 5z"/></svg>
+            </button>
+        </div> 
+
+        <div class="filters" id="filtersPanel" style="display:none; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:14px; background:#ffffff; padding:16px; border-radius:8px; margin-bottom:16px;">
+            <div class="filter-group">
+                <label class="filter-label">EMP ID</label>
+                <select id="filterEmpId" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">NAME</label>
+                <select id="filterName" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">POSITION</label>
+                <select id="filterPosition" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">LINE</label>
+                <select id="filterLine" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">SUB LINE</label>
+                <select id="filterSubLine" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">PROCESS</label>
+                <select id="filterProcess" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">SHIFT</label>
+                <select id="filterShift" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">STATUS</label>
+                <select id="filterStatus" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">POSTTYPE</label>
+                <select id="filterPostType" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">GENDER</label>
+                <select id="filterGender" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">WORK STATUS</label>
+                <select id="filterWorkStatus" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">DETAIL</label>
+                <select id="filterDetail" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+            </div>
+            <div class="filter-group" style="display:flex; flex-direction:column; justify-content:flex-end;">
+                <button id="resetFilters" onclick="resetFilters()" style="width:100%; box-sizing:border-box; background:#f50000;color:white;border:none;border-radius:6px;padding:8px 10px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s ease;" onmouseover="this.style.background='#ff5252'" onmouseout="this.style.background='#ff6b6b'" data-i18n="btn_reset_all">
+                    🔄 Reset All
+                </button>
+            </div> 
+        </div>
+
+       <div class="table-wrap" id="tableWrap" style="overflow-x:auto; cursor:grab;">
+    <table class="main-data-table">
+        <thead style="position:sticky; top:0; background:#fff; z-index:2;">
+                    <tr>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;">No.</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;">Emp ID</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_fullname">ชื่อ-สกุล</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_position">ตำแหน่ง</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;">Line</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;">Sub Line</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;">Process</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;">Code</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;">Shift</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_status">สถานะ</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;">POSType</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_gender">เพศ</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_work_status">สถานะทำงาน</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_risk_factor">ปัจจัยเสี่ยง</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;">Detail</th>
+                        <!-- 🆕 (2026-08-27): "GL Sub Line" — ตัวหาร headcount ของ GL ที่ดูแลหลาย
+                             Sub Line เหมือนหน้า IE Monthly Report (ดู custom-render.js
+                             _glSubLineMsOpen ฯลฯ) แสดงเฉพาะแถวที่ POSType = GL/Act. GL เท่านั้น -->
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="ie_th_gl_subline">GL Sub Line</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_remark">หมายเหตุ</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_start">เริ่ม</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_end">สิ้นสุด</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;">Need</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;">Reason Need</th>
+                        <th style="white-space: nowrap; text-align: center; padding: 10px 12px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="25" style="text-align:center;padding:40px;color:#999;font-size:15px;" data-i18n="empty_select_code_prompt">
+                            📋 กรุณาเลือก Code เพื่อแสดงข้อมูล
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="board-wrap" id="empBoardWrap" style="display:none;"></div>
+        <div class="pagination" id="pagination" style="margin-top:16px;"></div>
+    </div>
+</div>

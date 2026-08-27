@@ -1,0 +1,84 @@
+<div class="page" id="page-bp-plan">
+    <div class="left-panel">
+        <div class="table-main-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgb(27, 100, 78)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M4 19h16"/><path d="M8 19V9M13 19V5M18 19v-7"/></svg> <span data-i18n="bp_plan_title">Business Plan อัตรากำลัง</span>
+        </div>
+        <p class="bp-subtitle" data-i18n="bp_plan_subtitle">กำหนดเป้าหมายอัตรากำลังรายตำแหน่งต่อเดือน เทียบกับจำนวนพนักงานจริง</p>
+
+        <div class="filter-group" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-top:12px;">
+            <div>
+                <label class="filter-label" data-i18n="mpd_filter_year">ปี</label>
+                <select id="bpYearFilter" class="bp-select"></select>
+            </div>
+            <div>
+                <label class="filter-label" data-i18n="mpd_filter_month">เดือน</label>
+                <select id="bpMonthFilter" class="bp-select"></select>
+            </div>
+            <div style="flex:1; min-width:220px;">
+                <label class="filter-label" data-i18n="label_select_code">Select Code</label>
+                <select id="bpCodeFilter" class="bp-select"></select>
+            </div>
+            <button id="bpAddTargetBtn" class="btn btn-primary" style="display:none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> <span data-i18n="bp_btn_add_target">เพิ่มเป้าหมาย</span>
+            </button>
+        </div>
+
+        <div class="bp-chart-card">
+            <h4 class="section-title" data-i18n="bp_chart_title">Plan vs Actual รายตำแหน่ง</h4>
+            <div class="bp-chart-wrap"><canvas id="bpChartCompare"></canvas></div>
+        </div>
+
+        <div class="table-wrap" id="bpTableWrap" style="overflow-x:auto;">
+            <table class="main-data-table">
+                <thead style="position:sticky; top:0; background:#fff; z-index:2;">
+                    <tr>
+                        <th style="white-space:nowrap; text-align:center; padding:10px 12px;" data-i18n="th_position">ตำแหน่ง</th>
+                        <th style="white-space:nowrap; text-align:center; padding:10px 12px;" data-i18n="bp_th_plan">เป้าหมาย (Plan)</th>
+                        <th style="white-space:nowrap; text-align:center; padding:10px 12px;" data-i18n="bp_th_actual">จริง (Actual)</th>
+                        <th style="white-space:nowrap; text-align:center; padding:10px 12px;" data-i18n="bp_th_diff">ส่วนต่าง</th>
+                        <th style="white-space:nowrap; text-align:center; padding:10px 12px;" data-i18n="bp_th_achieve">% สำเร็จ</th>
+                        <th id="bpActionHeader" style="white-space:nowrap; text-align:center; padding:10px 12px; display:none;" data-i18n="bp_th_action">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="bpTableBody">
+                    <tr>
+                        <td colspan="6" style="text-align:center;padding:40px;color:#999;font-size:15px;" data-i18n="empty_select_code_prompt">
+                            📋 กรุณาเลือก Code เพื่อแสดงข้อมูล
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit target modal -->
+    <div id="bpTargetModal" class="standby-modal-overlay">
+        <div class="standby-modal-box" style="max-width:420px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 id="bpModalTitle" style="margin:0; font-family:'Sarabun',sans-serif;" data-i18n="bp_modal_title_add">เพิ่มเป้าหมาย</h3>
+                <button id="bpCloseModalBtn" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+            </div>
+            <div class="bp-modal-form">
+                <label class="filter-label" data-i18n="mpd_filter_year">ปี</label>
+                <select id="bpFormYear" class="bp-select" style="width:100%;"></select>
+
+                <label class="filter-label" data-i18n="mpd_filter_month">เดือน</label>
+                <select id="bpFormMonth" class="bp-select" style="width:100%;"></select>
+
+                <label class="filter-label" data-i18n="label_select_code">Code</label>
+                <select id="bpFormCode" class="bp-select" style="width:100%;"></select>
+
+                <label class="filter-label" data-i18n="th_position">ตำแหน่ง</label>
+                <input type="text" id="bpFormPosition" list="bpPositionOptions" class="bp-input" autocomplete="off">
+                <datalist id="bpPositionOptions"></datalist>
+
+                <label class="filter-label" data-i18n="bp_modal_target">จำนวนเป้าหมาย</label>
+                <input type="number" id="bpFormTarget" min="0" step="1" class="bp-input">
+            </div>
+            <div class="emp-modal-actions" style="margin-top:16px;">
+                <button class="btn-cancel" id="bpModalCancelBtn" data-i18n="emp_export_cancel">ยกเลิก</button>
+                <button class="btn btn-primary" id="bpModalSaveBtn" data-i18n="btn_save_data">บันทึก</button>
+            </div>
+        </div>
+    </div>
+</div>

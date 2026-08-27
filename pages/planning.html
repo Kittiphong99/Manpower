@@ -1,0 +1,373 @@
+<div class="page" id="page-Planning">
+
+  <div class="plan-tabs">
+    <button class="plan-tab active" data-plan-view="list" onclick="showPlanView('list')">
+      <i class="fa-solid fa-list"></i> <span data-i18n="plan_tab_list">1. รายการแผน</span>
+    </button>
+    <button class="plan-tab" data-plan-view="create" onclick="showPlanView('create')">
+      <i class="fa-solid fa-pen-to-square"></i> <span data-i18n="plan_tab_create">2. สร้าง/แก้ไขแผน</span>
+    </button>
+    <button class="plan-tab" data-plan-view="compare" onclick="showPlanView('compare')">
+      <i class="fa-solid fa-code-compare"></i> <span data-i18n="plan_tab_compare">3. Compare data</span>
+    </button>
+  </div>
+
+  <!-- ══════════════ VIEW 1: PLAN LIST ══════════════ -->
+  <div class="plan-view active" id="planview-list">
+    <div class="left-panel">
+      <div class="plan-toolbar">
+        <div>
+          <h1 style="font-size:16px;font-weight:700;margin:0;color:var(--text)" data-i18n="manpower_planning">Manpower Planning</h1>
+          <p style="font-size:12px;color:var(--muted);margin:2px 0 0" data-i18n="plan_list_subtitle">จัดการแผนกำลังคนล่วงหน้า ก่อนส่งไปใช้จริงที่ Assign Employees</p>
+        </div>
+        <div class="filter-group">
+          <div>
+            <label class="filter-label" data-i18n="label_select_code">เลือก Code</label>
+            <select class="plan-select" id="planListCodeSelect" onchange="onPlanListCodeChange(this.value)">
+              <option value="" data-i18n="opt_select_code">-- เลือก Code --</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="startFreshPlan()">
+            <i class="fa-solid fa-plus"></i> <span data-i18n="plan_btn_new">สร้างแผนใหม่</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="plan-grid" id="planGrid">
+        <div class="plan-card-new" style="grid-column:1/-1;text-align:center;opacity:.6" data-i18n="loading">กำลังโหลด...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ VIEW 2: CREATE / EDIT PLAN ══════════════ -->
+  <div class="plan-view" id="planview-create">
+    <div class="left-panel">
+      <div class="page-title-row">
+        <div>
+          <h1 id="planCreateTitle"><i class="fa-solid fa-pen-to-square" style="color:var(--accent)"></i> <span data-i18n="plan_btn_new">สร้างแผนใหม่</span></h1>
+          <p data-i18n="plan_create_desc">เลือก Code ได้ทั้งตอนสร้างแผนใหม่และตอนแก้ไขแผนเดิม</p>
+        </div>
+        <button class="btn btn-cancel" onclick="cancelPlanEdit()">
+          <i class="fa-solid fa-arrow-left"></i> <span data-i18n="plan_back_to_list">กลับรายการแผน</span>
+        </button>
+      </div>
+
+      <div class="plan-form-row">
+        <div class="form-group">
+          <label data-i18n="label_select_code">เลือก Code</label>
+          <!-- 🆕 (2026-08-27 — ผู้ใช้ขอให้หน้าตาสวยขึ้นเหมือน Assign Employees):
+               native <select> เดิมยังอยู่ (ซ่อนไว้) เป็น "แหล่งความจริง" ตัวเดียว
+               ให้โค้ดเดิมทั้งหมด (onPlanCreateCodeChange, codeSel.value ที่จุดอื่น
+               ในไฟล์นี้) ทำงานเหมือนเดิมทุกประการ ไม่ต้องแก้จุดอื่นเลย — แค่เพิ่ม
+               ปุ่ม+panel ค้นหาได้ทับไว้ข้างบน (เลือกได้ทีละ Code เท่านั้นเหมือนเดิม
+               ตามที่ยืนยัน ไม่ใช่ multi-select แบบ Assign Employees ซึ่ง 1 แผน
+               ต้องเป็น 1 สายเท่านั้นอยู่แล้วตาม routes/plans.js) -->
+          <select class="plan-select" id="createCodeSelect" style="display:none" onchange="onPlanCreateCodeChange(this.value)">
+            <option value="" data-i18n="opt_select_code">-- เลือก Code --</option>
+          </select>
+          <div id="createCodeMulti" class="code-multiselect" style="width:100%">
+            <button type="button" id="createCodeBtn" class="code-ms-btn" onclick="_planCodeMsOpen()">
+              <span class="code-ms-label" id="createCodeBtnLabel" data-i18n="opt_select_code">-- เลือก Code --</span>
+              <svg class="code-ms-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="plan-form-row">
+        <div class="form-group">
+          <label data-i18n="plan_name_label">ชื่อแผน</label>
+          <input type="text" id="planNameInput" placeholder="เช่น Plan สำรอง Q3" data-i18n-placeholder="plan_name_placeholder" oninput="savePlanDraftState()">
+        </div>
+        <div class="form-group" style="flex:2">
+          <label data-i18n="plan_remark_label">หมายเหตุ</label>
+          <input type="text" id="planRemarkInput" placeholder="เช่น เสริมกำลังก่อนช่วง Q3 พีค" data-i18n-placeholder="plan_remark_placeholder" oninput="savePlanDraftState()">
+        </div>
+      </div>
+
+      <!-- 🔧 ใหม่: Summary การ์ดเต็มรูปแบบเดียวกับหน้า Assign Employees (POS of CT/
+           Diff. POS/POS/OPE/GL/Spare/POS free/Other/คนท้อง/คนป่วย/Total/Men/Women)
+           แทนแถบสรุปย่อเดิม — คำนวณ+ผูก DOM ด้วย renderPlanStatusSummary() ใน
+           planning-manager.js (สแกน id ตรงๆ scope เฉพาะในนี้ ไม่ชนกับของหน้า
+           Assign Employees ที่ query แบบ document.querySelectorAll('.cards-row-grid')
+           เพราะ #page-emp โหลดมาก่อนหน้านี้ใน DOM เสมอ อยู่ index [0]/[1] เดิม) -->
+      <div class="summary-content-grid" id="planSummaryGrid">
+        <div class="left-sections">
+          <div>
+            <h4 class="section-title">In Line</h4>
+            <div class="cards-row-grid">
+              <div class="status-card card-emerald-dark" style="justify-content: center;">
+                <p class="status-card-title">POS of CT</p>
+                <p class="status-card-value" id="planPosOfCT">0</p>
+              </div>
+              <div class="status-card card-rose">
+                <p class="status-card-title">Diff. POS</p>
+                <p class="status-card-value" id="planDiffPos">0</p>
+              </div>
+              <div class="status-card card-emerald-dark">
+                <div>
+                  <p class="status-card-title">POS</p>
+                  <p class="status-card-value" id="planPosCount">0</p>
+                </div>
+                <div class="status-card-footer"><span>meta: <span id="planPosMeta">0</span></span><span>sub: <span id="planPosSub">0</span></span></div>
+              </div>
+              <div class="status-card card-gray">
+                <div>
+                  <p class="status-card-title">OPE</p>
+                  <p class="status-card-value" id="planOpeCount">0</p>
+                </div>
+                <div class="status-card-footer"><span>meta: <span id="planOpeMeta">0</span></span><span>sub: <span id="planOpeSub">0</span></span></div>
+              </div>
+              <div class="status-card card-gray">
+                <div>
+                  <p class="status-card-title">GL</p>
+                  <p class="status-card-value" id="planGlCount">0</p>
+                </div>
+                <div class="status-card-footer"><span>meta: <span id="planGlMeta">0</span></span><span>sub: <span id="planGlSub">0</span></span></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="section-title">Off Line</h4>
+            <div class="cards-row-grid">
+              <div class="status-card card-emerald-light">
+                <div><p class="status-card-title">Spare</p><p class="status-card-value" id="planSpareCount">0</p></div>
+                <div class="status-card-footer"><span>meta: <span id="planSpareMeta">0</span></span><span>sub: <span id="planSpareSub">0</span></span></div>
+              </div>
+              <div class="status-card card-emerald-light">
+                <div><p class="status-card-title">POS free</p><p class="status-card-value" id="planPosFreeCount">0</p></div>
+                <div class="status-card-footer"><span>meta: <span id="planPosFreeMeta">0</span></span><span>sub: <span id="planPosFreeSub">0</span></span></div>
+              </div>
+              <div class="status-card card-emerald-light">
+                <div><p class="status-card-title">Other</p><p class="status-card-value" id="planOtherCount">0</p></div>
+                <div class="status-card-footer"><span>meta: <span id="planOtherMeta">0</span></span><span>sub: <span id="planOtherSub">0</span></span></div>
+              </div>
+              <div class="status-card card-emerald-light">
+                <div><p class="status-card-title" data-i18n="plan_stat_pregnant">คนท้อง</p><p class="status-card-value" id="planPregnantCount">0</p></div>
+                <div class="status-card-footer"><span>meta: <span id="planPregnantMeta">0</span></span><span>sub: <span id="planPregnantSub">0</span></span></div>
+              </div>
+              <div class="status-card card-emerald-light">
+                <div><p class="status-card-title" data-i18n="plan_stat_sick">คนป่วย</p><p class="status-card-value" id="planSickCount">0</p></div>
+                <div class="status-card-footer"><span>meta: <span id="planSickMeta">0</span></span><span>sub: <span id="planSickSub">0</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-total-panel">
+          <div class="cards-row-grid-2">
+            <div class="total-sub-card">
+              <span class="total-card-title" data-i18n="label_total">Total</span>
+              <span class="total-card-value" id="planTotalCount">0</span>
+              <div class="status-card-footer"><span>meta: <span id="planTotalMeta">0</span></span><span>sub: <span id="planTotalSub">0</span></span></div>
+            </div>
+            <div class="total-sub-card">
+              <span class="total-card-title" data-i18n="label_men">Men</span>
+              <span class="total-card-value" id="planMenCount">0</span>
+              <div class="status-card-footer"><span>meta: <span id="planMenMeta">0</span></span><span>sub: <span id="planMenSub">0</span></span></div>
+            </div>
+            <div class="total-sub-card">
+              <span class="total-card-title" data-i18n="label_women">Women</span>
+              <span class="total-card-value" id="planWomenCount">0</span>
+              <div class="status-card-footer"><span>meta: <span id="planWomenMeta">0</span></span><span>sub: <span id="planWomenSub">0</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-bar-row" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div class="table-main-title" style="margin:0"><i class="fa-solid fa-users"></i> <span data-i18n="plan_roster_title">รายชื่อในแผน</span> (<span id="planEmployeeCount">0</span> <span data-i18n="plan_unit_persons">คน</span>)</div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <!-- 🔧 ใหม่: ป้าย/ปุ่มเช็คกรอกไม่ครบ — เหมือนหน้า Assign Employees
+               (#pendingCount/#incompleteBtn) ดู planUpdateIncompleteState()/
+               window.viewPlanIncomplete ใน planning-manager.js -->
+          <div style="text-align:center;line-height:1.1">
+            <div class="status-number" id="planPendingCount" style="font-size:18px">0</div>
+            <div class="status-label" style="font-size:10px" data-i18n="plan_pending_count_label">กรอกไม่ครบ</div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="planIncompleteBtn" onclick="viewPlanIncomplete()" style="padding:8px 10px">
+            <i class="fa-solid fa-eye" style="color:#f83d3d"></i> <span data-i18n="btn_view_incomplete_list">ดูรายชื่อที่ยังกรอกไม่ครบ</span>
+          </button>
+          <button class="btn btn-primary" onclick="openAddEmployeeModal()">
+            <i class="fa-solid fa-plus"></i> <span data-i18n="btn_add_employee">เพิ่มพนักงาน</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 🔧 ใหม่: ค้นหา + filter เหมือนหน้า Assign Employees (#searchInput/
+           #toggleFiltersBtn/#filtersPanel) — panel ซ่อนอยู่เป็นค่าเริ่มต้น
+           กดปุ่มรูปกรวยเพื่อเปิด/ปิด ดู attachPlanFilterToggle()/initPlanSearch()/
+           getPlanFilteredEmployees() ใน planning-manager.js -->
+      <div class="action-bar-row" style="justify-content:flex-end;gap:12px;margin-top:12px">
+        <div class="search-wrapper">
+          <input type="text" id="planSearchInput" placeholder="Search..." data-i18n-placeholder="search_placeholder_generic">
+          <span class="search-icon-inside"><i class="fa-solid fa-magnifying-glass" style="color: rgb(46, 136, 109);"></i></span>
+        </div>
+        <button class="filter-trigger-btn" id="planToggleFiltersBtn">
+          <img src="img/filter.png" style="width: 30px; height: 30px;">
+        </button>
+      </div>
+
+      <div class="filters" id="planFiltersPanel" style="display:none; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:14px; background:#ffffff; padding:16px; border-radius:8px; margin-bottom:16px;">
+        <div class="filter-group">
+          <label class="filter-label">EMP ID</label>
+          <select id="planFilterEmpId" onchange="onPlanFilterChange('empId', this.value)" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">NAME</label>
+          <select id="planFilterName" onchange="onPlanFilterChange('name', this.value)" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">POSITION</label>
+          <select id="planFilterPosition" onchange="onPlanFilterChange('position', this.value)" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">LINE</label>
+          <select id="planFilterLine" onchange="onPlanFilterChange('line', this.value)" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">SUB LINE</label>
+          <select id="planFilterSubLine" onchange="onPlanFilterChange('subline', this.value)" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">PROCESS</label>
+          <select id="planFilterProcess" onchange="onPlanFilterChange('process', this.value)" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">SHIFT</label>
+          <select id="planFilterShift" onchange="onPlanFilterChange('shift', this.value)" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">STATUS</label>
+          <select id="planFilterStatus" onchange="onPlanFilterChange('status', this.value)" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">POSTYPE</label>
+          <select id="planFilterPostType" onchange="onPlanFilterChange('posType', this.value)" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">GENDER</label>
+          <select id="planFilterGender" onchange="onPlanFilterChange('gender', this.value)" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">WORK STATUS</label>
+          <select id="planFilterWorkStatus" onchange="onPlanFilterChange('workStatus', this.value)" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">DETAIL</label>
+          <select id="planFilterDetail" onchange="onPlanFilterChange('detail', this.value)" style="width:100%; box-sizing:border-box; background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:13px;outline:none;cursor:pointer;"></select>
+        </div>
+        <div class="filter-group" style="display:flex; flex-direction:column; justify-content:flex-end;">
+          <button onclick="resetPlanFilters()" style="width:100%; box-sizing:border-box; background:#f50000;color:white;border:none;border-radius:6px;padding:8px 10px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;cursor:pointer;" data-i18n="btn_reset_all">
+            🔄 Reset All
+          </button>
+        </div>
+      </div>
+
+      <!-- 🔧 ใหม่: สลับมุมมองตาราง (default / A-สีสลับ+badge / D-แบบ Excel) เหมือน
+           Assign Employees — ดู setupPlanTableModeSwitcher ใน planning-manager.js -->
+      <div class="emp-mode-tabs" id="planModeTabs"></div>
+
+      <div class="table-wrap" id="planTableWrap" style="margin-top:12px; overflow-x:auto; cursor:grab;">
+        <table class="main-data-table">
+          <thead>
+            <tr>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="ie_th_no">No.</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_emp_id">Emp ID</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_fullname">ชื่อ-สกุล</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_position">ตำแหน่ง</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="ie_th_line">Line</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_sub_line">Sub Line</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_process">Process</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_code">Code</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="ie_th_shift">Shift</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_status">สถานะ</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="cfg_postype">POSType</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_gender">เพศ</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_work_status">สถานะทำงาน</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_risk_factor">ปัจจัยเสี่ยง</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="ie_th_detail">Detail</th>
+              <!-- 🆕 (2026-08-27): "GL Sub Line" — ขยายมาจากหน้า Assign Employees
+                   (custom-render.js _glSubLineMsOpen ฯลฯ, reuse ตรงๆ เพราะโหลด
+                   global ทั้งแอปอยู่แล้ว) แสดงเฉพาะแถวที่ POSType = GL/Act. GL -->
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="ie_th_gl_subline">GL Sub Line</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="ie_th_note">หมายเหตุ</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_start">เริ่ม</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_end">สิ้นสุด</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="ie_th_need">Need</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="ie_th_reason_need">Reason Need</th>
+              <th style="white-space: nowrap; text-align: center; padding: 10px 12px;" data-i18n="th_actions">Action</th>
+            </tr>
+          </thead>
+          <tbody id="planEmployeeTableBody">
+            <tr><td colspan="20" style="text-align:center;padding:32px;color:var(--muted)" data-i18n="plan_static_table_placeholder">เลือก Code ด้านบนเพื่อเริ่มสร้างแผน</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 🔧 ใหม่: มุมมอง "Board" (Process Master Board) — ทางเลือกของตารางด้านบน
+           สลับได้จาก #planModeTabs (ปุ่ม "Board") ซ่อนโดย default ดู
+           applyPlanTableMode()/renderPlanBoard() ใน planning-manager.js -->
+      <div class="board-wrap" id="planBoardWrap" style="display:none;"></div>
+
+      <div class="pagination" id="planPagination" style="margin-top:10px;justify-content:center"></div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+        <button class="btn btn-cancel" onclick="cancelPlanEdit()"><i class="fa-solid fa-xmark"></i> <span data-i18n="btn_cancel">ยกเลิก</span></button>
+        <button class="btn btn-primary" id="planSaveBtn" onclick="savePlanDraft()">
+          <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="plan_save_draft_btn">บันทึกแผน</span> (draft)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ VIEW 3: COMPARE DATA ══════════════ -->
+  <div class="plan-view" id="planview-compare">
+    <div class="left-panel">
+      <div class="compare-header">
+        <div>
+          <h1 style="font-size:16px;font-weight:700;margin:0;color:var(--text)" data-i18n="plan_tab_compare">Compare data</h1>
+          <p style="font-size:12px;color:var(--muted);margin:2px 0 0" id="compareSubtitle" data-i18n="loading">กำลังโหลด...</p>
+        </div>
+        <button class="btn btn-cancel" onclick="showPlanView('list')">
+          <i class="fa-solid fa-arrow-left"></i> <span data-i18n="plan_back_to_list">กลับรายการแผน</span>
+        </button>
+      </div>
+
+      <div class="compare-cards">
+        <div class="status-card"><p class="status-card-title" data-i18n="plan_compare_stat_plan">จำนวนคนตามแผน</p><p class="status-card-value" id="comparePlanTotal">0</p></div>
+        <div class="status-card"><p class="status-card-title" data-i18n="plan_compare_stat_actual">จำนวนคนจริงปัจจุบัน</p><p class="status-card-value" id="compareActualTotal">0</p></div>
+        <div class="status-card"><p class="status-card-title" data-i18n="plan_compare_stat_diff">ผลต่าง</p><p class="status-card-value" id="compareDiffTotal">0</p></div>
+      </div>
+
+      <table class="compare-table">
+        <thead><tr><th data-i18n="th_category">Category</th><th data-i18n="plan_compare_th_plan">แผน</th><th data-i18n="plan_compare_th_actual">จริงปัจจุบัน</th><th data-i18n="plan_compare_stat_diff">ผลต่าง</th><th data-i18n="th_change">เปลี่ยนแปลง</th></tr></thead>
+        <tbody id="compareTableBody">
+          <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)" data-i18n="loading">กำลังโหลด...</td></tr>
+        </tbody>
+        <tfoot id="compareTableFoot"></tfoot>
+      </table>
+
+      <div class="table-main-title" style="margin-bottom:10px"><i class="fa-solid fa-users-viewfinder"></i> <span data-i18n="plan_compare_diff_list_title">รายชื่อที่ต่างกัน</span></div>
+      <div class="diff-people-grid">
+        <div class="diff-people-card">
+          <div class="hdr add" id="compareOnlyInPlanHdr"><i class="fa-solid fa-user-plus"></i> อยู่ในแผน แต่ยังไม่มีตัวจริง (0)</div>
+          <div id="compareOnlyInPlanList"></div>
+        </div>
+        <div class="diff-people-card">
+          <div class="hdr remove" id="compareOnlyInActualHdr"><i class="fa-solid fa-user-minus"></i> มีตัวจริง แต่ไม่อยู่ในแผน (0)</div>
+          <div id="compareOnlyInActualList"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+        <button class="btn btn-cancel" onclick="showPlanView('list')" data-i18n="plan_compare_back">กลับ</button>
+        <button class="btn btn-primary" onclick="activatePlan(window.currentPlanDocNo)">
+          <i class="fa-solid fa-paper-plane"></i> <span data-i18n="plan_compare_use_this_plan_go">ใช้แผนนี้ → ไป Assign Employees</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
