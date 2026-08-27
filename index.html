@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Manpower Management System</title>
+  <link rel="stylesheet" href="css/3-layout.css?v=20260731">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    (function () {
+      let saved = null;
+      try { saved = JSON.parse(localStorage.getItem('manpower_ui_settings')); } catch (e) {}
+      document.documentElement.setAttribute('data-theme', saved?.theme === 'dark' ? 'dark' : 'light');
+
+      window.__loginLang = (function () {
+        try { return localStorage.getItem('manpower_lang') || 'th'; }
+        catch (e) { return 'th'; }
+      })();
+
+      function hexToRgb(hex) {
+        if (typeof hex !== 'string') return null;
+        let h = hex.trim().replace('#', '');
+        if (h.length === 3) h = h.split('').map(c => c + c).join('');
+        if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+        const num = parseInt(h, 16);
+        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+      }
+      function toHex({ r, g, b }) {
+        const c = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+        return '#' + c(r) + c(g) + c(b);
+      }
+      function mix(rgb, target, weight) {
+        return {
+          r: rgb.r + (target.r - rgb.r) * weight,
+          g: rgb.g + (target.g - rgb.g) * weight,
+          b: rgb.b + (target.b - rgb.b) * weight,
+        };
+      }
+      function applyAccentColor(hex) {
+        const rgb = hexToRgb(hex);
+        if (!rgb) return;
+        const white = { r: 255, g: 255, b: 255 };
+        const black = { r: 0, g: 0, b: 0 };
+        const hoverRgb = mix(rgb, black, 0.16);
+        const dmRgb    = mix(rgb, white, 0.24);
+        const dmHoverRgb = mix(dmRgb, black, 0.14);
+        const style = document.documentElement.style;
+        style.setProperty('--accent', hex);
+        style.setProperty('--accent-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+        style.setProperty('--accent-hover', toHex(hoverRgb));
+        style.setProperty('--accent-dm', toHex(dmRgb));
+        style.setProperty('--accent-dm-rgb', `${Math.round(dmRgb.r)}, ${Math.round(dmRgb.g)}, ${Math.round(dmRgb.b)}`);
+        style.setProperty('--accent-dm-hover', toHex(dmHoverRgb));
+        style.setProperty('--leaf-0', toHex(mix(rgb, white, 0)));
+        style.setProperty('--leaf-1', toHex(mix(rgb, white, 0.25)));
+        style.setProperty('--leaf-2', toHex(mix(rgb, white, 0.55)));
+        style.setProperty('--leaf-4', toHex(mix(rgb, white, 0.85)));
+      }
+      const accentCandidate = saved?.color || saved?.accentColor || saved?.accent || saved?.primaryColor || saved?.themeColor;
+      window.__loginAccent = hexToRgb(accentCandidate) ? accentCandidate : null;
+      if (window.__loginAccent) applyAccentColor(window.__loginAccent);
+      window.__applyAccentColor = applyAccentColor;
+    })();
+  </script>
+  <script>
+    window.addEventListener('storage', (e) => {
+      if (e.key !== 'manpower_ui_settings' || !window.__applyAccentColor) return;
+      try {
+        const saved = JSON.parse(e.newValue);
+        const accentCandidate = saved?.color || saved?.accentColor || saved?.accent || saved?.primaryColor || saved?.themeColor;
+        if (accentCandidate) window.__applyAccentColor(accentCandidate);
+      } catch (err) {}
+    });
+  </script>
+  <script>
+    function checkAlreadyLoggedIn() {
+        let currentSession = null;
+        try { currentSession = localStorage.getItem('manpower_session'); } catch(e) {}
+
+        if (currentSession) {
+            // 🔧 แก้ไข: ป้องกัน redirect วนไม่รู้จบ — ถ้าไฟล์นี้ (หน้า login)
+            // ดันถูกเซฟ/เดพลอยด้วยชื่อ "app.html" เอง (สลับชื่อกับหน้า
+            // dashboard จริงโดยไม่ตั้งใจ) โค้ดเดิมจะสั่ง location.href='app.html'
+            // ซึ่งกลายเป็น redirect ไปหาตัวเอง วนซ้ำจนเบราว์เซอร์ throttle
+            // (เห็นใน console: "Throttling navigation to prevent the browser
+            // from hanging") เช็คก่อนว่าตอนนี้ไม่ได้อยู่ที่ app.html อยู่แล้ว
+            const currentFile = window.location.pathname.split('/').pop().toLowerCase();
+            if (currentFile === 'app.html') {
+                console.error('⚠️ ไฟล์หน้า Login นี้กำลังถูกเปิดที่ URL "app.html" — ตรวจสอบว่าไฟล์นี้ถูกอัปโหลด/ตั้งชื่อผิดสลับกับหน้า dashboard จริงหรือไม่ (ควรชื่อ index.html หรือ login.html แทน) ยกเลิกการ redirect เพื่อกันหน้าเว็บวนลูป');
+                const statusBox = document.getElementById('loading-status');
+                if (statusBox) statusBox.style.display = 'none';
+                return;
+            }
+            window.location.href = 'App.html';
+            return;
+        }
+
+        const statusBox = document.getElementById('loading-status'); 
+        if (statusBox) statusBox.style.display = 'none';
+    }
+    document.addEventListener("DOMContentLoaded", checkAlreadyLoggedIn);
+    window.addEventListener("pageshow", (event) => {
+        if (event.persisted) checkAlreadyLoggedIn();
+    });
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --accent: #4eaaa3;
+      --accent-rgb: 78, 170, 163;
+      --accent-hover: #3da892;
+      --accent-dm: #62c4b0;
+      --accent-dm-rgb: 98, 196, 176;
+      --accent-dm-hover: #55b09e;
+      --leaf-0: #4eaaa3;
+      --leaf-1: #68c5bd;
+      --leaf-2: #a7dfd9;
+      --leaf-4: #e2f1f0;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow: hidden;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: #f8fafc;
+    }
+    .bg-container {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;
+    }
+    .bg-trees {
+      position: absolute; width: 100%; height: 100%;
+      background: url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1920&q=80') no-repeat center center;
+      background-size: cover;
+      filter: brightness(0.9) grayscale(0.2);
+    }
+    .bg-tint {
+      position: absolute; inset: 0;
+      background: rgba(var(--accent-rgb), 0.28);
+      mix-blend-mode: color;
+      transition: background-color .25s ease;
+    }
+    [data-theme="dark"] .bg-tint { background: rgba(var(--accent-dm-rgb), 0.22); }
+    .leaves-container { position: absolute; width: 100%; height: 100%; overflow: hidden; }
+    .leaf {
+      position: absolute; width: 15px; height: 15px; border-radius: 0 100% 0 100%;
+      opacity: 0.6; pointer-events: none; animation: leaf-fall linear infinite;
+    }
+    .leaf-c0 { background: var(--leaf-0); }
+    .leaf-c1 { background: var(--leaf-1); }
+    .leaf-c2 { background: var(--leaf-2); }
+    .leaf-c3 { background: #ffffff; }
+    .leaf-c4 { background: var(--leaf-4); }
+
+    /* 🆕 ใบไม้ — ทางร่วงแบบส่ายไปมาคล้ายใบไม้จริง ไม่ใช่เส้นตรง */
+    @keyframes leaf-fall {
+      0%   { top: -6%;  transform: translateX(0)      rotate(0deg); }
+      20%  { transform: translateX(18px)  rotate(140deg); }
+      40%  { transform: translateX(-14px) rotate(250deg); }
+      60%  { transform: translateX(20px)  rotate(400deg); }
+      80%  { transform: translateX(-10px) rotate(560deg); }
+      100% { top: 106%; transform: translateX(6px)    rotate(720deg); }
+    }
+    .leaf.p-leaf { border-radius: 0 100% 0 100%; animation-timing-function: ease-in-out; }
+
+    /* 🆕 ฝน — ทรงเป็นเส้นสายฝนเอียงตามลม ตกเร็ว ไม่หมุน ไม่ส่าย */
+    .leaf.p-rain {
+      width: 2px !important; border-radius: 2px; opacity: 0.75;
+      animation-name: rain-fall; animation-timing-function: linear;
+    }
+    @keyframes rain-fall {
+      0%   { top: -12%; transform: rotate(11deg) translateX(0); }
+      100% { top: 112%; transform: rotate(11deg) translateX(46px); }
+    }
+
+    /* 🆕 หิมะ — ลอยส่ายเบาๆ คล้ายเกล็ดหิมะจริง ระยะใกล้/ไกลให้ความชัด/ขนาดต่างกัน */
+    .leaf.p-snow {
+      border-radius: 50%; box-shadow: 0 0 3px rgba(255,255,255,0.7);
+      animation-name: snow-fall; animation-timing-function: ease-in-out;
+    }
+    @keyframes snow-fall {
+      0%   { top: -6%;  transform: translateX(0); }
+      25%  { transform: translateX(16px); }
+      50%  { transform: translateX(-12px); }
+      75%  { transform: translateX(14px); }
+      100% { top: 106%; transform: translateX(-6px); }
+    }
+
+    /* 🆕 ฟ้าแลบ — เฉพาะฤดูฝน กระพริบสว่างวาบทั่วจอเป็นระยะ */
+    .lightning-flash {
+      position: fixed; inset: 0; background: #eef2ff; opacity: 0;
+      pointer-events: none; z-index: 6; transition: opacity .06s ease-out;
+    }
+
+    /* 🆕 เมฆฝน — ลอยพาดผ่านด้านบนตอนฤดูฝน */
+    .storm-cloud {
+      position: absolute; top: 4%; width: 220px; height: 60px; border-radius: 50%;
+      background: rgba(71, 85, 105, 0.35); filter: blur(14px);
+      opacity: 0; pointer-events: none; transition: opacity .6s ease;
+      animation: cloud-drift 55s linear infinite;
+    }
+    .storm-cloud.show { opacity: 1; }
+    .storm-cloud.c2 { top: 10%; width: 160px; height: 44px; animation-duration: 70s; animation-delay: -20s; }
+    .storm-cloud.c3 { top: 2%; width: 260px; height: 70px; animation-duration: 85s; animation-delay: -45s; }
+    @keyframes cloud-drift {
+      0%   { transform: translateX(-30%); }
+      100% { transform: translateX(130vw); }
+    }
+
+    /* 🆕 ไอร้อน — เฉพาะฤดูร้อน ระยิบระยับลอยขึ้นด้านล่างจอให้ความรู้สึกร้อนอบอ้าว */
+    .heat-shimmer {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 140px;
+      background: linear-gradient(to top, rgba(255, 224, 130, 0.22), transparent);
+      opacity: 0; pointer-events: none; transition: opacity .6s ease;
+      animation: heat-wave 3.2s ease-in-out infinite;
+      mix-blend-mode: overlay;
+    }
+    .heat-shimmer.show { opacity: 1; }
+    @keyframes heat-wave {
+      0%, 100% { transform: scaleY(1) translateY(0); }
+      50%      { transform: scaleY(1.1) translateY(-6px); }
+    }
+
+    @keyframes fadeInUp { to { opacity: 1; transform: translateY(0) scale(1); } }
+    .card {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(255, 255, 255, 0.5) inset;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-top: 3px solid var(--accent);
+      position: relative;
+      z-index: 10;
+      opacity: 0;
+      transform: translateY(30px) scale(0.96);
+      animation: fadeInUp 1s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
+      transition: border-top-color .2s ease;
+    }
+    .logo { font-size: 32px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px; margin-bottom: 4px; text-align: center; }
+    .logo span { color: var(--accent); }
+    .subtitle { font-size: 13.5px; color: #64748b; margin-bottom: 32px; font-weight: 400; text-align: center; }
+    .form-group { position: relative; margin-bottom: 20px; }
+    label { display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px; }
+    input {
+      width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px; font-size: 14px; outline: none; color: #334155; transition: all .2s ease;
+    }
+    input::placeholder { color: #cbd5e1; }
+    input:focus { border-color: var(--accent); background: #ffffff; box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.15); }
+    .btn {
+      width: 100%; padding: 13px; background: var(--accent); color: #fff; font-size: 15px; font-weight: 600;
+      border: none; border-radius: 8px; cursor: pointer; transition: background-color .2s ease, transform .1s ease, box-shadow .2s ease;
+      display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 24px;
+      position: relative; overflow: hidden;
+    }
+    .btn::after {
+      content: ""; position: absolute; top: 0; left: -75%;
+      width: 45%; height: 100%;
+      background: linear-gradient(115deg, transparent, rgba(255,255,255,.4), transparent);
+      transform: skewX(-20deg); pointer-events: none;
+    }
+    .btn:hover::after, .btn:focus-visible::after { animation: btn-sweep .8s ease forwards; }
+    @keyframes btn-sweep { to { left: 130%; } }
+    .btn-ripple-fx {
+      position: absolute; border-radius: 50%;
+      background: rgba(255,255,255,.5);
+      transform: scale(0);
+      animation: btn-ripple-anim .6s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes btn-ripple-anim { to { transform: scale(2.4); opacity: 0; } }
+    .btn:hover { background: var(--accent-hover); }
+    .btn:active { transform: scale(0.99); }
+    .btn:disabled { opacity: .6; cursor: default; transform: none; }
+    .btn:disabled::after { display: none; }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .guardian-stage { width: 128px; height: 112px; margin: -6px auto 2px; }
+    .guardian-name { text-align: center; font-size: 11.5px; font-weight: 600; color: var(--accent); letter-spacing: .04em; margin-bottom: 10px; opacity: .85; }
+    .g-head-wobble { animation: g-wobble 5s ease-in-out infinite; transform-origin: 64px 96px; }
+    @keyframes g-wobble { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(1deg); } }
+    .g-paw    { transition: transform .32s cubic-bezier(.34,1.56,.64,1); transform-origin: center; }
+    .g-pupil  { transition: transform .16s ease-out; }
+    .g-lid    { transition: transform .18s ease; transform-origin: center; }
+    .g-brow   { transition: transform .18s ease; }
+    .g-bandana      { fill: var(--accent); transition: fill .2s ease; }
+    .g-bandana-knot { fill: var(--accent-hover); transition: fill .2s ease; }
+    [data-theme="dark"] .g-bandana      { fill: var(--accent-dm); }
+    [data-theme="dark"] .g-bandana-knot { fill: var(--accent-dm-hover); }
+    #password { padding-right: 42px; }
+    .form-group .toggle-eye {
+      position: absolute; right: 6px; top: 30px; width: 32px; height: 32px; border: none; background: none;
+      cursor: pointer; font-size: 16px; line-height: 1; color: #94a3b8; border-radius: 50%;
+      transition: color .15s ease, background-color .15s ease, transform .12s ease;
+    }
+    .form-group .toggle-eye:hover { color: var(--accent); background: rgba(var(--accent-rgb), 0.1); transform: translateY(-50%) scale(1.06) translateY(50%); }
+    [data-theme="dark"] .guardian-name { color: var(--accent-dm); }
+    [data-theme="dark"] .form-group .toggle-eye { color: #6b7280; }
+    [data-theme="dark"] .form-group .toggle-eye:hover { color: var(--accent-dm); background: rgba(var(--accent-dm-rgb), 0.14); }
+    @media (prefers-reduced-motion: reduce) {
+      .g-head-wobble { animation: none; }
+      .g-paw, .g-pupil, .g-lid, .g-brow { transition: none; }
+    }
+    .alert { border-radius: 8px; padding: 12px 14px; font-size: 13.5px; margin-top: 16px; display: none; line-height: 1.5; }
+    .alert.error   { background:#fff1f2; border:1px solid #fecdd3; color:#e11d48; }
+    .alert.success { background:#f0fdf4; border:1px solid #bbf7d0;  color:#16a34a; }
+    .alert.show    { display: block; }
+    .info-bar { margin-top: 28px; padding-top: 16px; border-top: 1px solid rgba(0, 0, 0, 0.06); font-size: 12.5px; color: #94a3b8; text-align: left; line-height: 1.4; }
+    .db-bar { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0, 0, 0, 0.06); font-size: 12.5px; color: #64748b; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; }
+    .dot.green  { background: var(--accent); box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.5); }
+    .dot.red    { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
+    #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 999999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast {
+      display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px 14px; border-radius: 10px; background: #ffffff;
+      border: 0.5px solid rgba(0,0,0,0.1); min-width: 260px; max-width: 320px; pointer-events: all; position: relative;
+      overflow: hidden; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.08); opacity: 0; transform: translateX(30px);
+      transition: opacity .28s ease, transform .28s ease;
+    }
+    .toast.show { opacity: 1; transform: translateX(0); }
+    .toast.hide { opacity: 0; transform: translateX(30px); }
+    .toast-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .toast-icon svg { width: 11px; height: 11px; }
+    .toast-body  { flex: 1; min-width: 0; }
+    .toast-title { font-size: 13px; font-weight: 600; color: #111; line-height: 1.35; }
+    .toast-desc  { font-size: 12px; color: #666; margin-top: 3px; line-height: 1.45; }
+    .toast-close { background: none; border: none; padding: 1px; color: #aaa; font-size: 14px; flex-shrink: 0; line-height: 1; cursor: pointer; transition: color .15s; width: auto; }
+    .toast-close:hover { color: #333; }
+    .toast-progress { position: absolute; bottom: 0; left: 0; height: 2.5px; width: 100%; transform-origin: left; animation: toast-shrink var(--dur, 3.5s) linear forwards; }
+    @keyframes toast-shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+    .toast-success .toast-icon { background: #dcfce7; color: #16a34a; }
+    .toast-success .toast-progress { background: #16a34a; }
+    .toast-error .toast-icon { background: #fee2e2; color: #dc2626; }
+    .toast-error .toast-progress { background: #dc2626; }
+    .toast-warning .toast-icon { background: #fef9c3; color: #ca8a04; }
+    .toast-warning .toast-progress { background: #ca8a04; }
+    .toast-info .toast-icon { background: #dbeafe; color: #2563eb; }
+    .toast-info .toast-progress { background: #2563eb; }
+    [data-theme="dark"] body { background: #16181d; }
+    [data-theme="dark"] .bg-trees { filter: brightness(0.5) grayscale(0.3); }
+    [data-theme="dark"] .card {
+      background: rgba(30, 33, 40, 0.75); border: 1px solid rgba(255, 255, 255, 0.08);
+      border-top: 3px solid var(--accent-dm);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(255, 255, 255, 0.04) inset;
+    }
+    [data-theme="dark"] .logo { color: #f5f7fa; }
+    [data-theme="dark"] .logo span { color: var(--accent-dm); }
+    [data-theme="dark"] .subtitle { color: #8a90a0; }
+    [data-theme="dark"] label { color: #b7bcc7; }
+    [data-theme="dark"] input { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.14); color: #f5f7fa; }
+    [data-theme="dark"] input::placeholder { color: #6b7280; }
+    [data-theme="dark"] input:focus { border-color: var(--accent-dm); background: rgba(255, 255, 255, 0.08); box-shadow: 0 0 0 4px rgba(var(--accent-dm-rgb), 0.18); }
+    [data-theme="dark"] .btn { background: var(--accent-dm); color: #0d0f12; }
+    [data-theme="dark"] .btn:hover { background: var(--accent-dm-hover); }
+    [data-theme="dark"] .alert.error   { background: rgba(225, 29, 72, 0.12); border-color: rgba(225, 29, 72, 0.3); color: #fb7185; }
+    [data-theme="dark"] .alert.success { background: rgba(22, 163, 74, 0.12); border-color: rgba(22, 163, 74, 0.3); color: #4ade80; }
+    [data-theme="dark"] .info-bar { color: #6b7280; border-top-color: rgba(255, 255, 255, 0.08); }
+    [data-theme="dark"] .db-bar { color: #8a90a0; border-top-color: rgba(255, 255, 255, 0.08); }
+    [data-theme="dark"] .dot { background: #4b5563; }
+    [data-theme="dark"] .dot.green { background: var(--accent-dm); box-shadow: 0 0 6px rgba(var(--accent-dm-rgb), 0.5); }
+    [data-theme="dark"] .dot.red   { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
+    [data-theme="dark"] .toast { background: #1e2128; border-color: rgba(255, 255, 255, 0.1); box-shadow: 0 4px 12px rgba(0,0,0,.35); }
+    [data-theme="dark"] .toast-title { color: #f5f7fa; }
+    [data-theme="dark"] .toast-desc  { color: #9aa0ab; }
+    [data-theme="dark"] .toast-close { color: #6b7280; }
+    [data-theme="dark"] .toast-close:hover { color: #d1d5db; }
+    .login-topbar-settings { position: fixed; top: 20px; right: 20px; z-index: 20; display: flex; align-items: center; gap: 8px; }
+    .lts-lang-group { display: flex; gap: 2px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 9px; padding: 3px; }
+    .lts-btn { padding: 5px 9px; border: none; background: transparent; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: .02em; cursor: pointer; color: #64748b; transition: all .15s ease; }
+    .lts-btn:hover { color: #334155; }
+    .lts-btn.active { background: var(--accent); color: #fff; }
+    .lts-theme-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.06); background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: transform .15s ease; }
+    .lts-theme-btn:hover { transform: scale(1.08); }
+    [data-theme="dark"] .lts-lang-group, [data-theme="dark"] .lts-theme-btn { background: rgba(30, 33, 40, 0.7); border-color: rgba(255, 255, 255, 0.1); }
+    [data-theme="dark"] .lts-btn { color: #9aa0ab; }
+    [data-theme="dark"] .lts-btn:hover { color: #e5e7eb; }
+    [data-theme="dark"] .lts-btn.active { background: var(--accent-dm); color: #0d0f12; }
+    .lts-color-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.1); background: var(--accent); cursor: pointer; padding: 0; transition: transform .15s ease; }
+    .lts-color-btn:hover { transform: scale(1.08); }
+    [data-theme="dark"] .lts-color-btn { border-color: rgba(255, 255, 255, 0.2); }
+    .accent-popover {
+      position: fixed; top: 60px; right: 20px; z-index: 25; width: 232px; background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(0, 0, 0, 0.07);
+      border-radius: 14px; padding: 14px 16px 16px; box-shadow: 0 18px 36px -14px rgba(15, 23, 42, 0.22);
+      opacity: 0; transform: translateY(-8px); pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+    }
+    .accent-popover.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .accent-popover-label { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; }
+    .accent-popover-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .accent-swatch { width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); flex-shrink: 0; background: var(--accent); transition: background-color .1s ease; }
+    .accent-hue-slider {
+      flex: 1; -webkit-appearance: none; -moz-appearance: none; appearance: none; height: 8px; border-radius: 999px;
+      outline: none; cursor: pointer;
+      background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+    }
+    .accent-hue-slider::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); }
+    .accent-hue-slider::-moz-range-track { height: 8px; border-radius: 999px; background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); }
+    .accent-hue-slider::-moz-focus-outer { border: 0; }
+    .accent-hue-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid #334155; box-shadow: 0 1px 3px rgba(0,0,0,.3); cursor: pointer; margin-top: -4px; }
+    .accent-hue-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid #334155; box-shadow: 0 1px 3px rgba(0,0,0,.3); cursor: pointer; }
+    .accent-hex-input { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-family: 'Segoe UI', monospace; color: #334155; outline: none; transition: border-color .15s ease, box-shadow .15s ease; }
+    .accent-hex-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15); }
+    [data-theme="dark"] .accent-popover { background: rgba(30, 33, 40, 0.94); border-color: rgba(255, 255, 255, 0.1); }
+    [data-theme="dark"] .accent-popover-label { color: #6b7280; }
+    [data-theme="dark"] .accent-swatch { border-color: rgba(255, 255, 255, 0.16); }
+    [data-theme="dark"] .accent-hex-input { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.14); color: #f5f7fa; }
+    [data-theme="dark"] .accent-hex-input:focus { border-color: var(--accent-dm); box-shadow: 0 0 0 3px rgba(var(--accent-dm-rgb), 0.18); }
+    .lts-species-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.06); background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: transform .15s ease; }
+    .lts-species-btn:hover { transform: scale(1.08); }
+    [data-theme="dark"] .lts-species-btn { background: rgba(30, 33, 40, 0.7); border-color: rgba(255, 255, 255, 0.1); }
+    .species-popover {
+      position: fixed; top: 60px; right: 20px; z-index: 25; width: 232px; background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(0, 0, 0, 0.07);
+      border-radius: 14px; padding: 14px 14px 14px; box-shadow: 0 18px 36px -14px rgba(15, 23, 42, 0.22);
+      opacity: 0; transform: translateY(-8px); pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+    }
+    .species-popover.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .species-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 320px; overflow-y: auto; }
+    .species-option {
+      display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px; border-radius: 10px;
+      border: 1px solid transparent; background: transparent; cursor: pointer; transition: background-color .15s ease, border-color .15s ease;
+    }
+    .species-option:hover { background: rgba(0, 0, 0, 0.045); }
+    .species-option.active { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.09); }
+    .species-emoji { font-size: 21px; line-height: 1; }
+    .species-name { font-size: 10px; color: #64748b; font-weight: 600; }
+    [data-theme="dark"] .species-popover { background: rgba(30, 33, 40, 0.94); border-color: rgba(255, 255, 255, 0.1); }
+    [data-theme="dark"] .species-option:hover { background: rgba(255, 255, 255, 0.06); }
+    [data-theme="dark"] .species-option.active { border-color: var(--accent-dm); background: rgba(var(--accent-dm-rgb), 0.12); }
+    [data-theme="dark"] .species-name { color: #9aa0ab; }
+
+    /* ═══════════════════════════════════════════════════════
+       🆕 แถวสวิตช์เปิด/ปิดใช้งาน — ใช้ร่วมกันทั้ง popover เลือกฤดู
+       และ popover เลือกสัตว์ ปิดแล้วจะไม่แสดงเอฟเฟกต์/ตัวละครเลย
+       ═══════════════════════════════════════════════════════ */
+    .fx-toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 10px; margin-bottom: 10px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    }
+    .fx-toggle-label { font-size: 12px; font-weight: 600; color: #334155; }
+    .fx-toggle {
+      position: relative; width: 38px; height: 22px; border-radius: 999px;
+      background: #cbd5e1; border: none; cursor: pointer; flex-shrink: 0;
+      transition: background-color .2s ease;
+    }
+    .fx-toggle::after {
+      content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+      border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25);
+      transition: transform .2s ease;
+    }
+    .fx-toggle.on { background: var(--accent); }
+    .fx-toggle.on::after { transform: translateX(16px); }
+    [data-theme="dark"] .fx-toggle-row { border-bottom-color: rgba(255, 255, 255, 0.1); }
+    [data-theme="dark"] .fx-toggle-label { color: #e5e7eb; }
+    [data-theme="dark"] .fx-toggle { background: #475569; }
+    [data-theme="dark"] .fx-toggle.on { background: var(--accent-dm); }
+    .species-grid.fx-disabled, .season-grid.fx-disabled { opacity: .45; pointer-events: none; }
+
+    /* ═══════════════════════════════════════════════════════
+       🆕 ปุ่ม + Popover เลือกฤดู (หน้าร้อน / หน้าฝน / หน้าหนาว / หิมะ)
+       ═══════════════════════════════════════════════════════ */
+    .lts-season-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.06); background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: transform .15s ease; }
+    .lts-season-btn:hover { transform: scale(1.08); }
+    [data-theme="dark"] .lts-season-btn { background: rgba(30, 33, 40, 0.7); border-color: rgba(255, 255, 255, 0.1); }
+    .season-popover {
+      position: fixed; top: 60px; right: 20px; z-index: 25; width: 232px; background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(0, 0, 0, 0.07);
+      border-radius: 14px; padding: 14px 14px 14px; box-shadow: 0 18px 36px -14px rgba(15, 23, 42, 0.22);
+      opacity: 0; transform: translateY(-8px); pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+    }
+    .season-popover.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .season-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .season-option {
+      display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 4px; border-radius: 10px;
+      border: 1px solid transparent; background: transparent; cursor: pointer; transition: background-color .15s ease, border-color .15s ease;
+    }
+    .season-option:hover { background: rgba(0, 0, 0, 0.045); }
+    .season-option.active { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.09); }
+    .season-emoji { font-size: 22px; line-height: 1; }
+    .season-name { font-size: 10.5px; color: #64748b; font-weight: 600; }
+    [data-theme="dark"] .season-popover { background: rgba(30, 33, 40, 0.94); border-color: rgba(255, 255, 255, 0.1); }
+    [data-theme="dark"] .season-option:hover { background: rgba(255, 255, 255, 0.06); }
+    [data-theme="dark"] .season-option.active { border-color: var(--accent-dm); background: rgba(var(--accent-dm-rgb), 0.12); }
+    [data-theme="dark"] .season-name { color: #9aa0ab; }
+
+    /* 🆕 ดวงอาทิตย์ — โชว์เฉพาะฤดูร้อน */
+    .sun {
+      position: absolute; top: 46px; right: 64px; width: 68px; height: 68px; border-radius: 50%;
+      background: radial-gradient(circle, #fff6d5 0%, #ffd76b 55%, #ffb703 100%);
+      box-shadow: 0 0 40px 14px rgba(255, 183, 3, 0.5), 0 0 90px 30px rgba(255, 183, 3, 0.22);
+      opacity: 0; transition: opacity .6s ease; pointer-events: none; z-index: 2;
+      animation: sun-pulse 6s ease-in-out infinite;
+    }
+    .sun.show { opacity: 1; }
+    @keyframes sun-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    /* 🆕 แสงรังสีดวงอาทิตย์หมุนช้าๆ ให้ความรู้สึกร้อนแรงขึ้น */
+    .sun::before {
+      content: ''; position: absolute; inset: -34px; border-radius: 50%; z-index: -1;
+      background: repeating-conic-gradient(rgba(255, 214, 10, 0.32) 0deg 3deg, transparent 3deg 16deg);
+      animation: sun-rays-spin 46s linear infinite;
+    }
+    @keyframes sun-rays-spin { to { transform: rotate(360deg); } }
+
+    /* 🆕 ชั้นบรรยากาศตามฤดู — ทาบเบาๆ ทับพื้นหลังป่า ให้เห็นโทนของแต่ละฤดู */
+    .season-overlay {
+      position: absolute; inset: 0; background: transparent; transition: background-color .6s ease; pointer-events: none;
+    }
+
+    /* 🆕 ป้ายบอกฤดูปัจจุบัน — บล็อกเล็กๆ ลอยมุมซ้ายบน ให้เห็นชัดว่าตอนนี้
+       อยู่ฤดูอะไร (ฝน/หิมะ/ร้อน/ใบไม้ร่วง) ไม่ต้องกดปุ่มเปิด popover ดู */
+    .season-badge {
+      position: fixed; top: 20px; left: 20px; z-index: 20;
+      display: flex; align-items: center; gap: 7px;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 999px; padding: 7px 14px 7px 10px;
+      box-shadow: 0 6px 18px -8px rgba(15, 23, 42, 0.18);
+      cursor: pointer; user-select: none;
+      transition: transform .15s ease, background-color .3s ease;
+    }
+    .season-badge:hover { transform: scale(1.04); }
+    .season-badge-emoji { font-size: 17px; line-height: 1; }
+    .season-badge-text { font-size: 12.5px; font-weight: 700; color: #334155; letter-spacing: .01em; }
+    [data-theme="dark"] .season-badge {
+      background: rgba(30, 33, 40, 0.72); border-color: rgba(255, 255, 255, 0.1);
+    }
+    [data-theme="dark"] .season-badge-text { color: #e5e7eb; }
+    @media (max-width: 480px) { .season-badge { top: 12px; left: 12px; padding: 6px 12px 6px 9px; } }
+
+    /* 🆕 เอฟเฟกต์บนกระจกการ์ด Login ตามฤดู — วางเป็นลูกสุดท้ายใน .card เพื่อให้
+       "ลอย" อยู่บนสุดเหมือนเกาะอยู่บนกระจกจริง แต่ pointer-events:none
+       เพื่อไม่บังการคลิก/พิมพ์ในฟอร์มด้านล่าง (ใช้ container เดียวกันทุกฤดู
+       สลับเนื้อหาข้างในตาม season ที่เลือก) */
+    .card-fx {
+      position: absolute; inset: 0; border-radius: 16px; overflow: hidden;
+      pointer-events: none; z-index: 30;
+      opacity: 0; transition: opacity .5s ease;
+    }
+    .card-fx.show { opacity: 1; }
+
+    /* ── ฝน: หยดน้ำเกาะกระจก ── */
+    .card-drop {
+      position: absolute; border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.85), rgba(255,255,255,0.12) 55%, rgba(100,116,139,0.28) 100%);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -1px 2px rgba(15,23,42,0.18);
+    }
+    .card-drop::before {
+      /* รอยทางน้ำที่หยดไหลผ่าน — เส้นบางจางไล่ขึ้นด้านบน */
+      content: ''; position: absolute; left: 50%; bottom: 100%;
+      width: 1.6px; height: var(--trail, 0px); transform: translateX(-50%);
+      background: linear-gradient(to top, rgba(148,163,184,0.35), transparent);
+    }
+    @keyframes drop-trickle {
+      0%   { transform: translateY(0); opacity: 0; }
+      10%  { opacity: 1; }
+      75%  { transform: translateY(var(--slide, 30px)); opacity: 1; }
+      100% { transform: translateY(var(--slide, 30px)); opacity: 0; }
+    }
+    [data-theme="dark"] .card-drop {
+      background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), rgba(255,255,255,0.08) 55%, rgba(15,23,42,0.35) 100%);
+    }
+    [data-theme="dark"] .card-fx .frost-corner { background: radial-gradient(circle, rgba(255,255,255,0.32), transparent 72%); }
+    [data-theme="dark"] .card-fx .snow-cap { background: rgba(255,255,255,0.6); }
+
+    /* ── หน้าร้อน: แสงแดดสะท้อนกระจกที่กวาดผ่านเป็นระยะ + แสงอุ่นมุมบน ── */
+    .card-fx .sun-corner-glow {
+      position: absolute; top: -30px; right: -30px; width: 150px; height: 150px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,214,10,0.32), transparent 70%);
+    }
+    .card-fx .sun-glare-sweep {
+      position: absolute; top: -70%; left: -45%; width: 55%; height: 240%;
+      background: linear-gradient(75deg, transparent 30%, rgba(255,255,255,0.32) 48%, rgba(255,241,199,0.5) 52%, transparent 68%);
+      transform: rotate(8deg);
+      animation: sun-glare-sweep 7.5s ease-in-out infinite;
+    }
+    @keyframes sun-glare-sweep {
+      0%   { left: -45%; opacity: 0; }
+      12%  { opacity: .85; }
+      50%  { left: 115%; opacity: .85; }
+      62%  { opacity: 0; }
+      100% { left: 115%; opacity: 0; }
+    }
+
+    /* ── หิมะ: น้ำแข็งเกาะมุมกระจก + หิมะสะสมตามขอบบน ── */
+    .card-fx .frost-corner {
+      position: absolute; width: 100px; height: 100px; border-radius: 50%; filter: blur(1.5px);
+      background: radial-gradient(circle, rgba(255,255,255,0.6), transparent 72%);
+    }
+    .card-fx .frost-corner.tl { top: -34px; left: -34px; }
+    .card-fx .frost-corner.tr { top: -34px; right: -34px; }
+    .card-fx .snow-cap {
+      position: absolute; top: -2px; border-radius: 50% 50% 40% 40%;
+      background: rgba(255,255,255,0.85); box-shadow: 0 1px 2px rgba(15,23,42,0.12);
+      animation: snowcap-twinkle 3.4s ease-in-out infinite;
+    }
+    @keyframes snowcap-twinkle { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+
+    /* ── หน้าหนาว: ใบไม้เกาะกระจก บางใบไหลลื่นหลุดไปเป็นระยะ ── */
+    .card-fx .card-leaf {
+      position: absolute; width: 13px; height: 13px; border-radius: 0 100% 0 100%;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.15);
+    }
+    .card-fx .card-leaf.slide { animation: card-leaf-slide linear infinite; }
+    @keyframes card-leaf-slide {
+      0%   { transform: translate(0, 0) rotate(0deg); opacity: .9; }
+      85%  { transform: translate(var(--lx, 20px), var(--ly, 60px)) rotate(200deg); opacity: .9; }
+      100% { transform: translate(var(--lx, 20px), var(--ly, 60px)) rotate(210deg); opacity: 0; }
+    }
+
+    @media (max-width: 480px) { .login-topbar-settings { top: 12px; right: 12px; } }
+  </style>
+</head>
+<body>
+
+<div class="season-badge" id="seasonBadge" onclick="toggleSeasonPopover()" title="เลือกฤดู">
+  <span class="season-badge-emoji" id="seasonBadgeEmoji">☀️</span>
+  <span class="season-badge-text" id="seasonBadgeText">หน้าร้อน</span>
+</div>
+
+<div class="login-topbar-settings" id="loginTopSettings">
+  <div class="lts-lang-group" id="ltsLangGroup">
+    <button class="lts-btn" data-lang="th" onclick="setLoginLang('th')">TH</button>
+    <button class="lts-btn" data-lang="en" onclick="setLoginLang('en')">EN</button>
+    <button class="lts-btn" data-lang="ja" onclick="setLoginLang('ja')">日</button>
+  </div>
+  <button class="lts-theme-btn" id="loginThemeBtn" onclick="toggleLoginTheme()" title="Dark / Light" aria-label="Toggle dark mode">🌙</button>
+  <button class="lts-species-btn" id="loginSpeciesBtn" onclick="toggleSpeciesPopover()" title="เลือกสัตว์ผู้พิทักษ์" aria-label="เลือกสัตว์ผู้พิทักษ์">🦝</button>
+  <button class="lts-season-btn" id="loginSeasonBtn" onclick="toggleSeasonPopover()" title="เลือกฤดู" aria-label="เลือกฤดู">☀️</button>
+  <button class="lts-color-btn" id="loginColorBtn" onclick="toggleAccentPopover()" title="เปลี่ยนสีธีม / Accent color" aria-label="เปลี่ยนสีธีม"></button>
+</div>
+
+<div class="species-popover" id="speciesPopover">
+  <div class="fx-toggle-row">
+    <span class="fx-toggle-label" id="speciesToggleLabel">เปิดใช้งาน</span>
+    <button type="button" class="fx-toggle" id="speciesToggle" onclick="toggleSpeciesEnabled()" aria-label="เปิด/ปิดผู้พิทักษ์"></button>
+  </div>
+  <div class="accent-popover-label" id="speciesPopoverLabel">เลือกผู้พิทักษ์</div>
+  <div class="species-grid" id="speciesGrid"></div>
+</div>
+
+<div class="season-popover" id="seasonPopover">
+  <div class="fx-toggle-row">
+    <span class="fx-toggle-label" id="seasonToggleLabel">เปิดใช้งาน</span>
+    <button type="button" class="fx-toggle" id="seasonToggle" onclick="toggleSeasonEnabled()" aria-label="เปิด/ปิดฤดู"></button>
+  </div>
+  <div class="accent-popover-label" id="seasonPopoverLabel">เลือกฤดู</div>
+  <div class="season-grid" id="seasonGrid"></div>
+</div>
+
+<div class="accent-popover" id="accentPopover">
+  <div class="accent-popover-label" id="accentPopoverLabel">ACCENT COLOR</div>
+  <div class="accent-popover-row">
+    <div class="accent-swatch" id="accentSwatch"></div>
+    <input type="range" min="0" max="360" step="1" class="accent-hue-slider" id="accentHueSlider" aria-label="Hue">
+  </div>
+  <input type="text" class="accent-hex-input" id="accentHexInput" maxlength="7" placeholder="#4eaaa3" autocomplete="off" spellcheck="false">
+</div>
+
+<section class="bg-container">
+    <div class="bg-trees"></div>
+    <div class="bg-tint"></div>
+    <div class="season-overlay" id="seasonOverlay"></div>
+    <div class="sun" id="loginSun"></div>
+    <div class="storm-cloud c1" id="cloud1"></div>
+    <div class="storm-cloud c2" id="cloud2"></div>
+    <div class="storm-cloud c3" id="cloud3"></div>
+    <div class="heat-shimmer" id="heatShimmer"></div>
+    <div class="leaves-container" id="leavesContainer"></div>
+</section>
+
+<div class="lightning-flash" id="lightningFlash"></div>
+
+<div id="toastContainer" role="region" aria-label="Notifications" aria-live="polite"></div>
+
+<div class="card">
+    <div class="guardian-stage">
+      <svg id="guardian" viewBox="0 0 128 112" width="100%" height="100%">
+        <g class="g-head-wobble">
+          <circle cx="34" cy="30" r="16" fill="#8b95a3"/>
+          <circle cx="34" cy="30" r="8.5" fill="#e7ebee"/>
+          <circle cx="94" cy="30" r="16" fill="#8b95a3"/>
+          <circle cx="94" cy="30" r="8.5" fill="#e7ebee"/>
+          <circle cx="64" cy="58" r="42" fill="#aab3bf"/>
+          <path d="M26 50 Q64 34 102 50 Q100 66 88 64 Q76 56 64 56 Q52 56 40 64 Q28 66 26 50 Z" fill="#3d4552"/>
+          <ellipse cx="64" cy="74" rx="22" ry="16" fill="#f2f4f6"/>
+          <path class="g-brow" id="gBrowL" d="M42 46 q7 -6 14 0" stroke="#3d4552" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <path class="g-brow" id="gBrowR" d="M72 46 q7 -6 14 0" stroke="#3d4552" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <g>
+            <ellipse cx="49" cy="56" rx="8.5" ry="9.5" fill="#fff"/>
+            <circle class="g-pupil" id="gPupilL" cx="49" cy="57" r="4.2" fill="#232a33"/>
+            <circle cx="51" cy="55" r="1.1" fill="#fff"/>
+            <ellipse class="g-lid" id="gLidL" cx="49" cy="56" rx="8.5" ry="9.5" fill="#3d4552" transform="scale(1,0)"/>
+          </g>
+          <g>
+            <ellipse cx="79" cy="56" rx="8.5" ry="9.5" fill="#fff"/>
+            <circle class="g-pupil" id="gPupilR" cx="79" cy="57" r="4.2" fill="#232a33"/>
+            <circle cx="81" cy="55" r="1.1" fill="#fff"/>
+            <ellipse class="g-lid" id="gLidR" cx="79" cy="56" rx="8.5" ry="9.5" fill="#3d4552" transform="scale(1,0)"/>
+          </g>
+          <ellipse cx="64" cy="70" rx="5.5" ry="3.8" fill="#3d4552"/>
+          <path d="M64 74 q0 5 -7 6.5 M64 74 q0 5 7 6.5" stroke="#8b95a3" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          <path class="g-bandana" d="M44 92 Q64 104 84 92 L80 84 Q64 92 48 84 Z"/>
+          <circle class="g-bandana-knot" cx="64" cy="90" r="3.4"/>
+          <g class="g-paw" id="gPawL" style="transform:translate(0px,0px)">
+            <ellipse cx="40" cy="98" rx="15" ry="13" fill="#c8ced6" stroke="#8b95a3" stroke-width="1.4"/>
+            <path d="M31 91 q2.5 6 0 11 M39 89 q2 7 0 12 M48 91 q2.5 6 0 11" stroke="#8b95a3" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          </g>
+          <g class="g-paw" id="gPawR" style="transform:translate(0px,0px)">
+            <ellipse cx="88" cy="98" rx="15" ry="13" fill="#c8ced6" stroke="#8b95a3" stroke-width="1.4"/>
+            <path d="M79 91 q2.5 6 0 11 M87 89 q2 7 0 12 M96 91 q2.5 6 0 11" stroke="#8b95a3" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="guardian-name" id="guardianHint">ผู้พิทักษ์กำลังเฝ้าดู 🦝</div>
+
+    <div class="logo">Man<span>Power</span></div>
+    <div class="subtitle">Manpower Management System</div>
+    
+    <div>
+        <div class="form-group">
+            <label id="lblUsername">Username</label>
+            <input type="text" id="username" placeholder="6509xxx / Computer Windows login" onkeydown="if(event.key==='Enter') login()"/>
+        </div>
+        
+        <div class="form-group">
+            <label id="lblPassword">Password</label>
+            <input type="password" id="password" placeholder="••••••••••" onkeydown="if(event.key==='Enter') login()"/>
+            <button type="button" class="toggle-eye" id="toggleEye" aria-label="แสดง/ซ่อนรหัสผ่าน" title="แสดง/ซ่อนรหัสผ่าน">👁️</button>
+        </div>
+        
+        <button class="btn" id="btn" onclick="login()"><i class="fa-solid fa-right-to-bracket"></i> <span id="btnLabel">เข้าสู่ระบบ</span></button>
+        
+        <div class="alert error" id="error"></div>
+        <div class="alert success" id="success"></div>
+    </div>
+    
+    <div class="info-bar" id="infoBarText">Please use your Computer Windows login credentials.</div>
+    
+    
+
+    <div class="card-fx" id="cardFx"></div>
+</div>
+
+<script src="js/api/api-client.js"></script>
+<script src="js/modules/auth.js"></script>
+<script>
+  // Ripple effect for the login button (page-local since index.html
+  // doesn't load the app's page-loader.js module system)
+  document.getElementById('btn')?.addEventListener('click', function (e) {
+    const btn = this;
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 1.4;
+    const ripple = document.createElement('span');
+    ripple.className = 'btn-ripple-fx';
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    btn.appendChild(ripple);
+    ripple.addEventListener('animationend', () => ripple.remove());
+  });
+</script>
+
+<script>
+const LOGIN_I18N = {
+  th: {
+    username_label: 'Username', password_label: 'Password', btn_login: 'เข้าสู่ระบบ',
+    btn_login_loading: '⏳ กำลังคิวรี่ตรวจสิทธิ์แบบ 2 ชั้น...',
+    info_bar: 'กรุณาใช้ข้อมูลเข้าสู่ระบบ Windows ของคอมพิวเตอร์ของคุณ',
+    db_checking: 'กำลังตรวจสอบการเชื่อมต่อฐานข้อมูล...', db_connected: 'เชื่อมต่อ SQL Server สำเร็จ',
+    db_failed: 'เชื่อมต่อ Database ล้มเหลว', toast_fill_required: 'กรุณากรอกรหัสพนักงาน และรหัสผ่านระบบให้ครบถ้วน!',
+    err_invalid_credentials: 'สิทธิ์เข้าใช้งานไม่ถูกต้อง',
+    toast_welcome: (name) => `ยินดีต้อนรับ ${name} — กำลังเข้าสู่ระบบ`,
+    success_html: (name) => `🟢 ผ่านการอนุมัติสิทธิ์ทั้ง 2 ชั้น!<br>ยินดีต้อนรับคุณ <strong>${name}</strong>`,
+    err_system_error: (msg) => `ระบบขัดข้อง: ${msg}`,
+    toast_title_success: 'สำเร็จ', toast_title_error: 'เกิดข้อผิดพลาด', toast_title_warning: 'คำเตือน', toast_title_info: 'แจ้งเตือน',
+    guardian_watch: 'ผู้พิทักษ์กำลังเฝ้าดู 🦝', guardian_cover: 'กำลังปิดตาให้รหัสผ่านของคุณ 🙈',
+    accent_label: 'สีธีม', species_label: 'เลือกผู้พิทักษ์', season_label: 'เลือกฤดู', enable_label: 'เปิดใช้งาน',
+  },
+  en: {
+    username_label: 'Username', password_label: 'Password', btn_login: 'Login',
+    btn_login_loading: '⏳ Verifying two-factor permissions...',
+    info_bar: 'Please use your Computer Windows login credentials.',
+    db_checking: 'Checking database connection...', db_connected: 'Connected to SQL Server',
+    db_failed: 'Database connection failed', toast_fill_required: 'Please enter both your employee ID and password!',
+    err_invalid_credentials: 'Invalid login credentials',
+    toast_welcome: (name) => `Welcome ${name} — signing you in`,
+    success_html: (name) => `🟢 Two-factor authorization approved!<br>Welcome, <strong>${name}</strong>`,
+    err_system_error: (msg) => `System error: ${msg}`,
+    toast_title_success: 'Success', toast_title_error: 'Error', toast_title_warning: 'Warning', toast_title_info: 'Notification',
+    guardian_watch: 'Your guardian is watching 🦝', guardian_cover: 'Covering your password 🙈',
+    accent_label: 'Accent Color', species_label: 'Choose Guardian', season_label: 'Choose Season', enable_label: 'Enable',
+  },
+  ja: {
+    username_label: 'ユーザー名', password_label: 'パスワード', btn_login: 'ログイン',
+    btn_login_loading: '⏳ 2段階の権限を確認中...',
+    info_bar: 'コンピューターのWindowsログイン情報を使用してください。',
+    db_checking: 'データベース接続を確認中...', db_connected: 'SQL Serverに接続しました',
+    db_failed: 'データベース接続に失敗しました', toast_fill_required: '社員IDとパスワードを両方入力してください！',
+    err_invalid_credentials: 'ログイン情報が正しくありません',
+    toast_welcome: (name) => `ようこそ ${name}様 — ログイン中...`,
+    success_html: (name) => `🟢 2段階認証を承認しました！<br><strong>${name}</strong>様、ようこそ`,
+    err_system_error: (msg) => `システムエラー: ${msg}`,
+    toast_title_success: '成功', toast_title_error: 'エラー', toast_title_warning: '警告', toast_title_info: 'お知らせ',
+    guardian_watch: 'ガーディアンが見守っています 🦝', guardian_cover: 'パスワードを隠しています 🙈',
+    accent_label: 'テーマカラー', species_label: 'ガーディアンを選択', season_label: '季節を選択', enable_label: '有効にする',
+  },
+};
+
+function lt(key, ...args) {
+  const lang = window.__loginLang || 'th';
+  const dict = LOGIN_I18N[lang] || LOGIN_I18N.th;
+  const val  = dict[key] ?? LOGIN_I18N.th[key] ?? key;
+  return (typeof val === 'function') ? val(...args) : val;
+}
+
+let dbStatus = 'checking';
+
+function applyLoginTexts() {
+  const lblU  = document.getElementById('lblUsername');
+  const lblP  = document.getElementById('lblPassword');
+  const btnEl = document.getElementById('btn');
+  const info  = document.getElementById('infoBarText');
+  const dbTxt = document.getElementById('dbText');
+
+  if (lblU)  lblU.textContent  = lt('username_label');
+  if (lblP)  lblP.textContent  = lt('password_label');
+  if (btnEl && !btnEl.disabled) { const lbl = document.getElementById('btnLabel'); if (lbl) lbl.textContent = lt('btn_login'); }
+  if (info)  info.textContent  = lt('info_bar');
+  if (dbTxt) {
+    dbTxt.textContent = dbStatus === 'connected' ? lt('db_connected')
+                        : dbStatus === 'failed'   ? lt('db_failed')
+                        : lt('db_checking');
+  }
+  const hintEl = document.getElementById('guardianHint');
+  if (hintEl) hintEl.textContent = lt(hintEl.dataset.covering === '1' ? 'guardian_cover' : 'guardian_watch');
+  const accentLabelEl = document.getElementById('accentPopoverLabel');
+  if (accentLabelEl) accentLabelEl.textContent = lt('accent_label');
+  const speciesLabelEl = document.getElementById('speciesPopoverLabel');
+  if (speciesLabelEl) speciesLabelEl.textContent = lt('species_label');
+  if (window.__refreshSpeciesGridLabels) window.__refreshSpeciesGridLabels();
+  const seasonLabelEl = document.getElementById('seasonPopoverLabel');
+  if (seasonLabelEl) seasonLabelEl.textContent = lt('season_label');
+  if (window.__refreshSeasonGridLabels) window.__refreshSeasonGridLabels();
+  if (window.__refreshSeasonBadge) window.__refreshSeasonBadge();
+  const speciesToggleLabelEl = document.getElementById('speciesToggleLabel');
+  if (speciesToggleLabelEl) speciesToggleLabelEl.textContent = lt('enable_label');
+  const seasonToggleLabelEl = document.getElementById('seasonToggleLabel');
+  if (seasonToggleLabelEl) seasonToggleLabelEl.textContent = lt('enable_label');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyLoginTexts();
+  updateLoginLangButtonsUI();
+  updateLoginThemeBtnUI();
+});
+
+function setLoginLang(lang) {
+  window.__loginLang = lang;
+  try { localStorage.setItem('manpower_lang', lang); } catch (e) {}
+  applyLoginTexts();
+  updateLoginLangButtonsUI();
+}
+
+function updateLoginLangButtonsUI() {
+  document.querySelectorAll('#ltsLangGroup .lts-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === (window.__loginLang || 'th'));
+  });
+}
+
+function toggleLoginTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem('manpower_ui_settings')) || {}; }
+  catch (e) { saved = {}; }
+  saved.theme = newTheme;
+  try { localStorage.setItem('manpower_ui_settings', JSON.stringify(saved)); } catch (e) {}
+
+  updateLoginThemeBtnUI();
+}
+
+function updateLoginThemeBtnUI() {
+  const btn = document.getElementById('loginThemeBtn');
+  if (!btn) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  btn.textContent = isDark ? '☀️' : '🌙';
+}
+</script>
+
+<script>
+let detectedPcUser = "";
+const errEl  = document.getElementById('error');
+const succEl = document.getElementById('success');
+
+function safeGetItem(key) {
+    try { return localStorage.getItem(key); } 
+    catch(e) { return null; }
+}
+function safeSetItem(key, val) {
+    try { localStorage.setItem(key, val); } 
+    catch(e) {}
+}
+
+async function initSystem() {
+    try {
+        const res = await fetch('/health');
+        const data = await res.json();
+        if (data.db === 'connected') {
+            dbStatus = 'connected';
+            const dot = document.getElementById('dbDot');
+            const txt = document.getElementById('dbText');
+            if (dot) dot.className = 'dot green';
+            if (txt) txt.textContent = lt('db_connected');
+        }
+    } catch {
+        dbStatus = 'failed';
+        const dot = document.getElementById('dbDot');
+        const txt = document.getElementById('dbText');
+        if (dot) dot.className = 'dot red';
+        if (txt) txt.textContent = lt('db_failed');
+    }
+}
+
+async function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('btn');
+
+    errEl.classList.remove('show');
+    succEl.classList.remove('show');
+
+    if (!username || !password) {
+        window.showToast(lt('toast_fill_required'), 'warning');
+        return;
+    }
+
+    btn.disabled = true;
+    
+
+    try {
+        const res = await fetch('/api/auth/login', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ 
+                username: username, 
+                password: password, 
+                actualPcUser: detectedPcUser
+            }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            show(errEl, '⚠️ ' + (data.message ?? lt('err_invalid_credentials')));
+            window.showToast(data.message ?? lt('err_invalid_credentials'), 'error');
+            btn.disabled = false;
+            document.getElementById('btnLabel').textContent = lt('btn_login');
+            return;
+        }
+
+        safeSetItem('manpower_jwt', data.token);
+        safeSetItem('manpower_session', JSON.stringify({
+            id: data.user.id,
+            username: data.user.username,
+            name: data.user.name,
+            role: data.user.role,
+            codes: data.user.codes,
+            factoryId: data.user.factoryId
+        }));
+
+        window.showToast(lt('toast_welcome', data.user.name), 'success');
+        show(succEl, lt('success_html', data.user.name));
+        setTimeout(() => { window.location.href = 'App.html'; }, 1200);
+
+    } catch (err) {
+        show(errEl, '⚠️ ' + lt('err_system_error', err.message));
+        window.showToast(lt('err_system_error', err.message), 'error');
+        btn.disabled = false;
+        document.getElementById('btnLabel').textContent = lt('btn_login');
+    }
+}
+
+function show(el, html) {
+    el.innerHTML = html;
+    el.classList.add('show');
+}
+
+initSystem();
+</script>
+
+<script>
+const TOAST_ICONS = {
+    success: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    error:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    info:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+};
+
+const TOAST_DUR = 4000;
+
+window.showToast = function(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const titleKey = { success: 'toast_title_success', error: 'toast_title_error',
+                       warning: 'toast_title_warning', info: 'toast_title_info' }[type] || 'toast_title_info';
+
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    el.setAttribute('role', 'alert');
+    el.innerHTML = `
+        <div class="toast-icon">${TOAST_ICONS[type] ?? TOAST_ICONS.info}</div>
+        <div class="toast-body">
+            <div class="toast-title">${lt(titleKey)}</div>
+            <div class="toast-desc">${message}</div>
+        </div>
+        <button class="toast-close" aria-label="ปิด">&#x2715;</button>
+        <div class="toast-progress" style="--dur:${TOAST_DUR}ms"></div>
+    `;
+
+    container.appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+
+    const timer = setTimeout(() => removeToast(el), TOAST_DUR + 100);
+    el._timer = timer;
+
+    el.querySelector('.toast-close').addEventListener('click', () => removeToast(el));
+    el.addEventListener('click', e => { if (!e.target.classList.contains('toast-close')) removeToast(el); });
+};
+
+function removeToast(el) {
+    if (!el || !el.parentElement) return;
+    clearTimeout(el._timer);
+    el.classList.remove('show');
+    el.classList.add('hide');
+    setTimeout(() => el.remove(), 300);
+}
+</script>
+
+<script>
+/* ───────────────────────────────────────────
+    🆕 SEASON SYSTEM — เลือกฤดูได้ 4 แบบ: หน้าร้อน (มีดวงอาทิตย์),
+    หน้าฝน (สายฝน), หน้าหนาว (ใบไม้ร่วงโทนหนาว), หิมะ (เกล็ดหิมะ)
+    บันทึกไว้ที่ localStorage 'manpower_login_season' (ค่าเฉพาะหน้า Login)
+─────────────────────────────────────────── */
+(function () {
+    const SEASONS = {
+        summer: {
+            emoji: '☀️', label: { th: 'หน้าร้อน', en: 'Summer', ja: '夏' },
+            showSun: true, particle: 'leaf',
+            overlay: 'rgba(255, 196, 64, 0.10)',
+            colors: null, // null = ใช้สี leaf-c0..c4 ที่ผูกกับ accent color เดิม
+            count: 20, sizeMin: 10, sizeMax: 24, durMin: 6, durMax: 12,
+        },
+        rainy: {
+            emoji: '🌧️', label: { th: 'หน้าฝน', en: 'Rainy', ja: '雨季' },
+            showSun: false, particle: 'rain',
+            overlay: 'rgba(51, 65, 85, 0.24)',
+            colors: ['#94a3b8', '#64748b', '#cbd5e1', '#475569'],
+            count: 34, sizeMin: 14, sizeMax: 26, durMin: 1.6, durMax: 2.8,
+        },
+        winter: {
+            emoji: '🍂', label: { th: 'หน้าหนาว', en: 'Winter', ja: '冬' },
+            showSun: false, particle: 'leaf',
+            overlay: 'rgba(100, 116, 139, 0.20)',
+            colors: ['#a8a29e', '#78716c', '#d6d3d1', '#57534e', '#e7e5e4'],
+            count: 18, sizeMin: 9, sizeMax: 20, durMin: 8, durMax: 14,
+        },
+        snow: {
+            emoji: '❄️', label: { th: 'หิมะ', en: 'Snow', ja: '雪' },
+            showSun: false, particle: 'snow',
+            overlay: 'rgba(191, 219, 254, 0.20)',
+            colors: ['#ffffff', '#f0f9ff', '#e0f2fe', '#dbeafe'],
+            count: 26, sizeMin: 6, sizeMax: 13, durMin: 9, durMax: 16,
+        },
+    };
+    const SEASON_KEY = 'manpower_login_season';
+    const SEASON_ENABLE_KEY = 'manpower_season_enabled';
+    const container   = document.getElementById('leavesContainer');
+    const sunEl        = document.getElementById('loginSun');
+    const overlayEl     = document.getElementById('seasonOverlay');
+    const seasonBtn      = document.getElementById('loginSeasonBtn');
+    const popover          = document.getElementById('seasonPopover');
+    const grid               = document.getElementById('seasonGrid');
+    const clouds              = [document.getElementById('cloud1'), document.getElementById('cloud2'), document.getElementById('cloud3')];
+    const heatEl               = document.getElementById('heatShimmer');
+    const lightningEl            = document.getElementById('lightningFlash');
+    const badgeEmojiEl            = document.getElementById('seasonBadgeEmoji');
+    const badgeTextEl              = document.getElementById('seasonBadgeText');
+    const badgeEl                    = document.getElementById('seasonBadge');
+    const cardDropsEl                  = document.getElementById('cardFx');
+    const seasonEnableToggleBtn          = document.getElementById('seasonToggle');
+    if (!container || !sunEl || !overlayEl || !seasonBtn || !popover || !grid) return;
+
+    const leafClasses = ['leaf-c0', 'leaf-c1', 'leaf-c2', 'leaf-c3', 'leaf-c4'];
+    let currentSeason = 'summer';
+    let seasonEnabled = true;
+    let lightningTimer = null;
+
+    function buildParticles(seasonKey) {
+        const cfg = SEASONS[seasonKey];
+        if (!cfg) return;
+        container.innerHTML = '';
+        for (let i = 0; i < cfg.count; i++) {
+            const p = document.createElement('div');
+            p.classList.add('leaf', `p-${cfg.particle}`);
+
+            const size = Math.random() * (cfg.sizeMax - cfg.sizeMin) + cfg.sizeMin;
+            const startLeft = Math.random() * 100;
+            const duration = Math.random() * (cfg.durMax - cfg.durMin) + cfg.durMin;
+            const delay = Math.random() * -14;
+
+            if (cfg.particle === 'rain') {
+                // 🆕 สายฝน — ใช้ gradient แนวตั้งแทนสีทึบ ให้ดูเป็นเส้นสายฝนมีหัวมีหาง
+                const c = cfg.colors[Math.floor(Math.random() * cfg.colors.length)];
+                p.style.background = `linear-gradient(to bottom, transparent, ${c} 35%, ${c} 85%, transparent)`;
+            } else if (cfg.colors) {
+                p.style.backgroundColor = cfg.colors[Math.floor(Math.random() * cfg.colors.length)];
+            } else {
+                p.classList.add(leafClasses[Math.floor(Math.random() * leafClasses.length)]);
+            }
+
+            if (cfg.particle === 'rain') {
+                p.style.width = '2px';
+                p.style.height = `${size}px`;
+            } else {
+                p.style.width = `${size}px`;
+                p.style.height = `${size}px`;
+            }
+
+            // 🆕 หิมะ: ให้เกล็ดเล็กดูไกล/เบลอ/จางกว่าเกล็ดใหญ่ (มิติความลึก)
+            if (cfg.particle === 'snow') {
+                const depthRatio = (size - cfg.sizeMin) / (cfg.sizeMax - cfg.sizeMin || 1);
+                p.style.opacity = String(0.35 + depthRatio * 0.55);
+                if (depthRatio < 0.4) p.style.filter = 'blur(0.5px)';
+            }
+
+            p.style.left = `${startLeft}%`;
+            p.style.animationDuration = `${duration}s`;
+            p.style.animationDelay = `${delay}s`;
+
+            container.appendChild(p);
+
+            p.addEventListener('animationiteration', () => {
+                p.style.left = `${Math.random() * 100}%`;
+            });
+        }
+    }
+
+    // 🆕 ฟ้าแลบสุ่มเป็นระยะ (เฉพาะฤดูฝน) — วาบสั้นๆ บางทีวาบซ้อน 2 ครั้งคล้ายฟ้าคะนองจริง
+    function scheduleLightning() {
+        clearTimeout(lightningTimer);
+        if (currentSeason !== 'rainy' || !lightningEl) return;
+        const nextIn = 3500 + Math.random() * 6500;
+        lightningTimer = setTimeout(() => {
+            flashLightning();
+            if (Math.random() < 0.5) setTimeout(flashLightning, 130 + Math.random() * 120);
+            scheduleLightning();
+        }, nextIn);
+    }
+    function flashLightning() {
+        if (!lightningEl) return;
+        lightningEl.style.opacity = String(0.55 + Math.random() * 0.35);
+        setTimeout(() => { lightningEl.style.opacity = '0'; }, 70 + Math.random() * 60);
+    }
+
+    // 🆕 เอฟเฟกต์บนกระจกการ์ด Login — สร้างใหม่ทุกครั้งที่เปลี่ยนเข้าฤดูนั้นๆ
+    const LEAF_TONES = ['#a8a29e', '#78716c', '#d6d3d1', '#92764f', '#b0876a'];
+
+    function buildCardRain() {
+        const count = 14;
+        for (let i = 0; i < count; i++) {
+            const d = document.createElement('div');
+            d.className = 'card-drop';
+            const size = Math.random() * 8 + 4;           // 4–12px
+            const left = Math.random() * 94 + 2;            // % ในการ์ด
+            const top = Math.random() * 88 + 4;
+            const willSlide = Math.random() < 0.45;          // ~45% ไหลลง ที่เหลือเกาะนิ่ง
+            const slide = willSlide ? Math.round(Math.random() * 26 + 14) : 0;
+            const duration = Math.random() * 3 + 3.5;         // 3.5–6.5s
+            const delay = Math.random() * -6;
+
+            d.style.width = `${size}px`;
+            d.style.height = `${size * 1.15}px`;                // หยดน้ำรีเล็กน้อยแนวตั้ง
+            d.style.left = `${left}%`;
+            d.style.top = `${top}%`;
+            d.style.setProperty('--slide', `${slide}px`);
+            d.style.setProperty('--trail', willSlide ? `${slide + 6}px` : '0px');
+            d.style.opacity = willSlide ? '0.85' : String(0.4 + Math.random() * 0.35);
+            if (willSlide) d.style.animation = `drop-trickle ${duration}s ease-in ${delay}s infinite`;
+
+            cardDropsEl.appendChild(d);
+        }
+    }
+
+    function buildCardSummer() {
+        const glow = document.createElement('div');
+        glow.className = 'sun-corner-glow';
+        cardDropsEl.appendChild(glow);
+
+        const sweep = document.createElement('div');
+        sweep.className = 'sun-glare-sweep';
+        cardDropsEl.appendChild(sweep);
+    }
+
+    function buildCardSnow() {
+        const tl = document.createElement('div'); tl.className = 'frost-corner tl'; cardDropsEl.appendChild(tl);
+        const tr = document.createElement('div'); tr.className = 'frost-corner tr'; cardDropsEl.appendChild(tr);
+
+        // 🆕 หิมะสะสมเรียงตามขอบบนการ์ด เหมือนหิมะเกาะกรอบกระจก
+        const capCount = 10;
+        for (let i = 0; i < capCount; i++) {
+            const cap = document.createElement('div');
+            cap.className = 'snow-cap';
+            const w = Math.random() * 22 + 14;
+            cap.style.width = `${w}px`;
+            cap.style.height = `${w * 0.42}px`;
+            cap.style.left = `${(i / capCount) * 100 + Math.random() * 6 - 3}%`;
+            cap.style.animationDelay = `${Math.random() * -3.4}s`;
+            cardDropsEl.appendChild(cap);
+        }
+    }
+
+    function buildCardWinter() {
+        const count = 9;
+        for (let i = 0; i < count; i++) {
+            const leaf = document.createElement('div');
+            leaf.className = 'card-leaf';
+            const willSlide = Math.random() < 0.35; // บางใบลื่นหลุดจากกระจกไปเป็นระยะ
+            const left = Math.random() * 90 + 3;
+            const top = Math.random() * 82 + 6;
+            const size = Math.random() * 7 + 9;
+            leaf.style.width = `${size}px`;
+            leaf.style.height = `${size}px`;
+            leaf.style.left = `${left}%`;
+            leaf.style.top = `${top}%`;
+            leaf.style.backgroundColor = LEAF_TONES[Math.floor(Math.random() * LEAF_TONES.length)];
+            leaf.style.transform = `rotate(${Math.round(Math.random() * 360)}deg)`;
+
+            if (willSlide) {
+                leaf.classList.add('slide');
+                leaf.style.setProperty('--lx', `${Math.round(Math.random() * 40 - 20)}px`);
+                leaf.style.setProperty('--ly', `${Math.round(Math.random() * 50 + 40)}px`);
+                leaf.style.animationDuration = `${(Math.random() * 3 + 4.5).toFixed(2)}s`;
+                leaf.style.animationDelay = `${(Math.random() * -6).toFixed(2)}s`;
+            }
+
+            cardDropsEl.appendChild(leaf);
+        }
+    }
+
+    const CARD_FX_BUILDERS = { rainy: buildCardRain, summer: buildCardSummer, snow: buildCardSnow, winter: buildCardWinter };
+
+    function buildCardFx(seasonKey) {
+        if (!cardDropsEl) return;
+        cardDropsEl.innerHTML = '';
+        const builder = CARD_FX_BUILDERS[seasonKey];
+        if (builder) builder();
+    }
+
+    function renderSeasonVisuals(seasonKey) {
+        const cfg = SEASONS[seasonKey];
+        if (!cfg) return;
+        buildParticles(seasonKey);
+        sunEl.classList.toggle('show', !!cfg.showSun);
+        overlayEl.style.backgroundColor = cfg.overlay;
+        seasonBtn.textContent = cfg.emoji;
+
+        clouds.forEach(c => { if (c) c.classList.toggle('show', seasonKey === 'rainy'); });
+        if (heatEl) heatEl.classList.toggle('show', seasonKey === 'summer');
+        if (lightningEl) lightningEl.style.opacity = '0';
+        clearTimeout(lightningTimer);
+        if (seasonKey === 'rainy') scheduleLightning();
+
+        // 🆕 เอฟเฟกต์บนกระจกการ์ด — ทุกฤดูมีของตัวเอง (ฝน/แดด/หิมะ/ใบไม้)
+        if (cardDropsEl) {
+            buildCardFx(seasonKey);
+            cardDropsEl.classList.add('show');
+        }
+        if (badgeEl) badgeEl.style.display = '';
+        updateBadge();
+    }
+
+    // 🆕 ซ่อนทุกเอฟเฟกต์ฤดูทั้งหมด (ใช้ตอนปิดสวิตช์) — ไม่ลบการเลือกฤดูที่จำไว้
+    function hideAllSeasonVisuals() {
+        container.innerHTML = '';
+        sunEl.classList.remove('show');
+        overlayEl.style.backgroundColor = 'transparent';
+        seasonBtn.textContent = '🚫';
+        clouds.forEach(c => { if (c) c.classList.remove('show'); });
+        if (heatEl) heatEl.classList.remove('show');
+        if (lightningEl) lightningEl.style.opacity = '0';
+        clearTimeout(lightningTimer);
+        if (cardDropsEl) { cardDropsEl.classList.remove('show'); cardDropsEl.innerHTML = ''; }
+        if (badgeEl) badgeEl.style.display = 'none';
+    }
+
+    function applySeason(seasonKey) {
+        const cfg = SEASONS[seasonKey];
+        if (!cfg) return;
+        currentSeason = seasonKey;
+        if (seasonEnabled) renderSeasonVisuals(seasonKey);
+        try { localStorage.setItem(SEASON_KEY, seasonKey); } catch (e) {}
+        renderGrid();
+    }
+
+    // 🆕 สวิตช์เปิด/ปิดระบบฤดูทั้งหมด — ปิดแล้วซ่อนทุกเอฟเฟกต์ (ฝน/หิมะ/แดด/ใบไม้/
+    // ป้ายบอกฤดู) ไปเลย แต่ยังจำฤดูที่เคยเลือกไว้ พอเปิดใหม่จะกลับมาแบบเดิม
+    function setSeasonEnabled(enabled) {
+        seasonEnabled = enabled;
+        if (seasonEnableToggleBtn) seasonEnableToggleBtn.classList.toggle('on', enabled);
+        grid.classList.toggle('fx-disabled', !enabled);
+        if (enabled) renderSeasonVisuals(currentSeason);
+        else hideAllSeasonVisuals();
+        try { localStorage.setItem(SEASON_ENABLE_KEY, enabled ? '1' : '0'); } catch (e) {}
+    }
+    window.toggleSeasonEnabled = function () { setSeasonEnabled(!seasonEnabled); };
+
+    // 🆕 ป้ายบอกฤดูปัจจุบันมุมซ้ายบน — อัปเดตทุกครั้งที่เปลี่ยนฤดู/เปลี่ยนภาษา
+    function updateBadge() {
+        const cfg = SEASONS[currentSeason];
+        if (!cfg || !badgeEmojiEl || !badgeTextEl) return;
+        const lang = window.__loginLang || 'th';
+        badgeEmojiEl.textContent = cfg.emoji;
+        badgeTextEl.textContent = cfg.label[lang] || cfg.label.th;
+    }
+    window.__refreshSeasonBadge = updateBadge;
+
+    function renderGrid() {
+        const lang = window.__loginLang || 'th';
+        grid.innerHTML = Object.keys(SEASONS).map((key) => {
+            const cfg = SEASONS[key];
+            const name = cfg.label[lang] || cfg.label.th;
+            const active = key === currentSeason ? ' active' : '';
+            return `<button type="button" class="season-option${active}" data-season="${key}">
+                        <span class="season-emoji">${cfg.emoji}</span>
+                        <span class="season-name">${name}</span>
+                    </button>`;
+        }).join('');
+        grid.querySelectorAll('.season-option').forEach((btn) => {
+            btn.addEventListener('click', () => applySeason(btn.dataset.season));
+        });
+    }
+    window.__refreshSeasonGridLabels = renderGrid;
+
+    function openPopover() { popover.classList.add('open'); }
+    function closePopover() { popover.classList.remove('open'); }
+    window.__closeSeasonPopover = closePopover;
+
+    window.toggleSeasonPopover = function () {
+        if (popover.classList.contains('open')) { closePopover(); return; }
+        if (window.__closeAccentPopover) window.__closeAccentPopover();
+        if (window.__closeSpeciesPopover) window.__closeSpeciesPopover();
+        openPopover();
+    };
+
+    document.addEventListener('click', (e) => {
+        if (!popover.classList.contains('open')) return;
+        if (popover.contains(e.target) || seasonBtn.contains(e.target) || (badgeEl && badgeEl.contains(e.target))) return;
+        closePopover();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closePopover();
+    });
+
+    window.__applySavedSeason = function () {
+        let saved = null;
+        try { saved = localStorage.getItem(SEASON_KEY); } catch (e) {}
+        currentSeason = (saved && SEASONS[saved]) ? saved : 'summer';
+
+        let savedEnabled = null;
+        try { savedEnabled = localStorage.getItem(SEASON_ENABLE_KEY); } catch (e) {}
+        seasonEnabled = savedEnabled !== '0';
+
+        if (seasonEnabled) renderSeasonVisuals(currentSeason);
+        else hideAllSeasonVisuals();
+        if (seasonEnableToggleBtn) seasonEnableToggleBtn.classList.toggle('on', seasonEnabled);
+        grid.classList.toggle('fx-disabled', !seasonEnabled);
+        renderGrid();
+        try { localStorage.setItem(SEASON_KEY, currentSeason); } catch (e) {}
+    };
+    window.__applySavedSeason();
+})();
+</script>
+
+<script>
+(function () {
+    const usernameEl = document.getElementById('username');
+    const passwordEl = document.getElementById('password');
+    const toggleEye  = document.getElementById('toggleEye');
+    if (!usernameEl || !passwordEl || !toggleEye) return;
+
+    const $ = (id) => document.getElementById(id);
+    const hintEl = () => document.getElementById('guardianHint');
+
+    function setHint(covering) {
+        const el = hintEl();
+        if (!el) return;
+        el.dataset.covering = covering ? '1' : '0';
+        el.textContent = lt(covering ? 'guardian_cover' : 'guardian_watch');
+    }
+
+    let lastPawState = 'rest';
+
+    function setPaws(state) {
+        lastPawState = state;
+        const pawL = $('gPawL'), pawR = $('gPawR');
+        if (!pawL || !pawR) return;
+        if (state === 'cover') {
+            pawL.style.transform = 'translate(9px,-46px) scale(1.05)';
+            pawR.style.transform = 'translate(-9px,-46px) scale(1.05)';
+            setHint(true);
+        } else if (state === 'peek') {
+            pawL.style.transform = 'translate(9px,-26px) scale(1.0)';
+            pawR.style.transform = 'translate(-9px,-26px) scale(1.0)';
+            setHint(false);
+        } else {
+            pawL.style.transform = 'translate(0px,0px)';
+            pawR.style.transform = 'translate(0px,0px)';
+            setHint(false);
+        }
+    }
+    window.__guardianSetPaws = setPaws;
+
+    function movePupils(x, y) {
+        const pupilL = $('gPupilL'), pupilR = $('gPupilR');
+        if (!pupilL || !pupilR) return;
+        pupilL.style.transform = `translate(${x}px, ${y}px)`;
+        pupilR.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    let isCovering = false;
+    let rafId = null;
+    const MAX_X = 3.6, MAX_Y = 4.2;
+
+    function updateGazeFromMouse(clientX, clientY) {
+        if (isCovering) return;
+        const svg = $('guardian');
+        if (!svg) return;
+        const rect = svg.getBoundingClientRect();
+        const cx = rect.left + rect.width * (64 / 128);
+        const cy = rect.top + rect.height * (56 / 112);
+        const dx = clientX - cx;
+        const dy = clientY - cy;
+        const dist = Math.hypot(dx, dy) || 1;
+        const nx = dx / dist;
+        const ny = dy / dist;
+        const pull = Math.min(dist / 220, 1);
+        movePupils(nx * MAX_X * pull, ny * MAX_Y * pull);
+    }
+
+    window.addEventListener('mousemove', (e) => {
+        if (rafId) return;
+        rafId = requestAnimationFrame(() => {
+            updateGazeFromMouse(e.clientX, e.clientY);
+            rafId = null;
+        });
+    });
+
+    usernameEl.addEventListener('focus', () => {
+        const browL = $('gBrowL'), browR = $('gBrowR');
+        if (browL) browL.style.transform = 'translateY(-2px)';
+        if (browR) browR.style.transform = 'translateY(-2px)';
+    });
+    usernameEl.addEventListener('blur', () => {
+        const browL = $('gBrowL'), browR = $('gBrowR');
+        if (browL) browL.style.transform = 'translateY(0)';
+        if (browR) browR.style.transform = 'translateY(0)';
+    });
+
+    passwordEl.addEventListener('focus', () => {
+        isCovering = passwordEl.type === 'password';
+        setPaws(passwordEl.type === 'password' ? 'cover' : 'peek');
+    });
+    passwordEl.addEventListener('input', () => {
+        isCovering = passwordEl.type === 'password';
+        setPaws(passwordEl.type === 'password' ? 'cover' : 'peek');
+    });
+    passwordEl.addEventListener('blur', () => {
+        isCovering = false;
+        setPaws('rest');
+    });
+
+    toggleEye.addEventListener('click', () => {
+        const isHidden = passwordEl.type === 'password';
+        passwordEl.type = isHidden ? 'text' : 'password';
+        toggleEye.textContent = isHidden ? '🙈' : '👁️';
+        passwordEl.focus();
+        isCovering = !isHidden;
+        setPaws(isHidden ? 'peek' : 'cover');
+    });
+
+    function blink() {
+        const lidL = $('gLidL'), lidR = $('gLidR');
+        if (!lidL || !lidR) return;
+        lidL.style.transform = 'scale(1,1)';
+        lidR.style.transform = 'scale(1,1)';
+        setTimeout(() => {
+            lidL.style.transform = 'scale(1,0)';
+            lidR.style.transform = 'scale(1,0)';
+        }, 130);
+    }
+    setInterval(() => {
+        if (document.activeElement !== passwordEl) blink();
+    }, 4500);
+
+    window.__guardianReapplyState = function () {
+        setPaws(document.activeElement === passwordEl
+            ? (passwordEl.type === 'password' ? 'cover' : 'peek')
+            : lastPawState === 'rest' ? 'rest' : 'rest');
+    };
+})();
+</script>
+
+<script>
+(function () {
+    const popover   = document.getElementById('accentPopover');
+    const colorBtn  = document.getElementById('loginColorBtn');
+    const hueSlider = document.getElementById('accentHueSlider');
+    const hexInput  = document.getElementById('accentHexInput');
+    const swatch    = document.getElementById('accentSwatch');
+    if (!popover || !colorBtn || !hueSlider || !hexInput || !swatch) return;
+
+    function hexToHsl(hex) {
+        const h = hex.replace('#', '');
+        const r = parseInt(h.substr(0, 2), 16) / 255;
+        const g = parseInt(h.substr(2, 2), 16) / 255;
+        const b = parseInt(h.substr(4, 2), 16) / 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let hh, s, l = (max + min) / 2;
+        if (max === min) { hh = s = 0; }
+        else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: hh = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: hh = (b - r) / d + 2; break;
+                default: hh = (r - g) / d + 4;
+            }
+            hh /= 6;
+        }
+        return { h: hh * 360, s: s * 100, l: l * 100 };
+    }
+    function hslToHex(h, s, l) {
+        s /= 100; l /= 100;
+        const k = n => (n + h / 30) % 12;
+        const a = s * Math.min(l, 1 - l);
+        const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+        const toHex = v => Math.round(v * 255).toString(16).padStart(2, '0');
+        return '#' + toHex(f(0)) + toHex(f(8)) + toHex(f(4));
+    }
+
+    let curS = 55, curL = 42;
+
+    function readCurrentAccent() {
+        const v = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+        return /^#[0-9a-fA-F]{6}$/.test(v) ? v : '#4eaaa3';
+    }
+
+    function persistAccentColor(hex) {
+        let saved;
+        try { saved = JSON.parse(localStorage.getItem('manpower_ui_settings')) || {}; }
+        catch (e) { saved = {}; }
+        saved.color = hex;
+        delete saved.accentColor; // 🔧 ล้าง key เก่าที่เคยเขียนผิดทิ้ง (แอปหลักไม่ได้อ่าน key นี้)
+        try { localStorage.setItem('manpower_ui_settings', JSON.stringify(saved)); } catch (e) {}
+    }
+
+    function updateFromHex(hex, opts) {
+        opts = opts || {};
+        if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+        if (window.__applyAccentColor) window.__applyAccentColor(hex);
+        swatch.style.background = hex;
+        if (!opts.skipHexField) hexInput.value = hex;
+        if (!opts.skipSlider) {
+            const hsl = hexToHsl(hex);
+            hueSlider.value = Math.round(hsl.h);
+            curS = hsl.s; curL = hsl.l;
+        }
+        persistAccentColor(hex);
+    }
+
+    hueSlider.addEventListener('input', () => {
+        const hex = hslToHex(Number(hueSlider.value), curS, curL);
+        updateFromHex(hex, { skipSlider: true });
+    });
+
+    hexInput.addEventListener('change', () => {
+        let v = hexInput.value.trim();
+        if (v && v[0] !== '#') v = '#' + v;
+        if (!/^#[0-9a-fA-F]{6}$/.test(v)) {
+            hexInput.value = readCurrentAccent();
+            return;
+        }
+        updateFromHex(v, { skipHexField: true });
+    });
+    hexInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') hexInput.blur();
+    });
+
+    function openPopover() {
+        const current = readCurrentAccent();
+        hexInput.value = current;
+        swatch.style.background = current;
+        const hsl = hexToHsl(current);
+        hueSlider.value = Math.round(hsl.h);
+        curS = hsl.s; curL = hsl.l;
+        popover.classList.add('open');
+    }
+    function closePopover() { popover.classList.remove('open'); }
+    window.__closeAccentPopover = closePopover;
+
+    window.toggleAccentPopover = function () {
+        if (popover.classList.contains('open')) { closePopover(); return; }
+        if (window.__closeSpeciesPopover) window.__closeSpeciesPopover();
+        openPopover();
+    };
+
+    document.addEventListener('click', (e) => {
+        if (!popover.classList.contains('open')) return;
+        if (popover.contains(e.target) || colorBtn.contains(e.target)) return;
+        closePopover();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closePopover();
+    });
+})();
+</script>
+
+<script>
+(function () {
+    const roundEars = (outer, inner) =>
+        `<circle cx="34" cy="30" r="16" fill="${outer}"/><circle cx="34" cy="30" r="8.5" fill="${inner}"/>` +
+        `<circle cx="94" cy="30" r="16" fill="${outer}"/><circle cx="94" cy="30" r="8.5" fill="${inner}"/>`;
+
+    const roundEarsSingle = (outer) =>
+        `<circle cx="34" cy="30" r="16" fill="${outer}"/><circle cx="94" cy="30" r="16" fill="${outer}"/>`;
+
+    const pointyEars = (outer, inner) =>
+        `<path d="M20 44 L34 8 L48 42 Z" fill="${outer}"/><path d="M26 38 L34 18 L42 37 Z" fill="${inner}"/>` +
+        `<path d="M80 44 L94 8 L108 42 Z" fill="${outer}"/><path d="M86 38 L94 18 L102 37 Z" fill="${inner}"/>`;
+
+    const pointyEarsTipped = (outer, inner, tip) =>
+        pointyEars(outer, inner) +
+        `<path d="M30 14 L34 8 L38 14 Z" fill="${tip}"/><path d="M90 14 L94 8 L98 14 Z" fill="${tip}"/>`;
+
+    const whiskers = (color) =>
+        `<path d="M30 72 q-14 -2 -20 -6 M30 76 q-14 2 -20 3 M98 72 q14 -2 20 -6 M98 76 q14 2 20 3" ` +
+        `stroke="${color}" stroke-width="1.1" fill="none" stroke-linecap="round" opacity="0.8"/>`;
+
+    const floppyEars = (outer, inner) =>
+        `<path d="M20 34 c-8 4 -12 28 0 28 c4 0 6-12 4-18 z" fill="${outer}"/><path d="M22 38 c-4 3 -8 18 0 18 c2 0 4-8 2-12 z" fill="${inner}"/>` +
+        `<path d="M108 34 c8 4 12 28 0 28 c-4 0 -6-12 -4-18 z" fill="${outer}"/><path d="M106 38 c4 3 8 18 0 18 c-2 0 -4-8 -2-12 z" fill="${inner}"/>`;
+
+    const mouseEars = (outer, inner) =>
+        `<circle cx="26" cy="26" r="20" fill="${outer}"/><circle cx="26" cy="26" r="12" fill="${inner}"/>` +
+        `<circle cx="102" cy="26" r="20" fill="${outer}"/><circle cx="102" cy="26" r="12" fill="${inner}"/>`;
+
+    const dragonHorns = (horn, scale) =>
+        `<path d="M36 22 C28 10 16 6 10 14 C16 16 26 22 32 30 Z" fill="${horn}"/><path d="M92 22 C100 10 112 6 118 14 C112 16 102 22 96 30 Z" fill="${horn}"/>` +
+        `<path d="M42 20 L44 12 L48 22 Z" fill="${scale}"/><path d="M86 20 L84 12 L80 22 Z" fill="${scale}"/>`;
+
+    const GUARDIAN_SPECIES = {
+        raccoon: {
+            emoji: '🦝', label: { th: 'แรคคูน', en: 'Raccoon', ja: 'アライグマ' },
+            ears: `<path d="M26 28 L14 10 Q32 14 40 28 Z" fill="#475569"/><path d="M102 28 L114 10 Q96 14 88 28 Z" fill="#475569"/>`,
+            headColor: '#94a3b8',
+            mask: `<path d="M24 54 Q44 40 64 54 Q84 40 104 54 L96 68 Q64 58 32 68 Z" fill="#1e293b"/>` +
+                  `<ellipse cx="46" cy="52" rx="14" ry="10" fill="#0f172a"/>` +
+                  `<ellipse cx="82" cy="52" rx="14" ry="10" fill="#0f172a"/>` +
+                  `<polygon points="64,62 58,54 70,54" fill="#0f172a"/>`,
+            muzzleColor: 'transparent',
+            browColor: 'transparent', lidColor: '#94a3b8',
+            noseColor: 'transparent', noseRX: 0.1, noseRY: 0.1, mouthColor: 'transparent',
+            pawColor: '#475569', pawStroke: '#334155',
+        },
+        husky: {
+            emoji: '🐺', label: { th: 'ฮัสกี้', en: 'Husky', ja: 'ハスキー' },
+            ears: `<path d="M24 36 L34 6 L46 32 Z" fill="#4b5563"/><path d="M28 32 L34 14 L40 29 Z" fill="#f8fafc"/>` +
+                  `<path d="M104 36 L94 6 L82 32 Z" fill="#4b5563"/><path d="M100 32 L94 14 L88 29 Z" fill="#f8fafc"/>`,
+            headColor: '#eef1f4',
+            mask: `<path d="M30 46 L64 26 L98 46 L85 64 Q64 54 43 64 Z" fill="#4b5563"/><path d="M48 38 L64 54 L80 38 L64 34 Z" fill="#ffffff"/>`,
+            muzzleColor: '#ffffff', browColor: '#475569', lidColor: '#cbd5e1',
+            noseColor: '#1f2937', mouthColor: '#94a3b8',
+            pawColor: '#f1f5f9', pawStroke: '#cbd5e1',
+        },
+        bear: {
+            emoji: '🐻', label: { th: 'หมี', en: 'Bear', ja: 'クマ' },
+            ears: roundEars('#B9752D', '#F0BE7E'),
+            headColor: '#E8A855', mask: '',
+            muzzleColor: '#FFF6E8', browColor: '#5B3A22', lidColor: '#E8A855',
+            noseColor: '#5B3A22', mouthColor: '#7A5030',
+            pawColor: '#F0BE7E', pawStroke: '#B9752D',
+        },
+        cat: {
+            emoji: '🐱', label: { th: 'แมว', en: 'Cat', ja: 'ネコ' },
+            ears: `<path d="M22 30 L16 4 Q34 14 40 30 Z" fill="#f59e0b"/><path d="M22 26 L18 10 Q30 18 34 26 Z" fill="#fca5a5"/>` +
+                  `<path d="M106 30 L112 4 Q94 14 88 30 Z" fill="#f59e0b"/><path d="M106 26 L110 10 Q98 18 94 26 Z" fill="#fca5a5"/>`,
+            headColor: '#fbbf24',
+            mask: `<polygon points="64,56 60,52 68,52" fill="#f43f5e"/>` +
+                  `<path d="M64 56 Q60 62 56 60 M64 56 Q68 62 72 60" fill="transparent" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>` +
+                  `<path d="M30 52 L14 50 M30 58 L12 58 M98 52 L114 50 M98 58 L116 58" fill="transparent" stroke="#78350f" stroke-width="1.5" stroke-linecap="round"/>`,
+            muzzleColor: 'transparent',
+            browColor: 'transparent', lidColor: '#fbbf24',
+            noseColor: 'transparent', noseRX: 0.1, noseRY: 0.1, mouthColor: 'transparent',
+            pawColor: '#fef08a', pawStroke: '#f59e0b',
+        },
+        fox: {
+            emoji: '🦊', label: { th: 'จิ้งจอก', en: 'Fox', ja: 'キツネ' },
+            ears: `<path d="M22 28 L10 2 Q32 10 40 28 Z" fill="#ea580c"/><path d="M24 24 L16 10 Q30 16 34 24 Z" fill="#1e293b"/>` +
+                  `<path d="M106 28 L118 2 Q96 10 88 28 Z" fill="#ea580c"/><path d="M104 24 L112 10 Q98 16 94 24 Z" fill="#1e293b"/>`,
+            headColor: '#f97316',
+            // 🔧 แก้ไข: เดิม patch สีขาวขึ้นต้นที่ y=56 พอดีตำแหน่งตาจริง ทำให้
+            // ตาจมไปกับ patch สีขาว — ขยับ patch ลงมาเริ่มที่ y=64 (ใต้ตา)
+            // แทน และเพิ่มคิ้วสีเข้มให้เห็นขอบตาชัดขึ้นบนพื้นส้ม
+            mask: `<path d="M24 64 C24 80 44 88 64 88 C84 88 104 80 104 64 C104 62 94 62 88 64 C74 66 54 66 40 64 C34 62 24 62 24 64 Z" fill="#ffffff"/>` +
+                  `<polygon points="64,80 57,70 71,70" fill="#0f172a"/>`,
+            muzzleColor: 'transparent',
+            browColor: '#7c2d12', lidColor: '#f97316',
+            noseColor: 'transparent', noseRX: 0.1, noseRY: 0.1, mouthColor: 'transparent',
+            pawColor: '#ffedd5', pawStroke: '#f97316',
+        },
+        panda: {
+            emoji: '🐼', label: { th: 'แพนด้า', en: 'Panda', ja: 'パンダ' },
+            ears: `<circle cx="28" cy="24" r="12" fill="#1e293b"/><circle cx="100" cy="24" r="12" fill="#1e293b"/>`,
+            headColor: '#ffffff',
+            mask: `<ellipse cx="46" cy="50" rx="11" ry="15" fill="#1e293b" transform="rotate(-15 46 50)"/>` +
+                  `<ellipse cx="82" cy="50" rx="11" ry="15" fill="#1e293b" transform="rotate(15 82 50)"/>` +
+                  `<ellipse cx="64" cy="62" rx="7" ry="4" fill="#1e293b"/>`,
+            muzzleColor: 'transparent',
+            browColor: 'transparent', lidColor: '#ffffff',
+            noseColor: 'transparent', noseRX: 0.1, noseRY: 0.1, mouthColor: 'transparent',
+            pawColor: '#e2e8f0', pawStroke: '#cbd5e1',
+        },
+        pig: {
+            emoji: '🐷', label: { th: 'หมู', en: 'Pig', ja: 'ブタ' },
+            ears: floppyEars('#ffccd5', '#ffb3c1'),
+            headColor: '#ffccd5',
+            mask: `<ellipse cx="64" cy="74" rx="13" ry="9" fill="#ff99b0"/><circle cx="60" cy="74" r="2" fill="#ff5d8f"/><circle cx="68" cy="74" r="2" fill="#ff5d8f"/>`,
+            muzzleColor: '#ffb3c1', browColor: '#ff85a1', lidColor: '#ffccd5',
+            noseColor: '#ff5d8f', noseRX: 10, noseRY: 7, mouthColor: '#ff85a1',
+            pawColor: '#ffccd5', pawStroke: '#ffb3c1',
+        },
+        monkey: {
+            emoji: '🐵', label: { th: 'ลิง', en: 'Monkey', ja: 'サル' },
+            ears: roundEars('#b45309', '#fed7aa'),
+            headColor: '#b45309',
+            mask: `<path d="M64 24 C44 24 36 40 44 58 C48 66 64 82 64 82 C64 82 80 66 84 58 C92 40 84 24 64 24 Z" fill="#fed7aa"/>`,
+            muzzleColor: '#fcd34d', browColor: '#78350f', lidColor: '#b45309',
+            noseColor: '#78350f', mouthColor: '#78350f',
+            pawColor: '#fed7aa', pawStroke: '#f97316',
+        },
+        dachshund: {
+            emoji: '🐶', label: { th: 'หมาดัชชุน', en: 'Dachshund', ja: 'ダックスフント' },
+            ears: `<path d="M12 34 c0-12 16-4 16 12 c0 16-2 36-10 40 c-6 3-6-40-6-52 z" fill="#6d4c41"/>` +
+                  `<path d="M116 34 c0-12-16-4-16 12 c0 16 2 36 10 40 c6 3 6-40 6-52 z" fill="#6d4c41"/>`,
+            headColor: '#ffffff',
+            mask: `<path d="M64 16 C87 16 106 35 106 58 C106 75 95 89 80 96 L64 96 Z" fill="#a1887f"/>` +
+                  `<circle cx="46" cy="40" r="4" fill="#a1887f"/>`,
+            muzzleColor: '#ffffff', browColor: '#4e342e', lidColor: '#d7ccc8',
+            noseColor: '#000000', noseRX: 6, noseRY: 4, mouthColor: '#4e342e',
+            extras: `<path d="M64 74 Q64 86 67 74 Z" fill="#ff1744"/>`,
+            pawColor: '#a1887f', pawStroke: '#6d4c41',
+        },
+        duck: {
+            emoji: '🦆', label: { th: 'เป็ด', en: 'Duck', ja: 'アヒル' },
+            ears: '', 
+            headColor: '#facc15', 
+            mask: `<ellipse cx="64" cy="66" rx="18" ry="10" fill="#f97316"/>` +
+                  `<circle cx="61" cy="63" r="1.5" fill="#ea580c"/>` +
+                  `<circle cx="67" cy="63" r="1.5" fill="#ea580c"/>`,
+            muzzleColor: 'transparent', 
+            browColor: '#ca8a04', lidColor: '#facc15',
+            noseColor: 'transparent', noseRX: 0.1, noseRY: 0.1, mouthColor: 'transparent', 
+            pawColor: '#f97316', pawStroke: '#ea580c', 
+        },
+        mouse: {
+            emoji: '🐭', label: { th: 'หนู', en: 'Mouse', ja: 'ネズミ' },
+            ears: mouseEars('#cbd5e1', '#fda4af'),
+            headColor: '#cbd5e1', mask: '',
+            muzzleColor: '#f1f5f9', browColor: '#64748b', lidColor: '#cbd5e1',
+            noseColor: '#f43f5e', noseRX: 4, noseRY: 3, mouthColor: '#64748b',
+            pawColor: '#e2e8f0', pawStroke: '#cbd5e1',
+            extras: whiskers('#94a3b8'),
+        },
+        horse: {
+            emoji: '🐴', label: { th: 'ม้า', en: 'Horse', ja: 'ウマ' },
+            ears: `<path d="M34 26 L22 2 Q32 2 40 18 Z" fill="#78350f"/><path d="M32 20 L26 8 Q30 8 35 16 Z" fill="#451a03"/>` +
+                  `<path d="M94 26 L106 2 Q96 2 88 18 Z" fill="#78350f"/><path d="M96 20 L102 8 Q98 8 93 16 Z" fill="#451a03"/>`,
+            headColor: '#a16207', 
+            mask: `<path d="M22 46 Q20 30 26 24 L24 44 Z" fill="#451a03"/>` + 
+                  `<path d="M106 46 Q108 30 102 24 L104 44 Z" fill="#451a03"/>` +
+                  `<path d="M60 16 L68 16 L66 50 L62 50 Z" fill="#ffffff"/>`,
+            muzzleColor: '#451a03', browColor: '#451a03', lidColor: '#a16207',
+            noseColor: '#1c1917', noseRX: 6, noseRY: 4, mouthColor: '#451a03',
+            pawColor: '#78350f', pawStroke: '#451a03',
+        },
+        dragon: {
+            emoji: '🐲', label: { th: 'มังกร', en: 'Dragon', ja: 'ドラゴン' },
+            ears: dragonHorns('#f59e0b', '#047857'),
+            headColor: '#10b981',
+            mask: `<path d="M28 66 Q14 78 30 80 Q42 74 44 70" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/><path d="M100 66 Q114 78 98 80 Q86 74 84 70" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>`,
+            muzzleColor: '#34d399', browColor: '#065f46', lidColor: '#10b981',
+            noseColor: '#047857', mouthColor: '#065f46',
+            pawColor: '#34d399', pawStroke: '#059669',
+        },
+        frog: {
+            emoji: '🐸', label: { th: 'กบ', en: 'Frog', ja: 'カエル' },
+            ears: '',
+            headColor: '#22c55e',
+            // 🔧 แก้ไข: เดิม mask วาดตาการ์ตูนอันใหญ่ซ้อนทับกับตาจริง (gPupilL/R
+            // ที่อยู่ cy=56 อยู่แล้ว) กลายเป็นกบ 4 ตา — ตัดตาปลอมออก เหลือแค่
+            // แก้มยุ้ยกับปากยิ้ม ให้ตาจริงเป็นตาเดียวของกบ
+            mask: `<circle cx="40" cy="66" r="5" fill="#fca5a5" opacity="0.5"/>` +
+                  `<circle cx="88" cy="66" r="5" fill="#fca5a5" opacity="0.5"/>`,
+            muzzleColor: 'transparent',
+            browColor: 'transparent', lidColor: '#22c55e',
+            noseColor: 'transparent', noseRX: 0.1, noseRY: 0.1,
+            mouthColor: '#166534',
+            pawColor: '#86efac', pawStroke: '#22c55e',
+        },
+        sheep: {
+            emoji: '🐑', label: { th: 'แกะ', en: 'Sheep', ja: 'ヒツジ' },
+            ears: floppyEars('#cbd5e1', '#f1f5f9'),
+            headColor: '#f1f5f9',
+            mask: `<circle cx="52" cy="22" r="10" fill="#ffffff"/><circle cx="64" cy="18" r="12" fill="#ffffff"/><circle cx="76" cy="22" r="10" fill="#ffffff"/>`,
+            muzzleColor: '#fda4af', browColor: '#94a3b8', lidColor: '#f1f5f9',
+            noseColor: '#f43f5e', mouthColor: '#94a3b8',
+            pawColor: '#f1f5f9', pawStroke: '#cbd5e1',
+        },
+        owl: {
+            emoji: '🦉', label: { th: 'นกฮูก', en: 'Owl', ja: 'フクロウ' },
+            ears: `<path d="M28 26 L12 12 Q32 18 42 32 Z" fill="#7c2d12"/><path d="M100 26 L116 12 Q96 18 86 32 Z" fill="#7c2d12"/>`,
+            headColor: '#9a3412', 
+            mask: `<circle cx="46" cy="50" r="16" fill="#ffffff"/>` +
+                  `<circle cx="82" cy="50" r="16" fill="#ffffff"/>` +
+                  `<polygon points="64,54 57,68 71,68" fill="#ea580c"/>`,
+            muzzleColor: 'transparent', 
+            browColor: '#431407', lidColor: '#9a3412',
+            noseColor: 'transparent', noseRX: 0.1, noseRY: 0.1, mouthColor: 'transparent',
+            pawColor: '#ea580c', pawStroke: '#9a3412', 
+        },
+        tiger: {
+            emoji: '🐯', label: { th: 'เสือ', en: 'Tiger', ja: 'トラ' },
+            ears: roundEars('#ea580c', '#ffedd5'),
+            headColor: '#f97316',
+            mask: `<path d="M28 44 L36 46 L30 50 Z M100 44 L92 46 L98 50 Z M44 54 L36 56 L42 60 Z M104 54 L96 56 L102 60 Z" fill="#1e293b"/>` + 
+                  `<path d="M64 22 L64 32 M60 25 L68 25" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>` +
+                  `<polygon points="64,66 59,58 69,58" fill="#1e293b"/>` +
+                  `<path d="M64 66 Q60 71 56 69 M64 66 Q68 71 72 69" fill="transparent" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>`,
+            muzzleColor: 'transparent', browColor: '#1e293b', lidColor: '#f97316',
+            noseColor: 'transparent', noseRX: 0.1, noseRY: 0.1, mouthColor: 'transparent',
+            pawColor: '#fed7aa', pawStroke: '#ea580c',
+            extras: whiskers('#1e293b'),
+        },
+        penguin: {
+            emoji: '🐧', label: { th: 'เพนกวิน', en: 'Penguin', ja: 'ペンギン' },
+            ears: '', 
+            headColor: '#232a33', 
+            mask: `<ellipse cx="64" cy="58" rx="28" ry="30" fill="#ffffff"/>` +
+                  `<polygon points="64,58 55,68 73,68" fill="#fb923c"/>`,
+            muzzleColor: 'transparent', 
+            browColor: '#232a33', lidColor: '#344154',
+            noseColor: 'transparent', noseRX: 0.1, noseRY: 0.1, mouthColor: 'transparent',
+            pawColor: '#fb923c', pawStroke: '#ea580c', 
+        }
+    };
+
+    function buildGuardianSVG(o) {
+        const hasMuzzle = o.muzzleColor && o.muzzleColor !== 'transparent';
+        const hasNose = o.noseColor && o.noseColor !== 'transparent';
+        const hasMouth = o.mouthColor && o.mouthColor !== 'transparent';
+
+        return `
+          ${o.ears}
+          <circle cx="64" cy="58" r="42" fill="${o.headColor}"/>
+          ${o.mask || ''}
+          ${hasMuzzle ? `<ellipse cx="64" cy="74" rx="22" ry="16" fill="${o.muzzleColor}"/>` : ''}
+          <path class="g-brow" id="gBrowL" d="M42 46 q7 -6 14 0" stroke="${o.browColor}" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <path class="g-brow" id="gBrowR" d="M72 46 q7 -6 14 0" stroke="${o.browColor}" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <g>
+            <ellipse cx="49" cy="56" rx="8.5" ry="9.5" fill="#fff"/>
+            <circle class="g-pupil" id="gPupilL" cx="49" cy="57" r="4.2" fill="#232a33"/>
+            <circle cx="51" cy="55" r="1.1" fill="#fff"/>
+            <ellipse class="g-lid" id="gLidL" cx="49" cy="56" rx="8.5" ry="9.5" fill="${o.lidColor}" transform="scale(1,0)"/>
+          </g>
+          <g>
+            <ellipse cx="79" cy="56" rx="8.5" ry="9.5" fill="#fff"/>
+            <circle class="g-pupil" id="gPupilR" cx="79" cy="57" r="4.2" fill="#232a33"/>
+            <circle cx="81" cy="55" r="1.1" fill="#fff"/>
+            <ellipse class="g-lid" id="gLidR" cx="79" cy="56" rx="8.5" ry="9.5" fill="${o.lidColor}" transform="scale(1,0)"/>
+          </g>
+          ${hasNose ? `<ellipse cx="64" cy="70" rx="${o.noseRX || 5.5}" ry="${o.noseRY || 3.8}" fill="${o.noseColor}"/>` : ''}
+          ${hasMouth ? `<path d="M64 74 q0 5 -7 6.5 M64 74 q0 5 7 6.5" stroke="${o.mouthColor}" stroke-width="1.6" fill="none" stroke-linecap="round"/>` : ''}
+          ${o.extras || ''}
+          <path class="g-bandana" d="M44 92 Q64 104 84 92 L80 84 Q64 92 48 84 Z"/>
+          <circle class="g-bandana-knot" cx="64" cy="90" r="3.4"/>
+          <g class="g-paw" id="gPawL" style="transform:translate(0px,0px)">
+            <ellipse cx="40" cy="98" rx="15" ry="13" fill="${o.pawColor}" stroke="${o.pawStroke}" stroke-width="1.4"/>
+            <path d="M31 91 q2.5 6 0 11 M39 89 q2 7 0 12 M48 91 q2.5 6 0 11" stroke="${o.pawStroke}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          </g>
+          <g class="g-paw" id="gPawR" style="transform:translate(0px,0px)">
+            <ellipse cx="88" cy="98" rx="15" ry="13" fill="${o.pawColor}" stroke="${o.pawStroke}" stroke-width="1.4"/>
+            <path d="M79 91 q2.5 6 0 11 M87 89 q2 7 0 12 M96 91 q2.5 6 0 11" stroke="${o.pawStroke}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          </g>
+        `;
+    }
+
+
+    const STORAGE_KEY = 'manpower_guardian_species';
+    const ENABLE_KEY = 'manpower_guardian_enabled';
+    const wobbleGroup = document.querySelector('#guardian .g-head-wobble');
+    const grid = document.getElementById('speciesGrid');
+    const speciesBtn = document.getElementById('loginSpeciesBtn');
+    const popover = document.getElementById('speciesPopover');
+    const guardianStageEl = document.querySelector('.guardian-stage');
+    const guardianNameEl = document.getElementById('guardianHint');
+    const enableToggleBtn = document.getElementById('speciesToggle');
+    if (!wobbleGroup || !grid || !speciesBtn || !popover) return;
+
+    let currentSpecies = 'raccoon';
+    let speciesEnabled = true;
+
+    function applySpecies(key) {
+        const cfg = GUARDIAN_SPECIES[key];
+        if (!cfg) return;
+        currentSpecies = key;
+        wobbleGroup.innerHTML = buildGuardianSVG(cfg);
+        speciesBtn.textContent = cfg.emoji;
+        try { localStorage.setItem(STORAGE_KEY, key); } catch (e) {}
+        renderGrid();
+        if (window.__guardianReapplyState) window.__guardianReapplyState();
+    }
+
+    // 🆕 สวิตช์เปิด/ปิดผู้พิทักษ์ทั้งหมด — ปิดแล้วซ่อนตัวละครไปเลย ไม่ใช่แค่ไม่เลือกตัวไหน
+    function setSpeciesEnabled(enabled) {
+        speciesEnabled = enabled;
+        if (guardianStageEl) guardianStageEl.style.display = enabled ? '' : 'none';
+        if (guardianNameEl) guardianNameEl.style.display = enabled ? '' : 'none';
+        if (enableToggleBtn) enableToggleBtn.classList.toggle('on', enabled);
+        grid.classList.toggle('fx-disabled', !enabled);
+        try { localStorage.setItem(ENABLE_KEY, enabled ? '1' : '0'); } catch (e) {}
+    }
+    window.toggleSpeciesEnabled = function () { setSpeciesEnabled(!speciesEnabled); };
+
+    function renderGrid() {
+        const lang = window.__loginLang || 'th';
+        grid.innerHTML = Object.keys(GUARDIAN_SPECIES).map((key) => {
+            const cfg = GUARDIAN_SPECIES[key];
+            const name = cfg.label[lang] || cfg.label.th;
+            const active = key === currentSpecies ? ' active' : '';
+            return `<button type="button" class="species-option${active}" data-species="${key}">
+                        <span class="species-emoji">${cfg.emoji}</span>
+                        <span class="species-name">${name}</span>
+                    </button>`;
+        }).join('');
+        grid.querySelectorAll('.species-option').forEach((btn) => {
+            btn.addEventListener('click', () => applySpecies(btn.dataset.species));
+        });
+    }
+    window.__refreshSpeciesGridLabels = renderGrid;
+
+    function openPopover() { popover.classList.add('open'); }
+    function closePopover() { popover.classList.remove('open'); }
+    window.__closeSpeciesPopover = closePopover;
+
+    window.toggleSpeciesPopover = function () {
+        if (popover.classList.contains('open')) { closePopover(); return; }
+        if (window.__closeAccentPopover) window.__closeAccentPopover();
+        openPopover();
+    };
+
+    document.addEventListener('click', (e) => {
+        if (!popover.classList.contains('open')) return;
+        if (popover.contains(e.target) || speciesBtn.contains(e.target)) return;
+        closePopover();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closePopover();
+    });
+
+    let saved = null;
+    try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    applySpecies(saved && GUARDIAN_SPECIES[saved] ? saved : 'raccoon');
+
+    let savedEnabled = null;
+    try { savedEnabled = localStorage.getItem(ENABLE_KEY); } catch (e) {}
+    setSpeciesEnabled(savedEnabled !== '0');
+})();
+</script>
+
+</body>
+</html>

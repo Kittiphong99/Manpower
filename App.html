@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  App.html — สารบัญ (Table of Contents)
+  ============================================================
+  🔧 [MAINT] markup ของแต่ละหน้าถูกแยกออกเป็นไฟล์จริงแล้ว อยู่ในโฟลเดอร์
+  pages/ — ไฟล์นี้เหลือแค่ shell (sidebar + topbar + placeholder ของแต่ละ
+  หน้า) โหลดหน้าจริงด้วย fetch() ผ่าน js/modules/page-loader.js ตอน
+  runtime (ดูรายละเอียดเหตุผล/กลไกในคอมเมนต์หัวไฟล์ page-loader.js)
+  ยังสลับหน้าด้วย switchPage() ใน js/modules/app.js เหมือนเดิม (ไม่ใช่
+  URL/route จริง) — แค่ตำแหน่งไฟล์ markup เปลี่ยนไปเท่านั้น:
+
+    pages/assign-employees.html    → Assign Employees        (id="page-emp")
+    pages/transfer.html             → Transferred In          (id="page-transfer")
+    pages/user-manager.html          → Users + Online status + Activity summary (id="page-user-manager")
+                                        (🔧 เดิมมี pages/users.html แยกต่างหาก — รวมเข้าหน้านี้แล้ว 2026-08,
+                                        userModal ยังอยู่ที่ App.html เหมือนเดิม)
+    pages/activity-log.html           → Activity Log            (id="page-log")
+    pages/report-analytics.html        → Reports → Manpower Analytics (id="page-report-analytics")
+    pages/report-monthly.html           → Reports → Monthly Manpower   (id="page-report-monthly")
+    pages/report-ie.html                 → Reports → IE Monthly Report  (id="page-report-ie")
+    pages/report-adjustment.html          → Reports → Report Adjustment  (id="page-report-adjustment")
+    pages/db-lines.html                   → Database Manager → Line Master Data (id="page-db-lines")
+    pages/db-config.html                   → Database Manager → Shift Factor Data (id="page-db-config")
+    pages/planning.html                     → Manpower Planning       (id="page-Planning")
+    pages/manpower-dashboard.html            → Manpower Dashboard      (id="page-Manpower Dashboard")
+    pages/bp-plan.html                        → BP Plan (Business Plan)  (id="page-bp-plan")
+    pages/bp-plan-overview.html                → BP Plan Overview (pivot ปีงบ) (id="page-bp-plan-overview")
+
+  Sidebar (เมนูซ้าย)                                            → ~บรรทัด 54-190 (ในไฟล์นี้)
+  <script> ที่เคยฝัง inline ในไฟล์นี้ ถูกย้ายออกไปเป็นไฟล์แยกแล้ว (อยู่ใน
+  js/modules/) ตามชื่อนี้ — ถ้าจะแก้ logic พวกนี้ไปแก้ที่ไฟล์ ไม่ใช่ในนี้:
+    session-guard.js   → เช็ค login ก่อนเข้าหน้า (โหลดแบบ static ตามปกติ)
+    page-loader.js       → fetch หน้าจาก pages/*.html + โหลด script อื่นทั้งหมด
+    toast.js               → ระบบแจ้งเตือนมุมขวาบน (showToast)
+    sidebar-menu.js          → เมนู Reports/Database Manager แบบ dropdown + flyout
+    planning-view.js          → สลับ sub-tab ในหน้า Manpower Planning
+
+  ⚠️ ถ้าจะเพิ่ม <script src> ใหม่ให้ทั้งแอป ต้องไปเพิ่มในลิสต์ APP_SCRIPTS
+  ที่ js/modules/page-loader.js ด้วย — เพิ่มแค่ในไฟล์นี้เฉยๆ จะไม่ถูกโหลด
+  ============================================================
+-->
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Manpower Management System</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='32' y2='32'%3E%3Cstop stop-color='%234FC7BC'/%3E%3Cstop offset='1' stop-color='%238B7CF6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M8 25V13M16 25V7M24 25V17' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+
+
+  <link rel="stylesheet" href="css/1-variables.css?v=20260820c">
+  <link rel="stylesheet" href="css/2-base.css?v=20260731">
+  <link rel="stylesheet" href="css/3-layout.css?v=20260821e">
+  <link rel="stylesheet" href="css/4-components.css?v=20260820">
+  <link rel="stylesheet" href="css/6-responsive.css?v=20260731">
+  <link rel="stylesheet" href="css/7-page-assign-employees.css?v=20260821b">
+  <link rel="stylesheet" href="css/8-kpi-cards.css?v=20260820c">
+  <link rel="stylesheet" href="css/9-page-analytics.css?v=20260820d">
+  <link rel="stylesheet" href="css/10-page-monthly-manpower.css?v=20260821d">
+  <link rel="stylesheet" href="css/11-page-ie-monthly-report.css?v=20260821">
+  <link rel="stylesheet" href="css/12-page-admin-transfer.css?v=20260821">
+  <link rel="stylesheet" href="css/13-page-planning.css?v=20260820">
+  <link rel="stylesheet" href="css/14-sidebar-icon-rail.css?v=20260820b">
+  <link rel="stylesheet" href="css/15-page-manpower-dashboard.css?v=20260820i">
+  <link rel="stylesheet" href="css/16-page-report-adjustment.css?v=20260820b">
+  <link rel="stylesheet" href="css/17-page-bp-plan.css?v=20260825">
+  <link rel="stylesheet" href="css/18-page-bp-plan-overview.css?v=20260825">
+  <link rel="stylesheet" href="css/ie-detail-drilldown.css?v=20260820">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Sarabun:wght@300;400;500;600&family=Inter:wght@400;500;600;700&family=Kanit:wght@300;400;500;600&family=Noto+Serif+Thai:wght@400;500;600&family=Prompt:wght@300;400;500;600&family=Mitr:wght@300;400;500;600&family=Noto+Sans+JP:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+</head>
+
+<body>
+
+<!-- ══ Toast Container (จุดเดียว) ══ -->
+<div id="toastContainer" role="region" aria-label="Notifications" aria-live="polite"></div>
+
+<script src="js/modules/session-guard.js"></script>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="app-container">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M11 20V4M18 20V13" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></div>
+      <div class="sidebar-brand-text" style="min-width:0; flex:1;">
+
+        <div class="mob-brand">Man<span>Power</span></div>
+        <div class="sidebar-sub">Manpower Management System</div>
+      </div>
+      <button id="sidebarCollapseBtn" onclick="toggleSidebarCollapse()"
+        style="margin-left:auto; flex-shrink:0; background:none; border:none; cursor:pointer; font-size:18px; color:var(--text);">
+        <i class="fa-solid fa-indent fa-flip-horizontal" style="color: rgb(168, 179, 175);"></i>
+      </button>
+    </div>
+    
+    <div class="sidebar-section-label" data-i18n="main_menu">เมนูหลัก</div>
+<nav class="nav-tabs" id="navTabs">
+  <button class="nav-tab" onclick="switchPage('emp')" data-page="emp">
+    <span class="nav-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20a8 8 0 1 1 16 0M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg></span>
+    <span class="nav-label" data-i18n="assign_employees">Assign Employees</span>
+  </button>
+
+  <button class="nav-tab" onclick="switchPage('Planning')" data-page="Planning">
+    <span class="nav-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 9h16"/></svg></span>
+    <span class="nav-label" data-i18n="manpower_planning">Manpower Planning</span>
+  </button>
+
+  <button class="nav-tab" onclick="toggleReportsMenu(this)" data-page="report"
+    style="justify-content:space-between">
+    <div style="display:flex;align-items:center;gap: 10px;">
+      <span class="nav-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M11 20V4M18 20V13"/></svg></span>
+      <span class="nav-label" data-i18n="reports">Reports</span>
+    </div>
+    <svg id="reports-chevron" width="14" height="14" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+      style="transition:transform .2s;flex-shrink:0;margin-right:8px">
+      <path d="M6 9l6 6 6-6"/>
+    </svg>
+  </button>
+
+  <div id="reports-submenu" style="display:none">
+    <button class="nav-sub-tab" onclick="this.blur(); switchPage('report-analytics')" data-sub="report-analytics">
+      <span class="nav-sub-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 19V10M12 19V5M19 19v-7"/></svg></span>
+      <span data-i18n="manpower_analytics">Manpower Analytics</span>
+    </button>
+    <button class="nav-sub-tab" onclick="this.blur(); switchPage('report-monthly')" data-sub="report-monthly">
+      <span class="nav-sub-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg></span>
+      <span data-i18n="monthly_manpower">Monthly Manpower</span>
+    </button>
+    <button class="nav-sub-tab" onclick="this.blur(); switchPage('report-ie')" data-sub="report-ie">
+      <span class="nav-sub-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h8l4.5 4.5V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"/><path d="M9 13h6M9 16.5h6"/></svg></span>
+      <span data-i18n="ie_monthly_report">IE Monthly Report</span>
+    </button>
+    <button class="nav-sub-tab" onclick="this.blur(); switchPage('report-adjustment')" data-sub="report-adjustment">
+      <span class="nav-sub-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg></span>
+      <span data-i18n="report_adjustment">Report Adjustment</span>
+    </button>
+  </div>
+
+ <button class="nav-tab" onclick="switchPage('Manpower Dashboard')" data-page="Manpower Dashboard">
+  <span class="nav-icon">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 19h16M6 15l3-4 3 3 5-7"/>
+    </svg>
+  </span>
+  <span class="nav-label" data-i18n="menu_manpower_dashboard">Manpower Dashboard</span>
+</button>
+
+  <button class="nav-tab" onclick="switchPage('transfer')" data-page="transfer">
+    <span class="nav-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8l4 4-4 4M3 12h18"/></svg></span>
+    <span class="nav-label" data-i18n="transferred_in">Transferred In</span>
+  </button>
+
+  <!-- 🔧 แก้ไข (ผู้ใช้ขอ 2026-08-26): เดิมรวม "BP Plan" + "BP Plan Overview" +
+       "Division Report" เป็นเมนูเดียว (dropdown "Business Plan อัตรากำลัง")
+       ผู้ใช้ขอลบ Division Report ออกจากระบบทั้งหมด และเลิกใช้เมนูกลุ่มนี้ —
+       แยก BP Plan / BP Plan Overview กลับมาเป็น 2 ปุ่มเมนูหลักเหมือนหน้าอื่น
+       (Assign Employees, Manpower Planning, ...) แทน — ทั้งสองหน้ายังทำงาน
+       เหมือนเดิมทุกประการ (switchPage ปกติ) แค่ไม่มี dropdown ห่อไว้แล้ว -->
+  <button class="nav-tab" onclick="switchPage('bp-plan')" data-page="bp-plan">
+    <span class="nav-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"/><path d="M8 19V9M13 19V5M18 19v-7"/></svg></span>
+    <span class="nav-label" data-i18n="bp_plan_title">Business Plan อัตรากำลัง</span>
+  </button>
+
+  <button class="nav-tab" onclick="switchPage('bp-plan-overview')" data-page="bp-plan-overview">
+    <span class="nav-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
+    <span class="nav-label" data-i18n="bpo_title">BP Plan Overview</span>
+  </button>
+
+
+</nav>
+
+<br><br>
+
+<div class="sidebar-section-label tab-admin" data-i18n="system_menu">ระบบ</div>
+<nav class="nav-tabs" id="navTabsAdmin">
+  <button class="nav-tab tab-admin" onclick="switchPage('log')" data-page="log">
+    <span class="nav-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span>
+    <span class="nav-label" data-i18n="activity_log">Activity Log</span>
+  </button>
+  <button class="nav-tab tab-admin" onclick="switchPage('user-manager')" data-page="user-manager">
+    <span class="nav-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6"/></svg></span>
+    <span class="nav-label" data-i18n="user_manager_console">User Manager</span>
+  </button>
+</nav>
+
+<button class="nav-tab tab-admin" onclick="toggleDbManagerMenu(this)" data-page="dbmanager"
+  style="justify-content:space-between">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="nav-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/></svg></span>
+    <span class="nav-label" data-i18n="database_manager">Database Manager</span>
+  </div>
+  <svg id="dbmanager-chevron" width="14" height="14" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+    style="transition:transform .2s;flex-shrink:0;margin-right:8px">
+    <path d="M6 9l6 6 6-6"/>
+  </svg>
+</button>
+
+<div id="dbmanager-submenu" style="display:none">
+  <button class="nav-sub-tab tab-admin" onclick="this.blur(); switchPage('db-lines')" data-sub="db-lines">
+    <span class="nav-sub-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="4" height="4" rx="1"/><rect x="3.5" y="14" width="4" height="4" rx="1"/><path d="M11 6h9.5M11 16h9.5"/></svg></span>
+    <span data-i18n="line_master_data">Line Master Data</span>
+  </button>
+  <button class="nav-sub-tab tab-admin" onclick="this.blur(); switchPage('db-config')" data-sub="db-config">
+    <span class="nav-sub-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V19.5a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2.5a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H8.5a1.65 1.65 0 0 0 1-1.51V2.5a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V8.5a1.65 1.65 0 0 0 1.51 1H21.5a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></span>
+    <span data-i18n="shift_factor_data">Shift Factor Data</span>
+  </button>
+</div>
+
+    
+    <div class="sidebar-footer" style="position:absolute; bottom:0; width:100%; padding:16px;">
+      <div class="sidebar-user" style="display:flex; align-items:center; gap:9px; margin-bottom:10px;">
+        <div style="width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg, var(--a1), var(--a2)); flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6"/></svg>
+        </div>
+        <span id="userBadgeName" style="font-size:12px; font-weight:600;">—</span>
+      </div>
+      <div class="sidebar-live" style="margin-bottom:10px;"><span class="live-dot"></span><span id="liveCount">0 คน</span></div>
+<div class="sidebar-actions" style="display:flex; align-items:center; gap:10px;">
+  <div class="theme-toggle" id="sidebarThemeToggle" role="group" aria-label="สลับโหมดสี">
+    <button type="button" class="theme-toggle-btn" data-theme-btn="dark" onclick="setThemeMode('dark')" title="โหมดมืด" aria-label="โหมดมืด">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 10.5 4a7 7 0 0 0 9.5 10.5z" fill="currentColor"/></svg>
+    </button>
+    <button type="button" class="theme-toggle-btn" data-theme-btn="light" onclick="setThemeMode('light')" title="โหมดสว่าง" aria-label="โหมดสว่าง">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <div class="sidebar-action-icons" style="display:flex; align-items:center; gap:4px;">
+    <button class="sbar-btn" onclick="toggleNotif()" id="notifBtn" title="แจ้งเตือน"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 13 6 9Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg><span class="notif-dot" id="notifDot"></span></button>
+
+    <button class="sbar-btn" onclick="openSettingsPanel()" id="settingsBtn" title="Settings"
+      style="background:none;border:none;cursor:pointer;width:30px;height:30px;
+             display:flex;align-items:center;justify-content:center;color:var(--muted)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+    </button>
+
+    <button class="sbar-btn" onclick="doLogout()" style="background:none; border:none; cursor:pointer;" title="ออกจากระบบ"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3"/><path d="M15.5 16.5 20 12l-4.5-4.5"/><path d="M20 12H9"/></svg></button>
+  </div>
+</div>
+
+<!-- ░░ SETTINGS MODAL ░░ -->
+<div id="settings-modal-bg"
+  style="display:none;position:fixed;inset:0;width:100vw;height:100vh;
+         background:rgba(15,23,42,.5);backdrop-filter:blur(4px);
+         z-index:99999;align-items:center;justify-content:center"
+  onclick="if(event.target===this)closeSettingsPanel()">
+
+  <div style="background:var(--surface2,#fff);color:var(--text,#1a1d23);
+              border-radius:16px;width:340px;max-width:92vw;
+              box-shadow:0 24px 64px rgba(0,0,0,.25);overflow:hidden">
+
+    <div style="padding:18px 22px;border-bottom:1px solid var(--border,#e2e8f0);
+                display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:600" data-i18n="settings_title">Settings</div>
+      <button onclick="closeSettingsPanel()"
+        style="background:none;border:none;font-size:20px;color:var(--muted,#94a3b8);cursor:pointer;line-height:1">✕</button>
+    </div>
+
+    <div style="padding:20px 22px">
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted,#94a3b8);
+                  text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px" data-i18n="settings_theme">
+        Theme mode
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:20px" id="settings-theme-options">
+        <button class="settings-opt-btn" data-theme-value="light" onclick="setThemeMode('light')" data-i18n="settings_theme_light"
+          style="flex:1;padding:8px 0;border:1px solid var(--border,#e2e8f0);background:none;
+                 border-radius:7px;font-size:13px;cursor:pointer;color:var(--text)">Light</button>
+        <button class="settings-opt-btn" data-theme-value="dark" onclick="setThemeMode('dark')" data-i18n="settings_theme_dark"
+          style="flex:1;padding:8px 0;border:1px solid var(--border,#e2e8f0);background:none;
+                 border-radius:7px;font-size:13px;cursor:pointer;color:var(--text)">Dark</button>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted,#94a3b8);
+                  text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px" data-i18n="settings_accent">
+        Accent color
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <input type="color" id="settings-color-swatch" value="#4FC7BC"
+          style="width:34px;height:34px;border:none;border-radius:50%;cursor:pointer;
+                 outline:1px solid var(--border,#e2e8f0);outline-offset:2px;padding:0">
+        <input type="range" id="settings-hue-slider" min="0" max="360" value="173"
+          style="flex:1;height:8px;border-radius:99px;
+                 background:linear-gradient(to right,#ff0000,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff0000)">
+      </div>
+      <input type="text" id="settings-hex-input" value="#4FC7BC" maxlength="7" spellcheck="false"
+        style="width:100%;background:none;border:1px solid var(--border,#e2e8f0);color:var(--text);
+               border-radius:7px;padding:8px 10px;font-size:13px;font-family:monospace;box-sizing:border-box">
+<div style="font-size:11px;font-weight:700;color:var(--muted,#94a3b8);
+            text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px" data-i18n="settings_language">
+  Language
+</div>
+<div style="display:flex;gap:6px;margin-bottom:20px" id="settings-lang-options">
+  <button class="settings-opt-btn" data-lang-value="th" onclick="setLanguage('th')"
+    style="flex:1;padding:8px 0;border:1px solid var(--border,#e2e8f0);background:none;
+           border-radius:7px;font-size:13px;cursor:pointer;color:var(--text)">ไทย</button>
+  <button class="settings-opt-btn" data-lang-value="en" onclick="setLanguage('en')"
+    style="flex:1;padding:8px 0;border:1px solid var(--border,#e2e8f0);background:none;
+           border-radius:7px;font-size:13px;cursor:pointer;color:var(--text)">English</button>
+  <button class="settings-opt-btn" data-lang-value="ja" onclick="setLanguage('ja')"
+    style="flex:1;padding:8px 0;border:1px solid var(--border,#e2e8f0);background:none;
+           border-radius:7px;font-size:13px;cursor:pointer;color:var(--text)">日本語</button>
+</div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted,#94a3b8);
+                  text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px" data-i18n="settings_font">
+        Font
+      </div>
+
+      <select id="settings-font-select"
+  style="width:100%;background:var(--surface2,#fff);border:1px solid var(--border);color:var(--text);
+         border-radius:7px;padding:9px 10px;font-size:13px;cursor:pointer">
+  <option value="sarabun" style="background:var(--surface2,#fff);color:var(--text)">Sarabun (ไทย)</option>
+  <option value="inter" style="background:var(--surface2,#fff);color:var(--text)">Inter (อังกฤษ)</option>
+  <option value="kanit" style="background:var(--surface2,#fff);color:var(--text)">Kanit (ไทย โมเดิร์น)</option>
+  <option value="noto-serif-thai" style="background:var(--surface2,#fff);color:var(--text)">Noto Serif Thai</option>
+  <option value="prompt" style="background:var(--surface2,#fff);color:var(--text)">Prompt (ไทย โมเดิร์น)</option>
+  <option value="mitr" style="background:var(--surface2,#fff);color:var(--text)">Mitr (ไทย มน)</option>
+  <option value="noto-sans-jp" style="background:var(--surface2,#fff);color:var(--text)">Noto Sans JP (日本語)</option>
+</select>
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted,#94a3b8);
+                  text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px" data-i18n="settings_fontsize">
+        Font size
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:20px" id="settings-fontsize-options">
+        <button class="settings-opt-btn" data-fontsize-value="small" onclick="setFontSize('small')" data-i18n="settings_fontsize_small"
+          style="flex:1;padding:8px 0;border:1px solid var(--border,#e2e8f0);background:none;
+                 border-radius:7px;font-size:12px;cursor:pointer;color:var(--text)">Small</button>
+        <button class="settings-opt-btn" data-fontsize-value="medium" onclick="setFontSize('medium')" data-i18n="settings_fontsize_medium"
+          style="flex:1;padding:8px 0;border:1px solid var(--border,#e2e8f0);background:none;
+                 border-radius:7px;font-size:13px;cursor:pointer;color:var(--text)">Medium</button>
+        <button class="settings-opt-btn" data-fontsize-value="large" onclick="setFontSize('large')" data-i18n="settings_fontsize_large"
+          style="flex:1;padding:8px 0;border:1px solid var(--border,#e2e8f0);background:none;
+                 border-radius:7px;font-size:15px;cursor:pointer;color:var(--text)">Large</button>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted,#94a3b8);
+                  text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px" data-i18n="settings_density">
+        Table density
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:20px" id="settings-density-options">
+        <button class="settings-opt-btn" data-density-value="comfortable" onclick="setDensity('comfortable')" data-i18n="settings_density_comfortable"
+          style="flex:1;padding:8px 0;border:1px solid var(--border,#e2e8f0);background:none;
+                 border-radius:7px;font-size:13px;cursor:pointer;color:var(--text)">Comfortable</button>
+        <button class="settings-opt-btn" data-density-value="compact" onclick="setDensity('compact')" data-i18n="settings_density_compact"
+          style="flex:1;padding:8px 0;border:1px solid var(--border,#e2e8f0);background:none;
+                 border-radius:7px;font-size:13px;cursor:pointer;color:var(--text)">Compact</button>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted,#94a3b8);
+                  text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px" data-i18n="settings_rowsperpage">
+        Rows per page
+      </div>
+      <select id="settings-pagesize-select"
+  style="width:100%;background:var(--surface2,#fff);border:1px solid var(--border);color:var(--text);
+         border-radius:7px;padding:9px 10px;font-size:13px;cursor:pointer">
+  <option value="10">10 แถว/หน้า</option>
+  <option value="15">15 แถว/หน้า</option>
+  <option value="20">20 แถว/หน้า</option>
+  <option value="25">25 แถว/หน้า</option>
+  <option value="50">50 แถว/หน้า</option>
+</select>
+
+
+    </div>
+
+    <div style="padding:14px 22px;border-top:1px solid var(--border,#e2e8f0);
+                display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="resetSettingsPanel()" data-i18n="settings_reset"
+        style="padding:8px 16px;background:none;border:1px solid var(--border,#e2e8f0);
+               color:var(--muted,#94a3b8);border-radius:7px;cursor:pointer;font-size:12px">
+        Reset
+      </button>
+      <button onclick="closeSettingsPanel()" data-i18n="settings_done"
+        style="padding:8px 18px;background:var(--accent,#0f766e);border:none;
+               color:#fff;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600">
+        Done
+      </button>
+    </div>
+  </div>
+</div>
+    </div>
+  </aside>
+
+ <div class="notif-panel" id="notifPanel">
+    <div class="notif-header">
+      <h3 data-i18n="notif_title">แจ้งเตือน</h3>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-cancel btn-sm" onclick="markAllRead()"><i class="fa-solid fa-check-double"></i> <span data-i18n="notif_mark_all_read">อ่านทั้งหมด</span></button>
+        <button class="btn btn-cancel btn-sm" onclick="toggleNotif()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+    <div class="notif-list" id="notifList"></div>
+  </div> 
+
+  <button id="sidebarOpenBtn" onclick="toggleSidebarCollapse()" 
+    style="position:fixed; top:20px; left:10px; z-index:1001; display:none;
+           background:var(--surface2); border:1px solid var(--border); 
+           border-radius:8px; width:36px; height:36px; cursor:pointer; font-size:16px;">
+    <i class="fa-solid fa-indent" style="color: rgb(168, 179, 175);"></i>
+  </button>
+  
+  <!-- ===== MAIN CONTENT AREA ===== -->
+  <!-- 🔧 แก้ไข (2026-08-21 — บั๊ก "เนื้อหาชิด/ทับ sidebar" เวลาตั้งค่า Font
+       Size ≠ Medium): เดิม settings-panel.js ใช้ CSS `zoom` บน
+       .main-content-area ตรงๆ เพื่อย่อ/ขยายทั้งหน้า (ดูคอมเมนต์เดิมใน
+       settings-panel.js) แต่ `zoom` สเกล "กล่องทั้งกล่อง" รวมถึง
+       margin-left: var(--sw) ที่ใช้เว้นที่ให้ sidebar (position:fixed) ด้วย —
+       พอ zoom ≠ 1 (เช่น Font Size = Small = 0.9) margin-left ที่แท้จริงเลย
+       เหลือ 236*0.9 ≈ 212px ไม่ใช่ 236px ทำให้เนื้อหาเลื่อนมาทับ/ชิด sidebar
+       จริง (sidebar เองไม่ได้ถูก zoom ด้วยเพราะเป็น element แยกอีกก้อน) —
+       ไม่ว่าจะแก้ padding ภายในหน้าไหนก็ไม่ช่วย เพราะ margin-left ที่ผิดอยู่
+       "นอก" ขอบเขตที่ CSS ของแต่ละหน้าคุมถึง
+
+       ทางแก้: แยก margin-left (ตำแหน่ง, ต้องไม่ถูก zoom) ออกจาก padding
+       เนื้อหา (ควรถูก zoom ไปด้วยกับตัวอักษร) — เพิ่ม wrapper
+       .main-content-zoom ไว้ข้างใน .main-content-area แล้วย้าย zoom เป้าหมาย
+       ไปที่ wrapper นี้แทน (แก้ settings-panel.js คู่กัน) -->
+  <main class="main-content-area">
+    <div class="main-content-zoom">
+
+   <div class="page active" id="page-welcome" style="display:flex;align-items:center;justify-content:center;min-height:70vh;">
+     <div style="width:100%;max-width:440px;text-align:center;background:var(--surface2,#fff);border:1px solid var(--border,#e2e8f0);border-top:3px solid var(--accent,#0f766e);border-radius:16px;padding:44px 40px;box-shadow:0 12px 30px rgba(15,23,42,0.08);">
+       <div style="font-size:40px;display:inline-block;margin-bottom:6px;">👋</div>
+       <div style="font-size:14px;color:var(--text-muted,#64748b);margin-bottom:4px;">ยินดีต้อนรับกลับ</div>
+       <div id="welcomeUserName" style="font-size:24px;font-weight:700;color:var(--text,#1e293b);letter-spacing:-0.4px;margin-bottom:10px;word-break:break-word;">—</div>
+       <div id="welcomeUserRole" style="display:inline-block;font-size:12px;font-weight:600;color:var(--accent,#0f766e);background:rgba(15,118,110,0.1);border:1px solid rgba(15,118,110,0.25);border-radius:999px;padding:4px 12px;margin-bottom:22px;">—</div>
+       <div style="font-size:13px;color:var(--muted,#94a3b8);line-height:1.5;">พร้อมเข้าใช้งานระบบ Manpower Management System แล้ว</div>
+     </div>
+   </div>
+
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: Assign Employees   (id="page-emp")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/assign-employees.html"></div>
+     
+
+
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: Transferred In   (id="page-transfer")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/transfer.html"></div>
+
+<!-- PAGE: USERS MANAGEMENT
+     🔧 เมนู "Users" แยกถูกลบออกแล้ว (2026-08) — ตารางผู้ใช้ทั้งหมด (edit/lock/delete/
+     add) ย้ายไปรวมอยู่ในหน้า "User Manager" (pages/user-manager.html) เพียงหน้าเดียว
+     เหลือแค่ userModal ไว้ที่นี่ เพราะ openUserModal()/saveUser() ใน
+     users-management.js ยังอ้างอิง id พวกนี้อยู่ (ไฟล์ pages/users.html เดิมถูกลบทิ้งแล้ว) -->
+
+<div class="modal-overlay" id="userModal">
+  <div class="modal" style="max-width:460px">
+    <h2 id="userModalTitle" data-i18n="modal_add_user">เพิ่มผู้ใช้งาน</h2>
+    <input type="hidden" id="uEditId"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label data-i18n="form_username">Username</label><input type="text" id="uUsername" placeholder="username"/></div>
+      <div class="form-group"><label data-i18n="form_display_name">ชื่อแสดง</label><input type="text" id="uDisplayName" data-i18n-placeholder="form_display_name_placeholder" placeholder="สมชาย ใจดี"/></div>
+      <div class="form-group"><label data-i18n="form_password">Password</label><input type="password" id="uPassword" placeholder="ใหม่หรือเว้นว่าง"/></div>
+      <div class="form-group"><label data-i18n="form_role">Role</label>
+        <select id="uRole" onchange="updateUserFactoryUI()">
+          <option value="superadmin">👑 Super Admin</option>
+          <option value="admin">🔴 Admin</option>
+          <option value="manager">🟢 Manager</option>
+          <option value="hr">🔵 HR</option>
+          <option value="viewer">⚫ Viewer</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" id="uFactoryWrap" style="margin-top: 8px;">
+      <label data-i18n="form_factories_access">โรงงานที่เข้าถึงได้</label>
+      <div id="uFactoryList" style="display:flex;gap:7px;flex-wrap:wrap;margin-top:6px"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;font-style: italic;" data-i18n="note_superadmin_all_factories">* Super Admin เข้าถึงทุกโรงงานอัตโนมัติ</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeUserModal()"><i class="fa-solid fa-xmark"></i> <span data-i18n="btn_cancel">ยกเลิก</span></button>
+      <button class="btn btn-primary" onclick="saveUser()"><i class="fa-solid fa-floppy-disk"></i> <span data-i18n="btn_save_user">บันทึก</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: ACTIVITY LOG -->
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: Activity Log   (id="page-log")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/activity-log.html"></div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: User Manager Console   (id="page-user-manager")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/user-manager.html"></div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: BP Plan   (id="page-bp-plan")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/bp-plan.html"></div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: BP Plan Overview   (id="page-bp-plan-overview")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/bp-plan-overview.html"></div>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-ring"></div>
+  <p class="loading-text" data-i18n="loading_data_overlay">LOADING DATA…</p>
+</div>
+
+<div class="toast-stack" id="toast-stack"></div>
+
+<!-- PAGE: MANPOWER ANALYTICS -->
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: Reports → Manpower Analytics   (id="page-report-analytics")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/report-analytics.html"></div>
+
+<!-- PAGE: MONTHLY MANPOWER -->
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: Reports → Monthly Manpower   (id="page-report-monthly")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/report-monthly.html"></div>
+
+<!-- PAGE: IE MONTHLY REPORT -->
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: Reports → IE Monthly Report   (id="page-report-ie")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/report-ie.html"></div>
+
+<!-- PAGE: REPORT ADJUSTMENT -->
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: Reports → Report Adjustment   (id="page-report-adjustment")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/report-adjustment.html"></div>
+
+<!-- PAGE: LINE MASTER DATA -->
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: Database Manager → Line Master Data   (id="page-db-lines")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/db-lines.html"></div>
+
+<!-- PAGE: SHIFT FACTOR DATA -->
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: Database Manager → Shift Factor Data   (id="page-db-config")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/db-config.html"></div>
+
+<!-- PAGE: PLANNING -->
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: Manpower Planning   (id="page-Planning")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/planning.html"></div>
+
+<!-- PAGE: MANPOWER DASHBOARD -->
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: Manpower Dashboard   (id="page-Manpower Dashboard")
+══════════════════════════════════════════════════ -->
+<div data-page-src="pages/manpower-dashboard.html"></div>
+    </div>
+  </main>
+</div>
+</div>
+
+
+
+
+<!-- ═══════════════════════════════════════════
+     SCRIPTS
+     🔧 เดิมมี <script src> ของโมดูลแอปทั้งหมดเรียงอยู่ตรงนี้ ตอนนี้ย้ายไปให้
+     js/modules/page-loader.js เป็นคนโหลดแทน (ต้องรอโหลด pages/*.html เสร็จ
+     ก่อน — ดูเหตุผลละเอียดในคอมเมนต์หัวไฟล์ page-loader.js)
+════════════════════════════════════════════ -->
+<script src="js/modules/page-loader.js"></script>
+</body>
+</html>
