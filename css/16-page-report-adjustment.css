@@ -1,0 +1,181 @@
+/* ══════════════════════════════════════════════════
+   REPORT ADJUSTMENT PAGE (#page-report-adjustment)
+   ไฟล์: css/16-page-report-adjustment.css
+   Scoped ด้วย #page-report-adjustment เหมือน 9-page-analytics.css —
+   ใช้ font แยก (Manrope, โหลด global ผ่าน Google Fonts link ใน App.html
+   <head> ร่วมกับฟอนต์อื่นของทั้งแอปแล้ว — ดูการแก้ไขใน App.html)
+
+   🔧 แก้ไข: ดีไซน์/ฟอนต์/เงา/ปุ่ม/การ์ด (รูปทรง ขนาด border-radius ฯลฯ)
+   คงเดิมทั้งหมด — แก้แค่ขนาดพื้นที่ .wrap ให้ใกล้เคียงหน้า Manpower Planning
+   (padding:24px 32px ไม่ centered แทน max-width:1220px + margin:0 auto เดิม)
+
+   🔧 แก้ไข (รอบ 2): ปรับขนาดตัวอักษร/องค์ประกอบ (h1/stat-val/card/ปุ่ม/
+   input ฯลฯ) ให้เล็กลงมาอยู่ในสเกลเดียวกับหน้า Planning
+
+   🔧 แก้ไข (รอบ 7 — สำคัญที่สุด): ก่อนหน้านี้หน้านี้มีชุดตัวแปรสี "--ra-*"
+   เป็นของตัวเอง hardcode เป็น hex ตรงๆ (เช่น --ra-card:#ffffff) แยกขาดจาก
+   ระบบ token กลาง (var(--surface)/var(--text)/var(--accent) ฯลฯ ใน
+   1-variables.css) ทำให้ทุกครั้งที่ต้องรองรับ Dark mode ต้องมานั่ง override
+   ทีละตัวแปร/ทีละ selector เอง (รอบ 4-6 ที่ผ่านมา) เสี่ยงพลาด/ตกหล่นได้ง่าย
+   มาก และแก้ปัญหาไม่ได้ถาวรจริง
+
+   ตอนนี้เปลี่ยน "--ra-*" ทุกตัวให้ชี้ไปที่ token กลางของระบบแทนเลข hex ตรงๆ
+   (--ra-card → var(--surface), --ra-ink → var(--text) ฯลฯ) — เพราะ token
+   กลางเหล่านี้ถูกนิยามให้สลับค่าตาม [data-theme] ไว้แล้วที่ 1-variables.css
+   จุดเดียว หน้านี้เลยได้ Dark/Light mode มาฟรีทันทีเหมือนหน้าอื่นในระบบทั้งหมด
+   ไม่ต้องเขียน [data-theme="dark"] ... !important ซ้ำอีกต่อไป (ลบ block
+   ของรอบ 4-6 ทิ้งทั้งหมดแล้ว) รูปทรง/ขนาด/ฟอนต์ Manrope ของหน้านี้ยังคงเดิม
+   ทุกอย่าง เปลี่ยนแค่ "แหล่งที่มาของสี" เท่านั้น
+   — ผลข้างเคียงที่ต้องรู้ไว้: โทนสี teal ที่เคยเป็นสีเฉพาะของหน้านี้ ตอนนี้
+   จะขยับตามสี Accent ที่ผู้ใช้เลือกไว้ใน Settings ด้วย (เหมือนปุ่ม/สีหลัก
+   ของหน้าอื่นทั้งระบบ) ไม่ตายตัวเป็น teal เป๊ะๆ อีกต่อไปถ้าผู้ใช้เปลี่ยน
+   Accent color เอง — ถ้าไม่ต้องการพฤติกรรมนี้ บอกได้ จะแยก teal ไว้ต่างหาก
+   จาก Accent แทน ══════════════════════════════════════════════════ */
+
+#page-report-adjustment{
+  --ra-card:      var(--surface);
+  --ra-border:    var(--border);
+  --ra-ink:       var(--text);
+  --ra-ink-soft:  var(--t1);
+  --ra-ink-faint: var(--muted);
+  --ra-teal:      var(--accent);
+  --ra-teal-soft: var(--a1d);
+  --ra-teal-deep: color-mix(in srgb, var(--accent) 72%, black);
+  --ra-surface2:  var(--surface2);
+  --ra-tint:      var(--surface3);
+  --ra-hover:     var(--surface2);
+  --ra-shadow:    var(--s2);
+  background: var(--bg0);
+  color: var(--ra-ink);
+  /* 🔧 แก้ไข: เดิม hardcode 'Manrope' ตรงๆ ทำให้ตั้งค่า Font ใน Settings
+     Panel (ผูกกับ CSS var --font-main ที่ settings-panel.js set ไว้ที่
+     document.documentElement) ไม่มีผลกับหน้านี้เลย — เปลี่ยนมาอ้างอิง
+     var(--font-main) ก่อน แล้วค่อย fallback ไปที่ Manrope เดิมถ้ายังไม่เคย
+     ตั้งค่าอะไร (ตอนโหลดหน้าแรกสุดก่อน settings-panel.js รัน) */
+  font-family: var(--font-main, 'Manrope', sans-serif);
+  font-size: 13px;
+  min-height: 100vh;
+}
+
+/* 🔧 แก้ไข: เอา max-width ออก (เดิม 1220px ไม่ centered ทำให้จอกว้างเหลือ
+   ช่องว่างขวามากกว่าซ้าย) ให้เต็มพื้นที่เหมือนหน้า Planning — padding
+   24px 32px ซ้าย/ขวาเท่ากันอยู่แล้วจาก shorthand ต้องใส่ max-width:none
+   ชัดๆ (ไม่ใช่แค่ไม่ประกาศ) เพราะ .wrap มี max-width:1280px มาจาก class
+   กลาง (3-layout.css) อยู่แล้ว ถ้าไม่ override จะยังโดน cap แบบเดิม */
+/* 🔧 แก้ไข: เจอบั๊ค .wrap ครอบแค่ .masthead อันเดียว (ปิด </div> ตั้งแต่
+   บรรทัดที่ 13 ของ HTML) — .card/.stat-grid/ตารางด้านล่างทั้งหมดเป็น
+   sibling ของ .wrap ไม่ได้อยู่ข้างในเลย เลยไม่ได้ padding 32px ซ้าย-ขวา
+   ไปด้วย ทำให้บล็อกเหล่านั้นชิดขอบซ้ายจนไปชน sidebar (คนละขอบกับ
+   masthead ด้านบน) — ย้าย padding ซ้าย-ขวา 32px มาไว้ที่ #page-report-adjustment
+   เอง (ครอบทุก sibling เท่ากันหมด) แล้วเอา padding ซ้าย-ขวา ออกจาก .wrap
+   กันเบิ้ล (เหลือแค่ padding บน-ล่าง 24px ของ masthead) */
+#page-report-adjustment{ padding: 0 32px; }
+#page-report-adjustment .wrap{ max-width:none; padding:24px 0 }
+
+#page-report-adjustment .masthead{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px }
+#page-report-adjustment .brand-row{ display:flex; align-items:center; gap:10px }
+#page-report-adjustment .brand-icon{
+  width:30px; height:30px; border-radius:9px;
+  background:linear-gradient(135deg, var(--ra-teal), var(--ra-teal-deep));
+  display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:13px;
+}
+#page-report-adjustment .brand-icon svg{ width:15px; height:15px; }
+#page-report-adjustment h1{ font-size:18px; font-weight:700; margin:0; letter-spacing:-.01em; color:var(--ra-ink) }
+#page-report-adjustment .subtitle{ font-size:12px; color:var(--ra-ink-soft); margin-top:2px }
+#page-report-adjustment .pill-meta{ background:var(--ra-teal-soft); color:var(--ra-teal-deep); font-weight:700; font-size:12px; padding:6px 14px; border-radius:100px }
+
+#page-report-adjustment .card{ background:var(--ra-card); border:1px solid var(--ra-border); border-radius:12px; box-shadow:var(--ra-shadow); margin-bottom:16px }
+#page-report-adjustment .card-pad{ padding:16px 18px }
+
+#page-report-adjustment .filter-row{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end }
+#page-report-adjustment .ffield{ display:flex; flex-direction:column; gap:5px; min-width:140px }
+#page-report-adjustment .ffield label{ font-size:11px; font-weight:700; color:var(--ra-ink-faint); text-transform:uppercase; letter-spacing:.04em }
+#page-report-adjustment .ffield select,
+#page-report-adjustment .ffield input{
+  border:1px solid var(--ra-border); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:12.5px;
+  background:var(--ra-surface2); color:var(--ra-ink);
+}
+#page-report-adjustment .ffield select:focus,
+#page-report-adjustment .ffield input:focus{ outline:none; border-color:var(--ra-teal) }
+#page-report-adjustment .spacer{ flex:1 }
+
+#page-report-adjustment .btn-export{
+  display:inline-flex; align-items:center; gap:8px;
+  background:linear-gradient(135deg, var(--ra-teal), var(--ra-teal-deep));
+  color:#fff; border:none; border-radius:9px; padding:9px 16px 9px 13px;
+  font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer;
+  box-shadow:0 4px 14px rgba(15,157,132,.28); transition:transform .15s ease, box-shadow .15s ease;
+}
+#page-report-adjustment .btn-export:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(15,157,132,.36) }
+#page-report-adjustment .btn-export:active{ transform:translateY(0) }
+#page-report-adjustment .btn-export svg{ width:14px; height:14px; flex-shrink:0 }
+#page-report-adjustment .btn-export.is-busy{ pointer-events:none; opacity:.85 }
+#page-report-adjustment .btn-export .spin{ animation:ra-spin .7s linear infinite; transform-origin:center }
+@keyframes ra-spin{ to{ transform:rotate(360deg) } }
+
+#page-report-adjustment .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px }
+#page-report-adjustment .stat-card{ background:var(--ra-card); border:1px solid var(--ra-border); border-radius:10px; box-shadow:var(--ra-shadow); padding:12px 14px }
+#page-report-adjustment .stat-label{ font-size:11px; font-weight:700; color:var(--ra-ink-faint); text-transform:uppercase; letter-spacing:.03em; margin-bottom:6px }
+#page-report-adjustment .stat-val{ font-size:19px; font-weight:800; letter-spacing:-.01em; color:var(--ra-ink) }
+#page-report-adjustment .stat-card.hi{ background:linear-gradient(135deg, var(--ra-teal), var(--ra-teal-deep)); border:none }
+#page-report-adjustment .stat-card.hi .stat-label{ color:rgba(255,255,255,.75) }
+#page-report-adjustment .stat-card.hi .stat-val{ color:#fff }
+
+#page-report-adjustment .table-scroll{ overflow-x:auto }
+#page-report-adjustment table{ width:100%; border-collapse:separate; border-spacing:0; min-width:920px }
+#page-report-adjustment thead .grp-row th{
+  font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--ra-ink-faint);
+  text-align:center; padding:7px 10px; background:var(--ra-surface2);
+}
+#page-report-adjustment thead .grp-row th.off{ color:var(--ra-ink-soft) }
+#page-report-adjustment thead .grp-row th.in{ color:var(--ra-teal-deep); background:var(--ra-teal-soft) }
+#page-report-adjustment thead .col-row th{
+  font-size:10.5px; font-weight:700; color:var(--ra-ink-soft); text-align:right; padding:7px 10px;
+  background:var(--ra-surface2); border-bottom:2px solid var(--ra-border);
+}
+#page-report-adjustment thead .col-row th.label-col{ text-align:left; color:var(--ra-ink-faint); text-transform:uppercase; font-size:10px; letter-spacing:.03em }
+#page-report-adjustment tbody td{ padding:8px 10px; font-size:12.5px; border-bottom:1px solid var(--ra-border); white-space:nowrap }
+#page-report-adjustment tbody td.num{ text-align:right; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ra-ink) }
+#page-report-adjustment tbody td.product-cell{ font-weight:800; color:var(--ra-teal-deep) }
+#page-report-adjustment tbody td.line-cell{ color:var(--ra-ink) }
+#page-report-adjustment tbody td.subline-cell{ color:var(--ra-ink-soft) }
+#page-report-adjustment tbody tr:hover td{ background:var(--ra-hover) }
+#page-report-adjustment tbody td.tot-off,
+#page-report-adjustment tbody td.tot-in{ font-weight:800; background:var(--ra-tint) }
+#page-report-adjustment tbody td.grand{ font-weight:800; color:var(--ra-teal-deep) }
+#page-report-adjustment tfoot td{ padding:10px 10px; font-size:12.5px; font-weight:800; background:var(--ra-teal-soft); color:var(--ra-teal-deep) }
+#page-report-adjustment tfoot td.label{ font-size:12.5px }
+#page-report-adjustment tfoot td.num{ text-align:right }
+#page-report-adjustment tfoot td:first-child{ border-radius:0 0 0 12px }
+#page-report-adjustment tfoot td:last-child{ border-radius:0 0 12px 0 }
+#page-report-adjustment .empty-row td{ padding:28px; text-align:center; color:var(--ra-ink-faint); font-size:12px }
+
+/* 🔧 แก้ไข: toast เป็นกล่องลอยเข้มตายตัวเสมอทั้ง 2 ธีม (ไม่ผูกกับ --ra-ink
+   ที่ตอนนี้สลับตามธีมแล้ว) กันพื้น toast กลายเป็นสีอ่อนคู่กับตัวหนังสือขาว
+   (color:#fff) จนมองไม่เห็นข้อความตอน Light mode */
+#page-report-adjustment .toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:#17231f; color:#fff; font-weight:600; font-size:12px; padding:9px 18px; border-radius:100px;
+  opacity:0; pointer-events:none; transition:.25s; box-shadow:0 8px 24px rgba(0,0,0,.2); z-index:50;
+}
+#page-report-adjustment .toast.show{ opacity:1; transform:translateX(-50%) translateY(0) }
+
+/* 🔧 เพิ่มใหม่: Table density (ดู [data-density] ใน 4-components.css) —
+   เดิม thead th/tbody td/tfoot td ของหน้านี้ set padding ด้วย selector
+   ที่ specificity สูงกว่า ([data-density="compact"] thead th ทั่วไป) เลย
+   ไม่มีผลอะไรเลยตอนสลับ Compact ใน Settings Panel — override เฉพาะหน้านี้
+   แบบเดียวกับที่ 9-page-analytics.css ทำกับ #page-report-analytics */
+[data-density="compact"] #page-report-adjustment thead .grp-row th,
+[data-density="compact"] #page-report-adjustment thead .col-row th{
+  padding:4px 10px;
+}
+[data-density="compact"] #page-report-adjustment tbody td{
+  padding:5px 10px;
+}
+[data-density="compact"] #page-report-adjustment tfoot td{
+  padding:6px 10px;
+}
+
+@media (max-width:720px){
+  #page-report-adjustment .stat-grid{ grid-template-columns:repeat(2,1fr) }
+}

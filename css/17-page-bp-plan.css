@@ -1,0 +1,85 @@
+/* ==========================================
+   css/17-page-bp-plan.css
+   Styles for the "BP Plan" (Business Plan headcount target) page.
+   Reuses the app's existing CSS variables (--accent, --border, --muted,
+   --surface2, --text, --text-muted) and existing components
+   (.table-wrap/.main-data-table/.standby-modal-overlay/.filter-label/
+   .btn/.section-title) — this file only adds what those don't cover.
+   ========================================== */
+
+.bp-subtitle {
+  font-size: 12px;
+  color: var(--muted, #94a3b8);
+  margin: 2px 0 0;
+}
+
+.bp-select,
+.bp-input {
+  box-sizing: border-box;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--text);
+  font-family: 'Sarabun', sans-serif;
+  font-size: 13px;
+  outline: none;
+}
+.bp-select { cursor: pointer; min-width: 130px; }
+
+.bp-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bp-modal-form .bp-select,
+.bp-modal-form .bp-input {
+  margin-bottom: 10px;
+}
+
+.bp-chart-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 16px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+}
+.bp-chart-card .section-title { margin: 0 0 12px; }
+.bp-chart-wrap {
+  position: relative;
+  height: 280px;
+  width: 100%;
+}
+.bp-chart-wrap canvas { max-width: 100%; }
+
+/* Diff column — over target (green) / under target (red) */
+.bp-diff-pos { color: #16a34a; font-weight: 600; }
+.bp-diff-neg { color: #dc2626; font-weight: 600; }
+.bp-diff-zero { color: var(--text-muted, #94a3b8); }
+
+.bp-achieve-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.bp-achieve-full { background: rgba(22,163,74,0.12); color: #16a34a; }
+.bp-achieve-partial { background: rgba(234,179,8,0.14); color: #b45309; }
+.bp-achieve-low { background: rgba(220,38,38,0.12); color: #dc2626; }
+
+.bp-row-actions { display: flex; gap: 6px; justify-content: center; }
+.bp-row-actions button {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: var(--text);
+}
+.bp-row-actions button:hover { background: var(--surface2); }
+
+@media (max-width: 900px) {
+  .bp-chart-wrap { height: 220px; }
+}

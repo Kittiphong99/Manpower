@@ -1,0 +1,420 @@
+/* ══════════════════════════════════════════════════════════
+   IE REPORT — DETAIL DRILL-DOWN TABLE
+   ══════════════════════════════════════════════════════════
+   ปรับ UX/UI ตารางแก้ไขพนักงานราย SubLine ให้:
+   1. เซลล์ข้อความปกติ (ชื่อ, ตำแหน่ง, ไลน์, สายย่อย, กระบวนการ, สถานะทำงาน,
+      รายละเอียด) ดูเหมือนข้อความจริง ไม่ใช่กล่อง input ทึบทุกช่อง —
+      โชว์เส้นใต้จางๆ ตอน hover เพื่อบอกว่าแก้ไขได้ ไม่ใช่ตลอดเวลา
+   2. Select ที่มีความหมายเชิงสถานะ (ประเภทตำแหน่ง, สถานะ META/Subcon, กะ)
+      เป็น badge สีตามความหมาย — ใช้ชุดสีเดียวกับ CAT_COLOR ในกราฟ
+      Manpower Analytics (ope:#2563eb, gl:#7c3aed, spare:#6b7280,
+      pregnant:#db2777, sick:#dc2626, posFree:#d97706, other:#059669)
+      เพื่อให้สื่อความหมายเดียวกันทั้งแอป ไม่ใช่คิดสีชุดใหม่
+   3. ปุ่มบันทึกเป็นปุ่มวงกลม icon-only สี teal (#0d9488 — สีเดียวกับปุ่ม
+      "ดูรายงานตาม IE" ที่มีอยู่แล้วในตาราง summary) แทนกรอบข้อความลอยๆ
+   ══════════════════════════════════════════════════════════ */
+
+/* ── ตารางโดยรวม ── */
+#rpt-detail-modal-tbody tr {
+  transition: background-color .12s ease;
+  border-left: 3px solid transparent;
+}
+#rpt-detail-modal-tbody tr:hover {
+  background: var(--surface2);
+  border-left-color: #0d9488;
+}
+#rpt-detail-modal-tbody td {
+  padding: 10px 12px;
+  vertical-align: middle;
+}
+
+/* ── Emp Code: เลขประจำตัว ให้ดูเป็น monospace เบาๆ ไม่ใช่ตัวเด่น ── */
+.ie-dd-empcode {
+  font-family: 'SF Mono', 'Consolas', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── ช่องข้อความทั่วไป (ชื่อ, ตำแหน่ง, ไลน์, สายย่อย, กระบวนการ,
+     สถานะทำงาน, รายละเอียด) — ดูเหมือนข้อความปกติ ไม่มีกรอบจนกว่าจะโฟกัส ── */
+.ie-dd-text {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text);
+  transition: all .15s ease;
+}
+.ie-dd-text:hover {
+  border-bottom: 1px dashed var(--border);
+  border-radius: 0;
+}
+.ie-dd-text:focus {
+  outline: none;
+  border: 1px solid #0d9488;
+  border-radius: 6px;
+  background: #f0fdfa;
+  box-shadow: 0 0 0 3px rgba(13,148,136,.12);
+}
+.ie-dd-text:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+/* ── ชื่อพนักงาน: เน้นน้ำหนักตัวอักษรมากกว่าช่องอื่นเล็กน้อย ── */
+.ie-dd-fullname {
+  font-weight: 600;
+}
+
+/* ── Select ทั่วไป (ไม่มีความหมายเชิงสถานะ เช่น ยังไม่ระบุ) ── */
+.ie-dd-select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface2) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%2394a3b8'/></svg>") no-repeat right 10px center;
+  padding: 6px 26px 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.ie-dd-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(13,148,136,.15);
+}
+.ie-dd-select:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+/* ── Badge สีตามประเภทตำแหน่ง (Position Type) — ใช้สีชุดเดียวกับ
+     CAT_COLOR ในกราฟ Manpower Analytics เพื่อความสอดคล้องกันทั้งแอป ── */
+.ie-dd-select[data-field="positionType"][data-value="OPE"]     { color:#2563eb; background-color:#eff6ff; border-color:#bfdbfe; }
+.ie-dd-select[data-field="positionType"][data-value="GL"]      { color:#7c3aed; background-color:#f5f3ff; border-color:#ddd6fe; }
+.ie-dd-select[data-field="positionType"][data-value="Spare"]   { color:#6b7280; background-color:#f9fafb; border-color:#e5e7eb; }
+.ie-dd-select[data-field="positionType"][data-value="Other"]   { color:#059669; background-color:#ecfdf5; border-color:#a7f3d0; }
+
+/* ── Badge สีตามสถานะพนักงาน (META = พนักงานตรง, Subcon = ผู้รับเหมาช่วง) ── */
+.ie-dd-select[data-field="status"][data-value="META"]    { color:#0d9488; background-color:#f0fdfa; border-color:#99f6e4; }
+.ie-dd-select[data-field="status"][data-value="Subcon"]  { color:#b45309; background-color:#fffbeb; border-color:#fde68a; }
+
+/* ── Badge กะทำงาน (A/B/C) — ทรงกลมเล็ก ให้ความรู้สึกเหมือน avatar ── */
+.ie-dd-select[data-field="shift"] {
+  max-width: 56px;
+  margin: 0 auto;
+  display: block;
+  color: #475569;
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+/* ── ปุ่มบันทึกต่อแถว — icon-only วงกลม สี teal เดียวกับปุ่มหลักของหน้า IE ── */
+.ie-detail-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #0d9488;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color .15s ease, transform .1s ease;
+}
+.ie-detail-save-btn:hover {
+  background: #0f766e;
+  transform: scale(1.06);
+}
+.ie-detail-save-btn:active {
+  transform: scale(.96);
+}
+.ie-detail-save-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── สถานะบันทึกสำเร็จ: แถวกระพริบเขียวจางๆ ชั่วครู่ ── */
+@keyframes ie-dd-saved-flash {
+  0%   { background-color: #f0fdfa; }
+  100% { background-color: transparent; }
+}
+#rpt-detail-modal-tbody tr.ie-dd-saved {
+  animation: ie-dd-saved-flash 1.2s ease-out;
+}
+
+/* ── ตาราง drill-down มี 21 คอลัมน์ — บังคับให้เลื่อนแนวนอนได้เสมอ
+   (ไม่ใช่แค่จอมือถือ) ไม่งั้นเบราว์เซอร์จะบีบทุกคอลัมน์จนข้อความ/select
+   หายไปหมด (ปัญหาที่เจอ: ชื่อโดนตัด, select โชว์แต่สีไม่มีตัวหนังสือ) ── */
+#rpt-detail-modal-bg .ie-modal {
+  max-width: 96vw;
+  width: 96vw;
+}
+#rpt-detail-modal-bg .ie-modal-body {
+  overflow-x: auto;
+}
+#rpt-detail-modal-bg .ie-detail-table {
+  min-width: 2260px;
+  table-layout: fixed;
+}
+
+/* กำหนดความกว้างขั้นต่ำต่อคอลัมน์ ตามลำดับที่ประกาศใน HTML
+   (No, EmpCode, FullName, Position, Line, SubLine, Process, Code, Shift,
+   Status, PositionType, Gender, WorkStatus, RiskFactor, Detail, Note,
+   Start, End, Need, ReasonNeed, Action)
+   🔧 แก้ไข: เพิ่มความกว้าง Position/Line/SubLine/Process — ข้อความจริง
+   เช่น "Alternator Bracket", "Bracket-ALT Front # A", "Group Leader"
+   ยาวเกินความกว้างเดิม ทำให้ input ตัดข้อความด้วย ellipsis จนอ่านไม่ออก */
+#rpt-detail-modal-bg .ie-detail-table col:nth-child(1)  { width: 44px;  }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(1),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(1)   { width: 44px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(2),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(2)   { width: 90px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(3),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(3)   { width: 160px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(4),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(4)   { width: 170px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(5),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(5)   { width: 220px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(6),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(6)   { width: 220px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(7),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(7)   { width: 150px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(8),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(8)   { width: 70px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(9),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(9)   { width: 70px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(10),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(10)  { width: 100px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(11),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(11)  { width: 110px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(12),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(12)  { width: 90px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(13),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(13)  { width: 110px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(14),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(14)  { width: 130px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(15),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(15)  { width: 130px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(16),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(16)  { width: 220px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(17),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(17)  { width: 140px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(18),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(18)  { width: 140px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(19),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(19)  { width: 110px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(20),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(20)  { width: 140px; }
+#rpt-detail-modal-bg .ie-detail-table th:nth-child(21),
+#rpt-detail-modal-bg .ie-detail-table td:nth-child(21)  { width: 60px; }
+
+/* ป้องกัน input/select ล้นออกนอกเซลล์ตอนคอลัมน์แคบ */
+#rpt-detail-modal-bg .ie-dd-text,
+#rpt-detail-modal-bg .ie-dd-select {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* select badge สี ต้องมีความกว้างพอให้ตัวหนังสือโชว์เสมอ ไม่บีบจนเหลือแต่สี */
+#rpt-detail-modal-bg .ie-dd-select {
+  min-width: 68px;
+  white-space: nowrap;
+}
+#rpt-detail-modal-bg .ie-dd-select[data-field="shift"] {
+  min-width: 56px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   REASON MODAL — กล่องกรอกเหตุผลการแก้ไข (แทน window.prompt)
+   ══════════════════════════════════════════════════════════
+   window.prompt() ของเบราว์เซอร์หน้าตาไม่สวย ลอยมุมบนซ้าย ปรับแต่งไม่ได้
+   เปลี่ยนเป็น modal กลางจอที่ควบคุมดีไซน์ได้เอง สอดคล้องกับ modal อื่น
+   ในระบบ (ใช้โทนสีและ radius เดียวกับ ie-modal) ══════════════════════ */
+#ie-reason-modal-bg {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, .5);
+  backdrop-filter: blur(4px);
+  z-index: 100000;
+  align-items: center;
+  justify-content: center;
+}
+#ie-reason-modal-bg.open {
+  display: flex;
+}
+.ie-reason-modal-box {
+  background: #fff;
+  border-radius: 14px;
+  width: 420px;
+  max-width: 92vw;
+  box-shadow: 0 24px 64px rgba(0,0,0,.25);
+  overflow: hidden;
+  animation: ie-reason-modal-in .15s ease-out;
+}
+@keyframes ie-reason-modal-in {
+  from { opacity: 0; transform: translateY(-8px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ie-reason-modal-head {
+  padding: 18px 22px 4px;
+}
+.ie-reason-modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text, #1a1d23);
+}
+.ie-reason-modal-sub {
+  font-size: 12px;
+  color: var(--muted, #94a3b8);
+  margin-top: 4px;
+}
+.ie-reason-modal-body {
+  padding: 14px 22px 6px;
+}
+.ie-reason-modal-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 64px;
+  transition: all .15s ease;
+}
+.ie-reason-modal-input:focus {
+  outline: none;
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13,148,136,.12);
+}
+.ie-reason-modal-error {
+  font-size: 12px;
+  color: #dc2626;
+  margin-top: 6px;
+  display: none;
+}
+.ie-reason-modal-error.show {
+  display: block;
+}
+.ie-reason-modal-foot {
+  padding: 16px 22px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.ie-reason-modal-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity .15s ease;
+}
+.ie-reason-modal-btn:hover {
+  opacity: .85;
+}
+.ie-reason-modal-btn-cancel {
+  background: none;
+  border: 1px solid var(--border, #e2e8f0);
+  color: var(--muted, #64748b);
+}
+.ie-reason-modal-btn-confirm {
+  background: #0d9488;
+  color: #fff;
+}
+
+/* ── ฟิลด์ที่ถูกล็อค (เหมือน Code) — Emp Code, Full Name, Position,
+   Status, Gender, Work Status: แสดงข้อมูลเต็ม ไม่มี input ให้แก้ไข ──
+   ต่างจาก .ie-dd-empcode (ใช้กับ Code/EmpCode) ตรงที่ยอมให้ตัด/ห่อบรรทัด
+   ถ้าข้อความยาว เพื่อไม่ให้ถูกตัดด้วย ellipsis จนอ่านไม่ออก */
+.ie-dd-locked-text {
+  display: block;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: var(--text, #1a1d23);
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+}
+.ie-dd-locked-text.ie-dd-fullname {
+  font-weight: 600;
+}
+
+/* ── Badge แบบ static (span) สำหรับฟิลด์ที่ล็อค — ใช้สีชุดเดียวกับ
+   select ที่ยังแก้ไขได้ (status/positionType) เพื่อความสอดคล้องของภาพ ── */
+.ie-dd-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--surface2, #f9fafb);
+  color: var(--muted, #64748b);
+  white-space: nowrap;
+}
+/* ใช้สีเดียวกับ select — เพิ่ม .ie-dd-badge ต่อท้าย selector เดิม */
+.ie-dd-select[data-field="status"][data-value="META"],
+.ie-dd-badge[data-field="status"][data-value="META"]    { color:#0d9488; background-color:#f0fdfa; border-color:#99f6e4; }
+.ie-dd-select[data-field="status"][data-value="Subcon"],
+.ie-dd-badge[data-field="status"][data-value="Subcon"]  { color:#b45309; background-color:#fffbeb; border-color:#fde68a; }
+
+/* Work Status: In Line = เขียว (กำลังทำงานอยู่), Off Line = เทา (ไม่ได้ทำงาน) */
+.ie-dd-badge[data-field="workStatus"][data-value="In Line"]  { color:#059669; background-color:#ecfdf5; border-color:#a7f3d0; }
+.ie-dd-badge[data-field="workStatus"][data-value="Off Line"] { color:#6b7280; background-color:#f9fafb; border-color:#e5e7eb; }
+
+/* ══════════════════════════════════════════════════════════
+   ปุ่มสลับกะ ALL/A/B/C ในหัว modal (Report by IE + Detail Drill-down)
+   ══════════════════════════════════════════════════════════ */
+.ie-shift-toggle {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--surface2, #f1f5f9);
+  padding: 3px;
+  border-radius: 8px;
+  margin-right: 8px;
+}
+.ie-shift-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted, #64748b);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.ie-shift-btn:hover {
+  color: var(--text, #1a1d23);
+}
+.ie-shift-btn.active {
+  background: #fff;
+  color: #0d9488;
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+
+/* ── responsive: มือถือ/จอแคบ ปรับ modal ให้เต็มจอมากขึ้น ── */
+@media (max-width: 768px) {
+  #rpt-detail-modal-bg .ie-modal {
+    width: 98vw;
+    max-width: 98vw;
+  }
+  .ie-reason-modal-box {
+    width: 92vw;
+  }
+}

@@ -1,0 +1,553 @@
+/* ==========================================
+   css/14-page-manpower-dashboard.css
+   Styles for the new "Manpower Dashboard" page.
+   Reuses the app's existing CSS variables (--accent, --border, --muted,
+   --surface2, --text, --text-muted, --ok) and existing components
+   (.adm-header/.adm-title/.adm-card/.adm-table/.kpi-card family) so it
+   matches the rest of the app automatically under both light/dark theme.
+   ⚠️ Variable names were inferred from usage elsewhere in App.html since
+   1-variables.css itself wasn't available to read directly — if any of
+   these don't resolve to the colors you expect, tell me and I'll adjust.
+   ========================================== */
+
+/* ==========================================
+   "Halo" glass skin (2026-08-20) — scoped to this page only via the
+   #page-Manpower\ Dashboard id (its real id has a literal space, hence
+   the escape) so the rest of the app keeps its normal solid cards.
+   The recolor itself is free: --accent/--accent2 are now ice-blue/
+   violet app-wide (see css/1-variables.css) and every rule in this
+   file already reads from those vars.
+   🔧 2026-08-20: dropped the colored radial-gradient wash that used to
+   sit behind this page (::before) — it made this one page's background
+   visibly different from the sidebar and every other page (a hard
+   color seam right at the sidebar border), which the user flagged as
+   "พื้นหลังแยกกัน ... ให้เหมือนกันทั้งระบบ". The page now sits on the
+   app's normal plain --bg0 like everywhere else; only the cards
+   themselves stay glassy (translucent + blur). */
+#page-Manpower\ Dashboard .adm-card,
+#page-Manpower\ Dashboard .mpd-filters,
+#page-Manpower\ Dashboard .mpd-kpi-card,
+#page-Manpower\ Dashboard .mpd-chart-card {
+  background: color-mix(in srgb, var(--surface2) 68%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Title icon — same gradient badge as the sidebar logo (css/3-layout.css
+   .sidebar-logo) instead of a plain 📊 emoji, so the icon mark matches
+   across the app. */
+.mpd-title-icon {
+  width: 30px; height: 30px; border-radius: 9px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 4px 14px -3px color-mix(in srgb, var(--accent) 55%, transparent);
+  display: inline-flex; align-items: center; justify-content: center;
+  vertical-align: middle;
+}
+.mpd-title-icon svg { width: 15px; height: 15px; }
+
+/* Small caps label above the H1 — the reference's "รายงานภาพรวมกำลังคน"
+   line, in the ice accent. */
+.mpd-eyebrow {
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+#page-Manpower\ Dashboard .mpd-kpi-card,
+#page-Manpower\ Dashboard .mpd-chart-card,
+#page-Manpower\ Dashboard .adm-card {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 16px 40px -24px rgba(0,0,0,0.4);
+}
+
+/* Toolbar pill buttons — same "premium" treatment as .adm-btn-primary/
+   .adm-btn-secondary (css/12-page-admin-transfer.css): shine-sweep on
+   hover (::after + @keyframes btn-sweep, shared global keyframe from
+   css/4-components.css), a lifted box-shadow, and a slight press-down
+   on :active — just kept pill-shaped to match this page's own toolbar,
+   instead of copying their rectangular radius. */
+.mpd-toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.mpd-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background-color .3s ease, border-color .3s ease, color .3s ease, box-shadow .3s ease, transform .15s ease;
+}
+.mpd-pill-btn::after {
+  content: ""; position: absolute; top: 0; left: -75%;
+  width: 45%; height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255,255,255,.35), transparent);
+  transform: skewX(-20deg); pointer-events: none;
+}
+.mpd-pill-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.mpd-pill-btn:hover, .mpd-pill-btn:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.mpd-pill-btn:hover::after, .mpd-pill-btn:focus-visible::after { animation: btn-sweep .8s ease forwards; }
+.mpd-pill-btn:active { transform: scale(.96); }
+.mpd-pill-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.mpd-pill-btn-primary:hover, .mpd-pill-btn-primary:focus-visible {
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* Dashboard/Report tab toggle — now sits inline inside the toolbar,
+   before Template/Import/Export/Refresh, separated by a thin divider. */
+.mpd-tab-btn {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: background-color .3s ease, border-color .3s ease, color .3s ease, transform .15s ease;
+}
+.mpd-tab-btn:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+.mpd-tab-btn:active { transform: scale(.96); }
+.mpd-tab-btn.mpd-tab-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.mpd-tab-btn.mpd-tab-active:hover { background: var(--accent); color: #fff; }
+.mpd-toolbar-divider {
+  width: 1px;
+  height: 24px;
+  align-self: center;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+/* Report summary table — Product Group × LINE breakdown */
+.mpd-report-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mpd-report-table th, .mpd-report-table td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--text);
+}
+.mpd-report-table thead th {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface2));
+  color: var(--text);
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.mpd-report-table thead tr:nth-child(1) th { top: 0; }
+.mpd-report-table thead tr:nth-child(2) th { top: 29px; }
+.mpd-report-table th.mpd-danger { color: #dc2626; }
+.mpd-report-table .mpd-group-header,
+.mpd-report-table .mpd-dept-name { text-align: left; white-space: normal; }
+.mpd-report-table .mpd-group-header { font-weight: 700; }
+.mpd-report-table .mpd-dept-name { white-space: nowrap; }
+.mpd-report-table .mpd-col-highlight { background: color-mix(in srgb, #fbbf24 18%, transparent); font-weight: 600; }
+.mpd-report-table .mpd-subtotal-row td { background: color-mix(in srgb, var(--accent) 10%, transparent); font-weight: 600; }
+.mpd-report-table .mpd-direct-total-row td { background: color-mix(in srgb, var(--accent) 18%, transparent); font-weight: 700; }
+.mpd-report-table .mpd-grand-total-row td { background: var(--accent); color: #fff; font-weight: 700; }
+.mpd-report-table .mpd-grand-total-row td.mpd-col-highlight { color: #111827; }
+
+.mpd-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 16px;
+  padding: 18px 20px 24px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .mpd-layout { grid-template-columns: 1fr; }
+}
+
+.mpd-filters {
+  padding: 16px;
+  position: sticky;
+  top: 12px;
+}
+
+.mpd-clear-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 999px;
+  font-size: 11px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.mpd-clear-btn:hover { color: var(--text); border-color: var(--accent); }
+
+.mpd-filter-group { margin-bottom: 14px; }
+.mpd-filter-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+.mpd-filter-group select,
+.mpd-search {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 7px 10px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  font-family: 'Sarabun', sans-serif;
+}
+.mpd-search { margin-bottom: 6px; }
+
+/* 🔧 2026-08-20: เดิมเป็นกล่องซ้อนกล่อง (มี border+bg ของตัวเอง ซ้อนอยู่ใน
+   .mpd-filters ที่มี border+bg อยู่แล้ว) ไม่ตรงกับต้นแบบที่ list ลอยอยู่บน
+   การ์ดตรงๆ ไม่มีกรอบซ้อน — เอา border/bg ออก เหลือแค่ scroll area */
+.mpd-checkbox-list {
+  max-height: 130px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.mpd-checkbox-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-bottom: 0;
+  font-weight: 400;
+  cursor: pointer;
+  padding: 5px 4px;
+  border-radius: 7px;
+  transition: background-color .15s ease, color .15s ease;
+}
+.mpd-checkbox-list label:hover { background: var(--surface2); color: var(--text); }
+/* checkbox ทรง custom (สี่เหลี่ยมมุมมน + ✓ ตอนเลือก) แทน native ของเบราว์เซอร์
+   ที่หน้าตาไม่ตรงกับดีไซน์กระจก/glow ของหน้านี้เลย ตามต้นแบบ */
+.mpd-checkbox-list input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px; height: 15px;
+  border-radius: 5px;
+  border: 1.4px solid var(--border);
+  background: transparent;
+  flex-shrink: 0;
+  cursor: pointer;
+  position: relative;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.mpd-checkbox-list input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.mpd-checkbox-list input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute; left: 4px; top: 1px;
+  width: 4px; height: 8px;
+  border: solid #fff; border-width: 0 1.6px 1.6px 0;
+  transform: rotate(45deg);
+}
+.mpd-checkbox-list label:has(input:checked) { color: var(--accent); font-weight: 600; }
+
+.mpd-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+#mpdDashboardContent { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* Self-contained KPI cards — NOT reusing the app's .kpi-card component
+   anymore, since that CSS appears to be scoped specifically to
+   #page-report-analytics and doesn't apply here. */
+.mpd-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+@media (max-width: 1100px) {
+  .mpd-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .mpd-kpi-grid { grid-template-columns: 1fr; }
+}
+
+.mpd-kpi-card {
+  position: relative;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  overflow: hidden;
+  min-width: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+}
+/* Soft ambient glow in the corner — a real radial-gradient fade (not a
+   flat tinted circle, which reads as a hard-edged "sticker" instead of
+   a glow) — cycles through the app's own accent pair (--accent
+   ice-blue / --accent2 violet) plus --warn for the "Status" card,
+   echoing the reference's ic-ice/ic-violet/ic-amber rhythm across its
+   4 KPI cards instead of the old green/indigo/purple set. */
+.mpd-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: -40%; right: -30%;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 38%, transparent), transparent 72%);
+  pointer-events: none;
+}
+.mpd-kpi-card.c-type::before   { background: radial-gradient(circle, color-mix(in srgb, var(--accent2) 38%, transparent), transparent 72%); }
+.mpd-kpi-card.c-status::before { background: radial-gradient(circle, color-mix(in srgb, var(--warn) 38%, transparent), transparent 72%); }
+.mpd-kpi-card.c-pos::before    { background: radial-gradient(circle, color-mix(in srgb, var(--accent2) 38%, transparent), transparent 72%); }
+
+.mpd-kpi-icon {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.mpd-kpi-icon svg { width: 17px; height: 17px; }
+.mpd-kpi-card.c-type   .mpd-kpi-icon { background: var(--accent2); box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--accent2) 60%, transparent); }
+.mpd-kpi-card.c-status .mpd-kpi-icon { background: var(--warn); box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--warn) 60%, transparent); }
+.mpd-kpi-card.c-pos    .mpd-kpi-icon { background: var(--accent2); box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--accent2) 60%, transparent); }
+
+.mpd-kpi-card .mpd-kpi-label,
+.mpd-kpi-card .mpd-kpi-value,
+.mpd-kpi-card .mpd-kpi-meta,
+.mpd-kpi-card .mpd-kpi-breakdown { position: relative; z-index: 1; }
+.mpd-kpi-card .mpd-kpi-label,
+.mpd-kpi-card .mpd-kpi-breakdown { max-width: calc(100% - 44px); }
+
+.mpd-kpi-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  margin-bottom: 6px;
+}
+.mpd-kpi-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1;
+}
+.mpd-kpi-meta {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.mpd-kpi-breakdown {
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1.8;
+  min-width: 0;
+}
+.mpd-kpi-breakdown .mpd-row { display: flex; justify-content: space-between; gap: 8px; min-width: 0; }
+.mpd-kpi-breakdown .mpd-row > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.mpd-kpi-breakdown .mpd-row > span:last-child { flex-shrink: 0; }
+.mpd-kpi-breakdown .mpd-pct { color: var(--muted); font-size: 11px; }
+
+.mpd-chart-row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.mpd-chart-row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1100px) {
+  .mpd-chart-row3, .mpd-chart-row2 { grid-template-columns: 1fr; }
+}
+
+.mpd-chart-card { padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03); min-width: 0; }
+.mpd-chart-card .mpd-chart-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  min-width: 0;
+}
+.mpd-chart-card .mpd-chart-head .mpd-chart-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+.mpd-chart-card h4 { margin: 0; font-size: 13px; color: var(--text); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mpd-chart-box { position: relative; height: 220px; width: 100%; min-width: 0; }
+.mpd-chart-box canvas { max-width: 100%; }
+
+/* Distribution donuts — compact ring (with a total + "100.00%" centered
+   inside the cutout) on the left, a plain value/% legend list on the
+   right, instead of a full-width ring with numbers crammed onto the
+   arc via datalabels. */
+.mpd-donut-body {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 20px;
+  align-items: center;
+  min-width: 0;
+}
+@media (max-width: 1100px) {
+  .mpd-donut-body { grid-template-columns: 1fr; }
+}
+.mpd-donut-wrap { position: relative; height: 150px; width: 150px; margin: 0 auto; }
+.mpd-donut-wrap canvas { max-width: 100%; }
+.mpd-donut-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.mpd-donut-center .n { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600; color: var(--text); line-height: 1; }
+.mpd-donut-center .p { font-size: 10.5px; color: var(--muted); font-weight: 600; margin-top: 3px; }
+.mpd-donut-legend { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.mpd-donut-legend-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--border);
+}
+.mpd-donut-legend-row:last-child { border-bottom: none; padding-bottom: 0; }
+.mpd-donut-legend-row .dl-name { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--text); min-width: 0; }
+.mpd-donut-legend-row .dl-sw { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.mpd-donut-legend-row .dl-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--text); text-align: right; }
+.mpd-donut-legend-row .dl-sub { font-size: 10.5px; color: var(--muted); text-align: right; }
+
+/* Status/Type pill badges for the Employee Details table — structure
+   (rounded pill + small dot) taken from the reference image; colors are
+   a small fixed semantic set (not arbitrary brand colors) so different
+   statuses stay visually distinguishable, same idea as the reference's
+   APPROVED/DENIED/USER/MANAGER badges. */
+.mpd-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+.mpd-badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.mpd-badge.b-active    { background: #dcfce7; color: #16a34a; }
+.mpd-badge.b-sick      { background: #fee2e2; color: #dc2626; }
+.mpd-badge.b-pregnant  { background: #fce7f3; color: #db2777; }
+.mpd-badge.b-maternity { background: #ede9fe; color: #7c3aed; }
+.mpd-badge.b-resigned  { background: #f3f4f6; color: #6b7280; }
+.mpd-badge.b-default   { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+
+/* 🔧 2026-08-20: เดิม hardcode ฟ้า/ส้ม ไม่เกี่ยวกับสีที่ donut "Employee Type
+   Distribution" ในหน้าเดียวกันใช้เลย (ตอนนั้นเป็น teal+เทา) ทำให้หมวดหมู่
+   เดียวกัน (พนักงานประจำ/ผู้รับเหมาช่วง) มีคนละสีในแต่ละจุดของหน้าเดียวกัน —
+   เปลี่ยนให้ผูกกับ --accent/--accent2 ตัวเดียวกับ donut (ดู mpdUpdateCharts
+   ใน manpower-dashboard.js ที่แก้คู่กัน) ให้สีตรงกันทั้งหน้า */
+.mpd-badge.t-regular    { background: var(--a1d); color: var(--accent); }
+.mpd-badge.t-subcontract{ background: color-mix(in srgb, var(--accent2) 14%, transparent); color: var(--accent2); }
+
+/* Self-contained Import modal — NOT reusing the app's .modal-overlay/.modal
+   classes, since those appear to have their own show/hide mechanism
+   (likely a toggled class rather than inline style) that conflicted with
+   this modal being controlled via plain style.display. This version is
+   fully independent so there's no ambiguity about how it opens/closes. */
+/* 🔧 2026-08-20: เพิ่ม display:none เป็นค่าเริ่มต้นตรงนี้ในตัว CSS เอง (เดิม
+   พึ่ง inline style="display:none" ในมาร์กอัปอย่างเดียว) — ถ้า display ไม่ถูก
+   กำหนดไว้เลยที่ไหนสักจุด div ธรรมดาจะ fallback เป็น display:block ตาม
+   ธรรมชาติของมัน ซึ่ง align-items/justify-content ด้านล่างจะไม่มีผลเลย (ใช้
+   ได้เฉพาะตอน display:flex) ทำให้กล่อง modal หลุดไปชิดซ้ายบนแทนที่จะอยู่กลาง
+   จอ — ประกาศ display:none ไว้ที่นี่กันไว้อีกชั้น แล้ว JS (mpdOpenExportModal)
+   ค่อยสลับเป็น flex ตอนเปิดตามเดิม */
+.mpd-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+}
+.mpd-modal {
+  background: var(--surface2, #fff);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  margin: 0;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.mpd-modal h2 { margin: 0 0 4px; font-size: 18px; color: var(--text); }
+.mpd-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+.mpd-modal-actions .btn-cancel {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 9px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: 'Sarabun', sans-serif;
+}
+
+/* Export CSV modal options — icon badge + title + count, structure taken
+   from the Monthly Manpower page's own export modal (.mm-export-option in
+   css/10-page-monthly-manpower.css) but themed with this page's own
+   ice/violet accent pair instead of that page's colors. */
+.mpd-export-modal-sub { margin: 0 0 16px; font-size: 12.5px; color: var(--muted); }
+.mpd-export-options { display: flex; flex-direction: column; gap: 10px; }
+.mpd-export-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Sarabun', sans-serif;
+  transition: border-color .15s ease, background-color .15s ease, transform .15s ease;
+}
+.mpd-export-option:hover { border-color: var(--accent); background: var(--surface2); transform: translateY(-1px); }
+.mpd-export-option:active { transform: scale(.99); }
+.mpd-export-icon {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.mpd-export-icon svg { width: 16px; height: 16px; }
+.mpd-export-icon.ice    { background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 60%, black)); box-shadow: 0 4px 12px -3px color-mix(in srgb, var(--accent) 55%, transparent); }
+.mpd-export-icon.violet { background: linear-gradient(135deg, var(--accent2), color-mix(in srgb, var(--accent2) 60%, black)); box-shadow: 0 4px 12px -3px color-mix(in srgb, var(--accent2) 55%, transparent); }
+.mpd-export-option-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mpd-export-option-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.mpd-export-option-sub { font-size: 11.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }

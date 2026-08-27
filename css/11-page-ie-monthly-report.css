@@ -1,0 +1,907 @@
+/* ══════════════════════════════════════════════════
+   IE MONTHLY REPORT PAGE (#page-report-ie)
+   ไฟล์: css/11-page-ie-monthly-report.css (เดิมชื่อ 10-ie-monthly-report.css)
+   🔧 อัปเดตล่าสุด: เพิ่ม CSS ที่ HTML/JS ใช้แต่ไม่เคยถูกนิยาม —
+   1) Reason Modal (#ie-reason-modal-bg + .ie-reason-modal-*)
+   2) Shift Toggle (.ie-shift-toggle / .ie-shift-btn)
+   3) Detail Drill-down controls (.ie-dd-*) + save flash keyframe
+   4) ความกว้างคอลัมน์ตาราง drill-down (แก้ select โชว์ค่าไม่ครบ)
+   5) แก้ไขการจัดวางช่องวันที่และตาราง Drill-down ไม่ให้ทับซ้อนกัน
+   ══════════════════════════════════════════════════ */
+
+#page-report-ie .ie-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 32px 0;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* 🔧 แก้ไข: Division/Month/Update date ใช้ class="fselect" เหมือนหน้า
+   Analytics แต่ไฟล์นี้ไม่เคยนิยาม .fselect ไว้เลยสักจุด ทำให้ทั้ง 3
+   ช่องนี้ไม่มีสไตล์อะไรเลย ใช้ browser default ดิบๆ (ไม่มีลูกศร dropdown
+   ที่ตรงธีม ไม่มี focus state สีเขียว ฯลฯ) — เพิ่มให้ตรงกับหน้า Analytics */
+#page-report-ie .fselect {
+  font-size: 13px;
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: var(--r1);
+  padding: 6px 10px;
+  color: var(--text);
+  background: var(--surface2);
+  cursor: pointer;
+  transition: border-color var(--tr);
+  box-sizing: border-box;
+}
+#page-report-ie select.fselect {
+  padding-right: 26px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 12px;
+}
+#page-report-ie .fselect:focus { outline: none; border-color: var(--accent); }
+#page-report-ie .fselect:hover { border-color: var(--b1); }
+#page-report-ie input[type="date"].fselect::-webkit-calendar-picker-indicator {
+  filter: var(--date-icon-filter, none);
+  cursor: pointer;
+}
+[data-theme="dark"] #page-report-ie input[type="date"].fselect::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+}
+#page-report-ie .ie-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  font-family: 'DM Sans', 'Sarabun', sans-serif;
+}
+#page-report-ie .ie-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+
+#page-report-ie .ie-filters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  padding: 20px 32px 0;
+}
+#page-report-ie .ie-fg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#page-report-ie .ie-flabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+/* ── Summary Table card ── */
+#page-report-ie .ie-table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+#page-report-ie .ie-summary-table,
+#page-report-ie .ie-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: fixed;
+}
+#page-report-ie .ie-detail-table { font-size: 12px; min-width: 1100px; }
+
+#page-report-ie .ie-th {
+  padding: 11px 16px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+#page-report-ie .ie-th-center { text-align: center; padding: 11px 8px; }
+#page-report-ie .ie-th-strong { color: var(--text); }
+
+#page-report-ie .ie-th-green { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, var(--surface2)); }
+#page-report-ie .ie-th-red   { color: var(--danger); background: color-mix(in srgb, var(--danger) 14%, var(--surface2)); }
+#page-report-ie .ie-th-amber { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, var(--surface2)); }
+#page-report-ie .ie-th-blue  { color: var(--info); background: color-mix(in srgb, var(--info) 14%, var(--surface2)); }
+#page-report-ie .ie-th-accent{ color: var(--accent); }
+
+#page-report-ie .ie-empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ── Summary Table body rows (filled by JS) ── */
+#page-report-ie #rpt-tbody-summary td,
+#page-report-ie #rpt-modal-tbody td {
+  background: var(--surface);
+  color: var(--t1);
+  border-bottom: 1px solid var(--border);
+}
+#page-report-ie #rpt-tbody-summary tr:hover td,
+#page-report-ie #rpt-modal-tbody tr:hover td {
+  background: var(--surface2);
+}
+
+/* ══════════════════════════════════════════════════
+   MODAL — appendChild ไป body จึงไม่ scope #page-report-ie
+   ══════════════════════════════════════════════════ */
+.ie-modal-bg {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+}
+.ie-modal {
+  background: var(--surface);
+  border-radius: 16px;
+  width: 92vw;
+  max-width: 1400px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--s4);
+  border: 1px solid var(--border);
+}
+.ie-modal-head {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  background: var(--surface2);
+}
+.ie-modal-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.ie-modal-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.ie-modal-close {
+  background: none; border: none; font-size: 20px;
+  color: var(--muted); cursor: pointer; line-height: 1;
+}
+.ie-modal-body { flex: 1; overflow: auto; padding: 16px 24px; }
+.ie-modal-foot {
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+.ie-modal-close-btn {
+  padding: 8px 20px;
+  background: var(--surface2);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--t1);
+}
+.ie-modal-close-btn:hover { background: var(--surface3); }
+
+/* th ในตาราง modal — scope แบบ global เพราะ modal อยู่ body */
+.ie-th {
+  padding: 10px 8px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+/* 🔧 เพิ่มใหม่: empty/loading state ในตาราง modal (rpt-modal-tbody /
+   rpt-detail-modal-tbody) — scope แบบ global เหมือน .ie-th ด้านบน เพราะ
+   modal ถูก appendChild ไป body จึงหลุดจาก #page-report-ie .ie-empty */
+.ie-empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ── Modal body cells ── */
+.ie-row { border-bottom: 0.5px solid var(--border); }
+.ie-td {
+  padding: 9px 8px;
+  font-size: 12px;
+  color: var(--t1);
+}
+.ie-td-center { text-align: center; }
+.ie-td-strong { color: var(--text); }
+.ie-td-secondary { color: var(--t1); }
+
+.ie-cell-amber { font-weight: 600; color: var(--warn); background: color-mix(in srgb, var(--warn) 15%, transparent); }
+.ie-cell-blue  { font-weight: 600; color: var(--info); background: color-mix(in srgb, var(--info) 15%, transparent); }
+.ie-cell-diff  { font-weight: 600; }
+
+.ie-val-ok      { color: var(--ok) !important; }
+.ie-val-danger  { color: var(--danger) !important; }
+.ie-val-muted   { color: var(--muted) !important; }
+
+.ie-td-input { padding: 6px 8px; }
+.ie-reason-input {
+  width: 100%;
+  padding: 5px 8px;
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: inherit;
+  outline: none;
+  background: var(--surface2);
+  color: var(--text);
+}
+.ie-reason-input:focus { border-color: var(--accent); }
+.ie-reason-readonly {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: .7;
+}
+
+.ie-summary-row {
+  background: var(--surface2);
+  font-weight: 600;
+  border-top: 2px solid var(--border);
+}
+.ie-summary-label {
+  text-align: right;
+  color: var(--t1);
+}
+
+/* ══════════════════════════════════════════════════
+   🆕 SHIFT TOGGLE — ปุ่มสลับกะ ALL/A/B/C ใน modal head
+   ══════════════════════════════════════════════════ */
+.ie-shift-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.ie-shift-btn {
+  border: none;
+  background: transparent;
+  padding: 5px 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background var(--tr), color var(--tr);
+}
+.ie-shift-btn:hover { color: var(--text); }
+.ie-shift-btn.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0,0,0,.12);
+}
+
+/* ══════════════════════════════════════════════════
+   🆕 REASON MODAL — กล่องกรอกเหตุผลการแก้ไข
+   ══════════════════════════════════════════════════ */
+#ie-reason-modal-bg {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px);
+  z-index: 100000;
+  align-items: center;
+  justify-content: center;
+}
+#ie-reason-modal-bg.open { display: flex; }
+
+.ie-reason-modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 440px;
+  max-width: 92vw;
+  box-shadow: var(--s4);
+  overflow: hidden;
+}
+.ie-reason-modal-head {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.ie-reason-modal-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.ie-reason-modal-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.ie-reason-modal-body { padding: 20px 24px; }
+.ie-reason-modal-input {
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--surface2);
+  color: var(--text);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color var(--tr);
+}
+.ie-reason-modal-input:focus { border-color: var(--accent); }
+
+.ie-reason-modal-error {
+  display: none;
+  font-size: 11px;
+  color: var(--danger);
+  margin-top: 8px;
+}
+.ie-reason-modal-error.show { display: block; }
+
+.ie-reason-modal-foot {
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.ie-reason-modal-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--tr);
+}
+.ie-reason-modal-btn-cancel { background: var(--surface2); color: var(--t1); }
+.ie-reason-modal-btn-cancel:hover { background: var(--surface3); }
+.ie-reason-modal-btn-confirm { background: var(--accent); color: #fff; }
+.ie-reason-modal-btn-confirm:hover { filter: brightness(1.08); }
+
+/* ══════════════════════════════════════════════════
+   🆕 DETAIL DRILL-DOWN — controls ในตารางพนักงานราย Sub Line
+   ══════════════════════════════════════════════════ */
+/* 🔧 แก้ไข: เปลี่ยนจาก table-layout:auto (คอลัมน์ขยับตามเนื้อหา ทำให้ทับ
+   ซ้อนกันเวลาโฟกัส/ข้อมูลยาว) เป็น table-layout:fixed คู่กับ <colgroup> ใน
+   HTML — ทุกคอลัมน์ความกว้างคงที่ตายตัวเสมอ ไม่ขยับไปมา */
+#rpt-detail-modal-bg .ie-detail-table {
+  table-layout: fixed;
+  width: 2780px;
+  min-width: 2780px;
+}
+#rpt-detail-modal-bg .ie-th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#rpt-detail-modal-tbody td {
+  padding: 10px 10px;
+  border-bottom: 0.5px solid var(--border);
+  background: var(--surface);
+  vertical-align: middle;
+  overflow: hidden;      /* 🔧 กันเนื้อหาล้นออกนอกเซลล์ไปทับคอลัมน์ข้างๆ */
+}
+#rpt-detail-modal-tbody tr:hover td { background: var(--surface2); }
+
+/* 🔧 เพิ่มใหม่: กันข้อความยาว (ชื่อ-สกุล, ตำแหน่ง, รหัสพนักงาน) ดันความสูง
+   แถว/ล้นออกนอกเซลล์ — ตัดด้วย ... แทน (badge/pill ไม่แตะ ให้คงทรงกลมเดิม) */
+.ie-dd-locked-text,
+.ie-dd-fullname {
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.ie-dd-badge {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 🔧 เพิ่มใหม่: โฟกัสของ input/select ในตาราง — เดิมใช้ outline default ของ
+   browser ซึ่งวาดล้นออกนอกกรอบ td ไปทับคอลัมน์ถัดไปเวลาช่องอยู่ติดกัน
+   ตอนนี้ยกเลิก outline default แล้วใช้ box-shadow ที่ inset อยู่ในกรอบเดิม
+   แทน พร้อม z-index ยกโฟกัสให้ลอยเหนือเซลล์ข้างๆ กันถูกบัง */
+#rpt-detail-modal-bg .ie-dd-text:focus,
+#rpt-detail-modal-bg .ie-dd-select:focus,
+#rpt-detail-modal-bg .ie-gl-ms-btn:focus {
+  position: relative;
+  z-index: 2;
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.ie-dd-select {
+  width: 100%;
+  box-sizing: border-box; /* 🔧 กัน padding บวกเพิ่มจนล้นความกว้างคอลัมน์คงที่ */
+  padding: 5px 8px;
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: inherit;
+  background: var(--surface2);
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+  min-width: 64px;
+  transition: border-color var(--tr);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ie-dd-select:focus { border-color: var(--accent); }
+.ie-dd-select:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ── ปรับปรุงช่องข้อความและวันที่ในตาราง Drill-down ── */
+.ie-dd-text {
+  width: 100%;
+  min-width: 90px;
+  padding: 5px 8px;
+  padding-right: 28px; /* เว้นพื้นที่ให้ไอคอนปฏิทิน */
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: inherit;
+  background: var(--surface2);
+  color: var(--text);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color var(--tr);
+  position: relative;
+}
+.ie-dd-text:focus { border-color: var(--accent); }
+.ie-dd-text:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ── จัดการไอคอนปฏิทินให้แสดงผลพอดี ไม่ทับตัวหนังสือ ── */
+#rpt-detail-modal-bg input[type="date"].ie-dd-text::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  position: absolute;
+  right: 6px;
+}
+#rpt-detail-modal-bg input[type="date"].ie-dd-text::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.ie-dd-select[data-field="lineName"],
+.ie-dd-select[data-field="subLine"]       { min-width: 170px; }
+.ie-dd-select[data-field="process"],
+.ie-dd-select[data-field="riskFactor"],
+.ie-dd-select[data-field="detail"]        { min-width: 120px; }
+.ie-dd-select[data-field="shift"]         { min-width: 56px; }
+.ie-dd-select[data-field="positionType"] { min-width: 84px; }
+
+.ie-dd-text[data-field="note"]            { min-width: 200px; }
+.ie-dd-text[data-field="reasonNeed"]     { min-width: 180px; }
+.ie-dd-text[data-field="start"],
+.ie-dd-text[data-field="endFinish"]      { min-width: 130px; }
+
+.ie-gl-multiselect { min-width: 170px; }
+
+.ie-gl-ms-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: inherit;
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--tr);
+  box-sizing: border-box;
+}
+.ie-gl-ms-btn:hover   { border-color: var(--accent); }
+.ie-gl-ms-btn:disabled { opacity: .6; cursor: not-allowed; }
+.ie-gl-multiselect.open .ie-gl-ms-btn { border-color: var(--accent); }
+
+.ie-gl-ms-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ie-gl-ms-caret { width: 12px; height: 12px; flex-shrink: 0; opacity: .7; transition: transform var(--tr); }
+.ie-gl-multiselect.open .ie-gl-ms-caret { transform: rotate(180deg); }
+
+.ie-gl-ms-panel {
+  display: none;
+  position: fixed;
+  z-index: 100010;
+  min-width: 220px;
+  max-width: 320px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--s4);
+  overflow: hidden;
+}
+.ie-gl-ms-panel.open { display: block; }
+
+.ie-gl-ms-actions {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.ie-gl-ms-actions button {
+  flex: 1;
+  border: none;
+  background: var(--surface2);
+  color: var(--t1);
+  font-size: 11px;
+  font-family: inherit;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.ie-gl-ms-actions button:hover { filter: brightness(0.95); background: var(--border); }
+
+.ie-gl-ms-list { max-height: 220px; overflow-y: auto; padding: 4px 0; }
+.ie-gl-ms-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--t1);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ie-gl-ms-item:hover { background: var(--surface2); }
+.ie-gl-ms-item input[type="checkbox"] { cursor: pointer; accent-color: var(--accent); }
+.ie-gl-ms-empty { padding: 12px; font-size: 11px; color: var(--text-muted); text-align: center; }
+
+.ie-dd-locked-text {
+  font-size: 12px;
+  color: var(--t1);
+  white-space: nowrap;
+}
+.ie-dd-fullname {
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.ie-dd-empcode {
+  font-size: 12px;
+  color: var(--t1);
+  padding: 9px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ie-dd-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--t1);
+  white-space: nowrap;
+}
+
+.ie-detail-save-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+  color: var(--ok);
+  cursor: pointer;
+  transition: background var(--tr);
+}
+.ie-detail-save-btn:hover { background: color-mix(in srgb, var(--ok) 26%, transparent); }
+.ie-detail-save-btn svg { width: 14px; height: 14px; }
+
+@keyframes ie-dd-saved-flash {
+  0%  { background: color-mix(in srgb, var(--ok) 25%, transparent); }
+  100% { background: transparent; }
+}
+tr.ie-dd-saved td { animation: ie-dd-saved-flash 1s ease-out; }
+
+[data-density="compact"] .ie-th {
+  padding: 7px 10px;
+}
+[data-density="compact"] #page-report-ie #rpt-tbody-summary td,
+[data-density="compact"] #page-report-ie #rpt-modal-tbody td,
+[data-density="compact"] .ie-td {
+  padding: 5px 8px;
+}
+[data-density="compact"] #rpt-detail-modal-tbody td {
+  padding: 6px 8px;
+}
+
+#page-report-ie .ie-calc-btn,
+#page-report-ie .ie-export-btn {
+  height: 34px;
+  padding: 0 18px;
+  border-radius: var(--r1);
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: background var(--tr), filter var(--tr), box-shadow var(--tr);
+}
+/* 🔧 แก้ไข: เดิมพื้นสีทึบเรียบๆ — เปลี่ยนเป็น gradient + glow shadow ให้
+   เข้ากับสไตล์ปุ่ม CTA หลักของหน้าอื่นๆ ในแอป (เช่น Assign Employees) */
+#page-report-ie .ie-calc-btn {
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 55%, white));
+  color: #fff;
+  box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--accent) 65%, transparent);
+}
+#page-report-ie .ie-calc-btn:hover { filter: brightness(1.08); }
+#page-report-ie .ie-calc-btn:disabled { opacity: .6; cursor: not-allowed; filter: none; box-shadow: none; }
+
+#page-report-ie .ie-export-btn {
+  background: var(--surface2);
+  color: var(--t1);
+  border: 1px solid var(--border);
+}
+#page-report-ie .ie-export-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+#page-report-ie .ie-export-btn:hover { background: var(--surface3); }
+
+/* 🔧 เพิ่มใหม่: Floating Action Button "New" (Concept 3)
+   ลอยมุมล่างขวาของหน้า Summary — ไม่แตะ layout/toolbar เดิมเลย
+   ใช้ token สีเดิมของระบบ (--accent, --s4) ให้กลืนกับธีม light/dark ที่มีอยู่ */
+#page-report-ie .ie-fab {
+  position: fixed;
+  right: 32px;
+  bottom: 28px;
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--s4), 0 10px 24px -8px color-mix(in srgb, var(--accent) 55%, transparent);
+  transition: transform var(--tr), filter var(--tr), box-shadow var(--tr);
+  z-index: 500; /* ต่ำกว่า modal (99999+) แต่ลอยเหนือเนื้อหาตารางทั้งหมด */
+}
+#page-report-ie .ie-fab svg { width: 22px; height: 22px; }
+#page-report-ie .ie-fab:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: var(--s4), 0 14px 30px -8px color-mix(in srgb, var(--accent) 65%, transparent);
+}
+#page-report-ie .ie-fab:active { transform: translateY(0); }
+
+@media (max-width: 640px) {
+  #page-report-ie .ie-fab { right: 18px; bottom: 18px; width: 48px; height: 48px; }
+  #page-report-ie .ie-fab svg { width: 20px; height: 20px; }
+}
+
+.ie-modal-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter var(--tr);
+}
+.ie-modal-export-btn:hover { filter: brightness(1.08); }
+.ie-export-caret { font-size: 9px; opacity: .85; }
+
+.ie-export-wrap {
+  position: relative;
+  display: inline-block;
+}
+.ie-export-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  flex-direction: column;
+  min-width: 210px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--s4);
+  overflow: hidden;
+  z-index: 10;
+}
+.ie-export-menu button {
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  font-family: inherit;
+  color: var(--t1);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ie-export-menu button:hover { background: var(--surface2); }
+.ie-export-menu button + button { border-top: 1px solid var(--border); }
+
+.ie-modal-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 24px;
+  border-bottom: 0.5px solid var(--border);
+  background: var(--surface);
+}
+.ie-group-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.ie-group-tab-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 16px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background var(--tr), color var(--tr);
+}
+.ie-group-tab-btn:hover { color: var(--text); }
+.ie-group-tab-btn.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0,0,0,.12);
+}
+
+/* ══════════════════════════════════════════════════
+   🆕 MODAL HEAD/SUBHEAD LAYOUT HELPERS
+   ══════════════════════════════════════════════════ */
+/* 🔧 เพิ่มใหม่: กลุ่มปุ่มสลับกะ + ปุ่มปิด ชิดขวาสุดของแถวหัว modal "Report by IE"
+   ด้วยกัน (แยกจาก .ie-modal-head ที่จัด space-between ระหว่าง title กับกลุ่มนี้) */
+.ie-modal-head-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+/* 🔧 เพิ่มใหม่: กลุ่มฝั่งซ้ายของ .ie-modal-subhead — แท็บ "ราย Code"/"รวมตาม
+   Sub Line" ต่อด้วยเส้นคั่นแล้วตามด้วย Toggle ขอบเขต GL Sub Line "Code"/"Div" */
+.ie-subhead-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ie-subhead-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════
+   🆕 FILTER BAR — Filter สถานะ + Filter สายย่อย (dropdown+multiselect) ใน
+   modal "Report by IE" — กลุ่ม Filter ชิดซ้าย ปุ่ม "ล้าง Filter" ชิดขวา
+   ══════════════════════════════════════════════════ */
+.ie-modal-filterbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 24px;
+  border-bottom: 0.5px solid var(--border);
+  background: var(--surface);
+}
+.ie-filterbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ie-filterbar-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.ie-filter-status-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ie-filter-status-btn {
+  border: 0.5px solid var(--border);
+  background: var(--surface2);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background var(--tr), color var(--tr), border-color var(--tr);
+}
+.ie-filter-status-btn:hover { color: var(--text); border-color: var(--accent); }
+.ie-filter-status-btn.active {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 16%, var(--surface2));
+  border-color: color-mix(in srgb, var(--ok) 40%, var(--border));
+}
+.ie-filter-status-btn-danger.active {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 16%, var(--surface2));
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--border));
+}
+.ie-filter-clear-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--tr);
+}
+.ie-filter-clear-btn:hover { color: var(--text); }
+/* ปุ่ม "ล้าง Filter" แบบ inline ในข้อความ empty-state (ดู renderRptModal) */
+.ie-filter-clear-inline {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-left: 6px;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}

@@ -1,0 +1,353 @@
+/* ══════════════════════════════════════════════════
+   ADMIN / DATABASE / TRANSFER PAGES — shared styles
+   ไฟล์: css/12-page-admin-transfer.css (เดิมชื่อ 11-admin-pages.css)
+
+   🧹 เพิ่ม #tabTransferred/#tabWaiting เข้ามา (ย้ายมาจากก้อน
+   legacy ใน 3-layout.css เดิม — เป็นกฎที่ยังมีผลจริงเพราะใช้
+   ID selector + !important ที่ปรับ padding เฉพาะ 2 ปุ่มนี้ให้
+   เล็กกว่า .adm-tab ปกตินิดหน่อย)
+   ══════════════════════════════════════════════════ */
+
+.adm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 32px 0;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.adm-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.adm-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+
+/* 🆕 ไอคอนหัวหน้า (แทน emoji เดิม) — กล่องกลมมนพื้นสี accent จางๆ ไอคอนเส้น
+   บาง ให้เข้าธีมเดียวกับหน้าอื่นในแอป */
+.adm-header-row { display: flex; align-items: center; gap: 11px; }
+.adm-page-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--a1d);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.adm-page-icon svg { width: 18px; height: 18px; color: var(--accent); }
+
+.adm-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--s1);
+}
+
+.adm-table { width: 100%; border-collapse: collapse; font-size: 13px; position: relative; }
+.adm-th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  white-space: nowrap;
+}
+.adm-table tbody td {
+  padding: 12px 16px;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border);
+}
+.adm-table tbody tr:hover td { background: var(--surface2); }
+.adm-empty { text-align: center; padding: 48px; color: var(--muted); }
+
+.adm-search {
+  width: 280px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  margin-bottom: 14px;
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.adm-tab {
+  padding: 10px 22px;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .2s;
+}
+.adm-tab:hover { background: var(--surface2); color: var(--text); }
+.adm-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* 🔧 แก้ไข: เดิมพื้นสีทึบเรียบๆ — เปลี่ยนเป็น gradient + glow shadow ให้
+   เข้ากับสไตล์ปุ่ม/แท็บ active หลักของหน้าอื่นๆ ในแอป (เช่น IE Monthly
+   Report) — scope เฉพาะหน้านี้ (.adm-tab-active ไม่ได้ใช้ที่หน้าอื่นเลย) */
+.adm-tab-active {
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 55%, white));
+  color: #fff;
+  font-weight: 700;
+  border-color: transparent;
+  box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* ปุ่มแท็บของหน้า Transfer System โดยเฉพาะ — ปรับ padding ให้
+   กระชับกว่า .adm-tab ทั่วไปเล็กน้อย */
+#tabTransferred, #tabWaiting {
+  padding: 7px 18px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  transition: background .15s !important;
+  cursor: pointer !important;
+  border: none !important;
+}
+
+.adm-btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 18px;
+  border: 1.5px solid var(--accent);
+  border-radius: var(--r2, 10px);
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background-color .3s ease, color .3s ease, border-color .3s ease, box-shadow .3s ease;
+}
+.adm-btn-primary::after {
+  content: ""; position: absolute; top: 0; left: -75%;
+  width: 45%; height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255,255,255,.35), transparent);
+  transform: skewX(-20deg); pointer-events: none;
+}
+.adm-btn-primary:hover, .adm-btn-primary:focus-visible {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 8px 20px -6px rgba(0,0,0,.35);
+  box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.adm-btn-primary:hover::after, .adm-btn-primary:focus-visible::after { animation: btn-sweep .8s ease forwards; }
+.adm-btn-primary:active { transform: scale(.96); }
+
+.adm-btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r2, 10px);
+  background: var(--surface);
+  color: var(--t1);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color .3s ease, border-color .3s ease, color .3s ease, transform .15s ease;
+}
+.adm-btn-secondary:hover { background: var(--surface2); border-color: var(--b1); color: var(--t0); }
+.adm-btn-secondary:active { transform: scale(.96); }
+
+.adm-btn-cancel {
+  padding: 9px 18px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r2, 10px);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--t1);
+  transition: background-color .3s ease, border-color .3s ease, color .3s ease, transform .15s ease;
+}
+.adm-btn-cancel:hover { background: var(--surface3); border-color: var(--b1); color: var(--t0); }
+.adm-btn-cancel:active { transform: scale(.96); }
+
+.adm-empty-box {
+  margin-top: 24px;
+  padding: 40px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+}
+
+/* ── Modal ── */
+.adm-modal-bg {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+}
+.adm-modal {
+  background: var(--surface);
+  border-radius: 16px;
+  width: 520px;
+  max-width: 92vw;
+  max-height: 88vh;
+  overflow: auto;
+  box-shadow: var(--s4);
+  border: 1px solid var(--border);
+}
+.adm-modal-head {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.adm-modal-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.adm-modal-close {
+  background: none; border: none; font-size: 20px;
+  color: var(--muted); cursor: pointer;
+}
+.adm-modal-foot {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.adm-label { font-size: 11px; font-weight: 600; color: var(--muted); }
+.adm-input {
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  box-sizing: border-box;
+  background: var(--surface2);
+  color: var(--text);
+  outline: none;
+}
+.adm-input:focus { border-color: var(--accent); }
+
+/* ── cfg-tab (Shift Factor sub-tabs) ── */
+.cfg-tab {
+  padding: 8px 16px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--r2, 10px);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background-color .3s ease, color .3s ease, border-color .3s ease;
+}
+.cfg-tab::after {
+  content: ""; position: absolute; top: 0; left: -75%;
+  width: 45%; height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255,255,255,.35), transparent);
+  transform: skewX(-20deg); pointer-events: none;
+}
+.cfg-tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.cfg-tab.active::after { animation: btn-sweep .8s ease forwards; }
+
+/* ── nav-sub-tab — clean style, no boxy borders ── */
+.nav-sub-tab {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 8px 52px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  text-align: left;
+  transition: background .15s, color .15s;
+  font-family: inherit;
+}
+.nav-sub-tab:hover { background: var(--surface2); color: var(--text); }
+.nav-sub-tab.active { background: var(--a1d); color: var(--accent); }
+.nav-sub-icon { font-size: 13px; line-height: 1; }
+
+/* ── User Modal scroll fix ── */
+#userModal .modal { overflow-y: auto !important; }
+
+/* ══════════════════════════════════════════════════
+   🆕 TRANSFER TABLE — cell/status-pill (แทน inline style hex สีสว่างล้วน
+   เดิมที่ไม่ปรับตาม dark/light theme เลย เช่น #d4edda/#155724, #e2e8f0)
+   scope เฉพาะ #page-transfer ไม่กระทบตารางหน้าอื่น
+   ══════════════════════════════════════════════════ */
+#page-transfer .adm-cell-idx { color: var(--muted); font-weight: 600; text-align: center; }
+#page-transfer .adm-cell-id  { font-family: 'JetBrains Mono', monospace; color: var(--text); font-weight: 600; }
+#page-transfer .adm-cell-name { font-weight: 600; color: var(--text); }
+#page-transfer .adm-cell-muted { color: var(--muted); }
+#page-transfer .adm-cell-date {
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+#page-transfer .adm-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--ok) 16%, transparent);
+  color: var(--ok);
+  white-space: nowrap;
+}
+#page-transfer .adm-status-pill svg { width: 11px; height: 11px; flex-shrink: 0; }
+#page-transfer .adm-status-pill--info {
+  background: color-mix(in srgb, var(--info) 16%, transparent);
+  color: var(--info);
+}
+#page-transfer .adm-status-pill--warn {
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  color: var(--warn);
+}
+#page-transfer .adm-warn-icon { color: var(--warn); cursor: help; margin-left: 5px; }
+#page-transfer .adm-warn-icon svg { width: 12px; height: 12px; vertical-align: -2px; }
+
+/* 🆕 Table density — หน้า Admin/Database/Transfer */
+[data-density="compact"] .adm-th {
+  padding: 8px 12px;
+}
+[data-density="compact"] .adm-table tbody td {
+  padding: 7px 12px;
+}

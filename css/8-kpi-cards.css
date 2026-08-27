@@ -1,0 +1,106 @@
+/* ══════════════════════════════════════════════════
+   KPI CARDS — Manpower Analytics (#page-report-analytics)
+   ไฟล์: css/8-kpi-cards.css
+   ไม่มีการเปลี่ยนแปลงจากต้นฉบับ (เดิมชื่อ 7-kpi-cards.css) —
+   ไฟล์นี้เขียนดีอยู่แล้ว ใช้ var()/color-mix() ครบ ไม่มีปัญหา
+   dark mode ตั้งแต่แรก
+   ══════════════════════════════════════════════════ */
+
+#page-report-analytics .cards-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 1100px) {
+  #page-report-analytics .cards-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  #page-report-analytics .cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+#page-report-analytics .kpi-card {
+  position: relative;
+  background: color-mix(in srgb, var(--surface2) 68%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--r3);
+  padding: 13px 13px 11px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 16px 40px -24px rgba(0,0,0,0.4);
+  transition: box-shadow var(--tr);
+  /* การ์ดแต่ละใบสูงไม่เท่ากันเพราะ label บางหมวด (เช่น "PREGNANT(คนท้อง)",
+     "SICK(คนป่วย)") ยาวกว่าหมวดอื่นจนตัดขึ้นบรรทัดที่ 2 — grid จะ stretch
+     ให้เท่ากันเองแค่ "แถวเดียวกัน" เท่านั้น พอจอแคบลงจน grid ตัดเป็นหลายแถว
+     (breakpoint 4 คอลัมน์/2 คอลัมน์ด้านล่าง) แต่ละแถวเลยสูงไม่เท่ากัน —
+     ล็อค min-height ให้พอสำหรับ label 2 บรรทัดเสมอ ทุกการ์ดจะสูงเท่ากัน
+     ไม่ว่าจะอยู่แถวไหน */
+  min-height: 106px;
+}
+#page-report-analytics .kpi-card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--kpi-accent, var(--accent));
+}
+#page-report-analytics .kpi-card:hover {
+  box-shadow: var(--s2);
+}
+
+#page-report-analytics .kpi-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 6px;
+}
+
+#page-report-analytics .kpi-num {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+#page-report-analytics .kpi-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+#page-report-analytics .kpi-pct {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: var(--kpi-accent, var(--accent));
+  background: color-mix(in srgb, var(--kpi-accent, var(--accent)) 15%, transparent);
+}
+
+#page-report-analytics .kpi-meta {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.9;
+}
+#page-report-analytics .kpi-meta span {
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* ── per-card accent color (categorical, ไม่ผูกกับ accent หลัก) ──
+   ค่าตรงกับ CAT_COLOR ใน js/modules/reports.js และ .legend-dot ใน
+   report-analytics.html เป๊ะๆ ทั้ง 7 หมวด — เดิมใช้คนละชุดสี ทำให้
+   สีของ KPI card ไม่ตรงกับสีในกราฟ/legend ของหมวดเดียวกัน (บั๊คแบบ
+   เดียวกับที่เจอใน Manpower Dashboard ระหว่าง badge กับ donut chart) */
+#page-report-analytics .kpi-card.c-ope      { --kpi-accent: #2563eb; }
+#page-report-analytics .kpi-card.c-gl       { --kpi-accent: #7c3aed; }
+#page-report-analytics .kpi-card.c-spare    { --kpi-accent: #6b7280; }
+#page-report-analytics .kpi-card.c-pregnant { --kpi-accent: #db2777; }
+#page-report-analytics .kpi-card.c-sick     { --kpi-accent: #dc2626; }
+#page-report-analytics .kpi-card.c-posfree  { --kpi-accent: #d97706; }
+#page-report-analytics .kpi-card.c-other    { --kpi-accent: #059669; }
+
+

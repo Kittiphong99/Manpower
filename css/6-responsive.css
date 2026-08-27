@@ -1,0 +1,131 @@
+/*
+ * ============================================================
+ *  EMPTRACK — Responsive Breakpoints
+ *  ไฟล์: css/6-responsive.css
+ *  โหลดเป็นไฟล์สุดท้ายในกลุ่ม "global" (ก่อนไฟล์เฉพาะหน้า)
+ *  ไม่มีการเปลี่ยนแปลงจากต้นฉบับ — breakpoint เฉพาะหน้า (เช่น
+ *  .cards-row-grid ของ Assign Employees, .mm-summary-grid ของ
+ *  Monthly Manpower) ให้ดูใน media query ที่อยู่ท้ายไฟล์ของ
+ *  หน้านั้นๆ แทน เพื่อให้แก้ไขหน้าไหนก็แก้ไฟล์เดียวจบ
+ *
+ *  Breakpoints:
+ *    ≥1280px → xl desktop  (stats 5 cols)
+ *     900px  → md tablet   (sidebar off-canvas)
+ *     600px  → sm phone    (single column)
+ * ============================================================
+ */
+
+/* ══ TABLET / SMALL DESKTOP (≤900px) ══════════════════ */
+@media (max-width: 900px) {
+
+  .mob-topbar { display: flex; }
+
+  .sidebar {
+    transform: translateX(-100%);
+    top: 0; z-index: 120; box-shadow: none;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 32px rgba(0,0,0,.45);
+  }
+  .sidebar-overlay { display: block; }
+
+  .main-content { margin-left: 0; padding-top: 52px; }
+  .wrap { padding: 16px 14px; }
+
+  .stats { grid-template-columns: repeat(2, 1fr); }
+
+  .ff-layout { grid-template-columns: 1fr; }
+
+  .cal-grid { grid-template-columns: 1fr; }
+  .cal-sidebar { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+
+  .charts-grid { grid-template-columns: 1fr; }
+
+  .leave-stats, .ot-stats { grid-template-columns: repeat(2, 1fr); }
+
+  .rpt-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .emp-table-wrap, .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { min-width: 700px; }
+
+  .emp-grid { grid-template-columns: repeat(2, 1fr); }
+
+  #allstaffGrid { grid-template-columns: 1fr; }
+
+  .modal {
+    padding: 20px 16px;
+    max-width: calc(100vw - 32px) !important;
+    margin: 0;
+  }
+  #assignPickerModal [style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ══ PHONE (≤600px) ════════════════════════════════════ */
+@media (max-width: 600px) {
+
+  .wrap { padding: 12px 10px; }
+
+  .stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stat-card { padding: 12px 14px; }
+  .stat-val  { font-size: 22px !important; }
+
+  .col-hide-sm { display: none; }
+
+  .emp-grid { grid-template-columns: 1fr; }
+
+  .filter-tabs,
+  .proc-tabs,
+  .shift-bar,
+  #leaveFilterBar,
+  #rptTabs,
+  #allstaffFilterBar {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .filter-tabs::-webkit-scrollbar,
+  .proc-tabs::-webkit-scrollbar,
+  .shift-bar::-webkit-scrollbar { display: none; }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
+  }
+  .header-actions { width: 100%; }
+
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    max-height: 85vh;
+  }
+
+  .login-box { padding: 28px 20px; }
+
+  #toastContainer { left: 10px; right: 10px; width: auto; }
+
+  .leave-stats, .ot-stats { grid-template-columns: repeat(2, 1fr); }
+
+  .rpt-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .cal-day { padding: 4px !important; min-height: 40px !important; }
+  .cal-day-num { font-size: 11px !important; }
+
+  #allstaffGrid { grid-template-columns: 1fr; }
+}
+
+/* ══ LARGE DESKTOP (≥1280px) ═══════════════════════════ */
+@media (min-width: 1280px) {
+  .stats { grid-template-columns: repeat(5, 1fr); }
+  .emp-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  #allstaffGrid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+}

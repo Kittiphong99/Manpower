@@ -1,0 +1,547 @@
+/* ══════════════════════════════════════════════════
+   MONTHLY MANPOWER PAGE (#page-report-monthly)
+   ไฟล์: css/10-page-monthly-manpower.css (เดิมชื่อ 9-monthly-manpower.css)
+
+   🧹 รวมเพิ่มจากก้อน "MANPOWER ANALYTICS SYSTEM v2.0" ที่เคย
+   หลงอยู่ใน 3-layout.css: .page-wrapper, .section-header/
+   .section-icon/.section-title/.section-subtitle,
+   .chart-section และองค์ประกอบย่อยของกราฟแท่งทั้งหมด,
+   .page-footer — เดิม hardcode เป็น hex ล้วน (#fafbfd, #ffffff
+   ฯลฯ) ไม่มี dark override เลย ตอนนี้แปลงเป็น var() ครบ และ
+   scope ด้วย #page-report-monthly ทุกจุดเพื่อไม่ให้ชนกับหน้าอื่น
+   (ดู CHANGELOG.md)
+   ══════════════════════════════════════════════════ */
+
+/* ── Page wrapper (การ์ดใหญ่ครอบทั้งหน้า) ─────────────────── */
+/* 🔧 แก้ไข (2026-08-21 — ตาม reference "Halo"): เดิม max-width:1400px +
+   margin:0 auto ทำให้การ์ดลอยตรงกลางจอ เหลือขอบว่างซ้าย-ขวาเยอะบนจอกว้าง
+   ทั้งที่ reference ยืดเต็มความกว้างของพื้นที่เนื้อหา (เหมือน pattern เดียวกับ
+   ที่แก้ไว้แล้วใน 16-page-report-adjustment.css) — เอา max-width/margin ออก
+   ให้เต็มพื้นที่เสมอ */
+#page-report-monthly .page-wrapper {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  /* 🔧 แก้ไข (2026-08-21): var(--s1) เดิมเบามาก (1px 4px, 8% opacity) พอตัด
+     max-width/centering ออกไปแล้วการ์ดเลยดูเหมือน "ติดขอบ" sidebar เพราะไม่มี
+     เงาช่วยแยกชั้นให้เห็นชัด — reference ใช้เงาลอยหนักกว่านี้มาก
+     (0 20px 60px -30px rgba(0,0,0,.5)) ให้การ์ดดูลอยแยกจากพื้นหลัง/sidebar
+     ชัดเจน ใส่ margin-top เล็กน้อยเสริมด้วยเพื่อให้เงาบนมีที่ให้เห็น */
+  box-shadow: 0 20px 60px -30px rgba(0,0,0,.5);
+  padding: 32px;
+  margin-top: 4px;
+}
+
+/* ── Header ── */
+/* 🔧 แก้ไข (2026-08-21 — ตามที่ผู้ใช้ขอ "ระยะห่างเท่าหน้า Report Adjustment"):
+   เดิม padding ซ้าย-ขวา 32px ที่นี่ซ้อนทับกับ padding 32px ของ .page-wrapper
+   ที่ครอบอยู่ชั้นนอกอีกที (รวมเป็น 64px) ทำให้ระยะห่างจาก sidebar มากกว่า
+   หน้า Report Adjustment เกือบเท่าตัว (88px vs 56px) — เอา padding ซ้าย-ขวา
+   ออกจากจุดนี้ ให้เหลือแหล่งเดียวคือ .page-wrapper (เหมือนหน้า Report
+   Adjustment ที่มี padding 32px แค่จุดเดียวที่ #page-report-adjustment) */
+#page-report-monthly .mm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 0 0;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+#page-report-monthly .mm-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  font-family: 'DM Sans', 'Sarabun', sans-serif;
+}
+#page-report-monthly .mm-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 4px 0 0;
+  font-weight: 400;
+}
+#page-report-monthly .mm-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 55%, white));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -10px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+#page-report-monthly .mm-export-btn:hover { opacity: .9; }
+
+/* ── Summary Cards ── */
+#page-report-monthly .mm-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 20px 0;
+}
+#page-report-monthly .mm-summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+#page-report-monthly .mm-card-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin: 0 0 8px;
+}
+#page-report-monthly .mm-card-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  line-height: 1;
+}
+#page-report-monthly .mm-card-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+#page-report-monthly .mm-meta-positive { color: var(--ok); font-weight: 500; }
+#page-report-monthly .mm-meta-negative { color: var(--danger); font-weight: 500; }
+#page-report-monthly .mm-value-positive { color: var(--ok); }
+#page-report-monthly .mm-value-negative { color: var(--danger); }
+
+#page-report-monthly .mm-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+/* 🔧 แก้ไข (2026-08-21): เดิมชื่อ .mm-icon-blue ผูกกับ var(--info) (ฟ้า) —
+   reference ใช้สี ice (var(--accent)) เดียวกับปุ่ม/ไอคอน section อื่นทั้งหน้า
+   ไม่ใช่สีฟ้าแยกต่างหาก เปลี่ยนชื่อ+สีให้ตรงกับ ic-ice ของ reference */
+#page-report-monthly .mm-icon-ice   { background: var(--a1d); }
+#page-report-monthly .mm-icon-ice svg   { stroke: var(--accent); }
+#page-report-monthly .mm-icon-green { background: color-mix(in srgb, var(--ok) 18%, transparent); }
+#page-report-monthly .mm-icon-green svg { stroke: var(--ok); }
+#page-report-monthly .mm-icon-rose  { background: color-mix(in srgb, var(--danger) 18%, transparent); }
+#page-report-monthly .mm-icon-rose svg  { stroke: var(--danger); }
+
+/* ── Shift Tabs ── */
+#page-report-monthly .mm-shift-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0 16px;
+}
+#page-report-monthly .mm-shift-group {
+  display: flex;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 3px;
+  gap: 2px;
+}
+#page-report-monthly .shift-tab {
+  padding: 7px 18px;
+  border: none;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+  background: transparent;
+  color: var(--muted);
+}
+#page-report-monthly .shift-tab.active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Section header pattern (ใช้กับ "Current/Previous Month Data"
+   และหัวข้อกราฟ) ── */
+#page-report-monthly .section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+#page-report-monthly .section-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--surface2);
+}
+#page-report-monthly .section-icon svg { width: 15px; height: 15px; }
+#page-report-monthly .section-icon.teal  { background: var(--a1d); color: var(--accent); }
+#page-report-monthly .section-icon.slate { background: var(--surface2); color: var(--muted); }
+/* 🆕 ไอคอน "Previous Month Data" (นาฬิกา) — reference ใช้สี sage (เขียว)
+   ไม่ใช่สีเทา slate — ผูกกับ var(--ok) (โทนเขียวเดียวกับที่ใช้เป็น "sage"
+   ทั่วทั้งแอปอยู่แล้ว เช่น mm-icon-green) */
+#page-report-monthly .section-icon.sage  { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+#page-report-monthly .section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+#page-report-monthly .section-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+#page-report-monthly .tables-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+/* ── Table header colors (accent columns) ── */
+#page-report-monthly .mm-th-maxpos      { background: var(--surface3); }
+#page-report-monthly .mm-th-maxpos-prev { background: var(--surface2); }
+#page-report-monthly .mm-th-pos         { background: var(--a1d); }
+#page-report-monthly .mm-th-pos-prev    { background: var(--surface2); }
+#page-report-monthly .mm-th-sick        { color: var(--danger); }
+#page-report-monthly .mm-th-free        { color: var(--ok); }
+
+/* ── Table (Current/Previous) ── */
+#page-report-monthly .table-scroll table {
+  background: var(--surface);
+  table-layout: fixed;
+  width: 100%;
+}
+#page-report-monthly .table-scroll thead th {
+  background: var(--surface2);
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+#page-report-monthly .table-scroll tbody td {
+  background: var(--surface);
+  color: var(--t1);
+  border-bottom: 1px solid var(--border);
+}
+#page-report-monthly .table-scroll tbody tr:hover td {
+  background: var(--surface2);
+}
+#page-report-monthly .table-prev tbody { opacity: .88; }
+
+/* 🔧 แก้ไข (2026-08-21): .empty-state ปกติ (4-components.css) เป็นสไตล์กลาง
+   ของทั้งแอป (เทา, padding ใหญ่, ไว้ใช้กับ empty list ทั่วไป) — reference
+   หน้านี้ใช้สี amber ตัวเอียงตัวหนา padding เล็กกว่าแทน override เฉพาะหน้านี้ */
+#page-report-monthly .empty-state {
+  padding: 16px;
+  color: var(--warn);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-style: italic;
+  text-align: center;
+}
+
+/* ⚠️ ชุด class ต่อไปนี้ (col-*, var-*, status-sick/free/muted) ไม่พบ
+   การใช้งานตรงๆ ใน index.html แต่คาดว่า monthly-report.js (ยังไม่ได้
+   รับไฟล์มาตรวจสอบ) น่าจะ set class พวกนี้ให้ tbody cell ตอน render
+   ข้อมูลจริง — เก็บไว้ก่อนเพื่อความปลอดภัย ถ้าเช็คแล้วไม่ได้ใช้จริง
+   ค่อยลบออกทีหลังได้ */
+#page-report-monthly .col-maxpos-head { background: color-mix(in srgb, var(--warn) 10%, var(--surface2)); }
+#page-report-monthly .col-pos-head    { background: color-mix(in srgb, var(--info) 10%, var(--surface2)); }
+#page-report-monthly .col-actual-head { background: var(--a1d); }
+
+#page-report-monthly .col-maxpos { background: color-mix(in srgb, var(--warn) 8%, transparent); font-weight: 700; color: var(--warn); text-align: center; }
+#page-report-monthly .col-pos    { background: color-mix(in srgb, var(--info) 8%, transparent); font-weight: 700; color: var(--info); text-align: center; }
+#page-report-monthly .col-sum    { background: var(--a1d); font-weight: 700; color: var(--accent); text-align: center; }
+#page-report-monthly .col-center { text-align: center; }
+#page-report-monthly .col-mono   { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
+#page-report-monthly .col-remark { font-style: italic; font-size: 10px; color: var(--muted); padding-left: 16px; }
+#page-report-monthly .col-linename { font-weight: 600; color: var(--text); }
+/* 🆕 บันทึกย่อในคอลัมน์ Remark — ใช้ var(--muted) เดียวกันทั้งคู่ (ระบบนี้
+   ไม่มี token "muted-2" แยกอีกชั้นแบบ mockup ต้นแบบ) แยกกันด้วย italic แทน */
+#page-report-monthly .mm-remark-note { color: var(--muted); }
+#page-report-monthly .mm-remark-historical { color: var(--muted); font-style: italic; }
+
+#page-report-monthly .var-neg  { color: var(--danger); font-weight: 700; }
+#page-report-monthly .var-pos  { color: var(--ok);     font-weight: 700; }
+#page-report-monthly .var-zero { color: var(--t2); }
+
+#page-report-monthly .status-sick  { color: var(--danger); font-weight: 600; }
+#page-report-monthly .status-free  { color: var(--ok); font-weight: 600; background: color-mix(in srgb, var(--ok) 8%, transparent); }
+#page-report-monthly .status-muted { color: var(--t2); }
+
+#page-report-monthly .table-prev .col-maxpos   { background: var(--surface2); color: var(--t1); }
+#page-report-monthly .table-prev .col-pos      { background: var(--surface2); color: var(--t1); }
+#page-report-monthly .table-prev .col-sum      { color: var(--t1); background: transparent; }
+#page-report-monthly .table-prev .col-linename { font-weight: 400; color: var(--t1); }
+
+/* ── Chart section ── */
+#page-report-monthly .chart-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r4);
+  padding: 24px;
+}
+#page-report-monthly .chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+#page-report-monthly .mm-chart-icon {
+  background: var(--a1d);
+  color: var(--accent);
+}
+#page-report-monthly .chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+/* 🆕 legend-chip — reference ห่อ label แต่ละอันเป็น pill มีขอบ ไม่ใช่ข้อความลอย
+   เฉยๆ แบบเดิม */
+#page-report-monthly .legend-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  padding: 5px 11px;
+  border-radius: 100px;
+}
+#page-report-monthly .legend-swatch {
+  width: 8px; height: 8px; border-radius: 2px; display: inline-block;
+}
+#page-report-monthly .legend-swatch.prev { background: var(--surface3); }
+#page-report-monthly .legend-swatch.curr { background: var(--accent); }
+
+/* 🆕 ปุ่มหมวดหมู่กราฟ (Total/OPE/GL/Spare/...) — base style (inactive)
+   ผูกกับ CSS variable ของธีม ส่วน active state สีเฉพาะหมวดหมู่ยัง inline
+   มาจาก renderChartFilter() (monthly-manpower.js) ตามเดิม */
+#page-report-monthly .chart-pill {
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  transition: all .15s;
+}
+#page-report-monthly .chart-pill:hover { border-color: var(--b1); color: var(--text); }
+
+#page-report-monthly .chart-canvas-wrap {
+  height: 240px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+#page-report-monthly .chart-canvas-wrap::before,
+#page-report-monthly .chart-canvas-wrap::after,
+#page-report-monthly .chart-gridline {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  border-top: 1px dashed var(--border);
+  pointer-events: none;
+}
+#page-report-monthly .chart-canvas-wrap::before { top: 0; }
+#page-report-monthly .chart-canvas-wrap::after  { top: 33.33%; }
+#page-report-monthly .chart-gridline { top: 66.66%; }
+
+#page-report-monthly .chart-grid-label {
+  position: absolute;
+  left: 6px;
+  font-size: 9px;
+  color: var(--muted);
+  transform: translateY(-50%);
+}
+
+#page-report-monthly .bar-group {
+  display: flex; align-items: flex-end; gap: 5px; height: 100%;
+  justify-content: center; z-index: 1;
+}
+#page-report-monthly .bar {
+  width: 18px;
+  border-radius: 4px 4px 0 0;
+  transition: height .45s cubic-bezier(.4,0,.2,1), background .15s;
+  position: relative;
+  cursor: pointer;
+}
+#page-report-monthly .bar.prev { background: var(--surface3); }
+#page-report-monthly .bar.curr { background: var(--accent); }
+#page-report-monthly .bar.prev:hover { background: var(--border); }
+#page-report-monthly .bar.curr:hover { background: color-mix(in srgb, var(--accent) 80%, black); }
+
+/* tooltip: จงใจให้เป็นสีเข้มคงที่ทั้ง 2 ธีม (ธรรมเนียม tooltip ทั่วไป) */
+#page-report-monthly .bar-tooltip {
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2430;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s;
+  z-index: 10;
+}
+#page-report-monthly .bar:hover .bar-tooltip { opacity: 1; }
+#page-report-monthly .bar.curr .bar-tooltip  { background: var(--accent); color: #0d0f12; }
+
+#page-report-monthly .chart-x-labels {
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 16px 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+#page-report-monthly .chart-x-label {
+  text-align: center;
+  max-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Page footer ── */
+#page-report-monthly .page-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+#page-report-monthly .footer-status { display: flex; align-items: center; gap: 7px; }
+#page-report-monthly .status-dot {
+  width: 7px; height: 7px; background: var(--ok); border-radius: 50%;
+  animation: mmPulse 2s infinite;
+}
+@keyframes mmPulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+
+/* ══════════════════════════════════════════════════
+   EXPORT MODAL — ใช้ document.body.appendChild(modal) จึงไม่
+   scope ด้วย #page-report-monthly (element หลุดไปอยู่ที่ <body>)
+   ══════════════════════════════════════════════════ */
+.mm-export-modal-bg {
+  display: none;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+}
+.mm-export-modal {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 380px;
+  max-width: 90vw;
+  box-shadow: var(--s4);
+  font-family: 'Inter', 'Sarabun', sans-serif;
+  position: relative;
+  z-index: 100000;
+  border: 1px solid var(--border);
+}
+.mm-export-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.mm-export-modal-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.mm-export-modal-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.mm-export-close {
+  background: none; border: none; font-size: 20px;
+  color: var(--muted); cursor: pointer; line-height: 1;
+}
+
+.mm-export-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  border: 1.5px solid var(--border);
+  transition: all .15s;
+  width: 100%;
+}
+.mm-export-option:hover { background: var(--surface2); }
+.mm-export-both    { border-color: var(--accent); background: var(--a1d); }
+.mm-export-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.mm-export-icon-both     { background: var(--accent); }
+.mm-export-icon-current  { background: var(--info); }
+.mm-export-icon-previous { background: var(--muted); }
+
+.mm-export-option-title { font-size: 13px; font-weight: 600; }
+.mm-export-option-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.mm-text-teal  { color: var(--accent); }
+.mm-text-blue  { color: var(--info); }
+.mm-text-slate { color: var(--t1); }
+
+/* 🆕 Table density — หน้า Monthly Manpower */
+[data-density="compact"] #page-report-monthly .table-scroll thead th {
+  padding: 6px 6px;
+}
+[data-density="compact"] #page-report-monthly .table-scroll tbody td {
+  padding: 5px 6px;
+}
+
+
+/* ══ Line Name Filter — วางคู่กับปุ่มกะ .shift-tab ══
+   🔧 แก้ไข (2026-08-26): เดิมเป็น <select id="mm-filter-line"> เดี่ยว —
+   เปลี่ยนเป็น multi-select + search (#mmLineFilterMulti ใน
+   report-monthly.html, logic ที่ monthly-manpower.js) ใช้ CSS class
+   .code-multiselect/.code-ms-* ที่นิยามไว้แล้วใน 7-page-assign-employees.css
+   (โหลด global ทุกหน้า เข้าธีม dark/light อยู่แล้ว) เหลือแค่ responsive
+   rule เฉพาะหน้านี้ที่ต้องเพิ่มเอง */
+@media (max-width: 640px) {
+  .mm-shift-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  #mmLineFilterMulti {
+    width: 100%;
+    margin-right: 0 !important;
+  }
+}

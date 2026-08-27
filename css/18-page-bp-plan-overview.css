@@ -1,0 +1,107 @@
+/* ==========================================
+   css/18-page-bp-plan-overview.css
+   Styles for the "BP Plan Overview" page (pivot grid: Department/Position x
+   fiscal-year Plan/Actual). Reuses .bp-select/.bp-input/.bp-subtitle from
+   17-page-bp-plan.css and the app's existing table/modal components — this
+   file only adds the filter-popover + sticky two-row header pieces those
+   don't cover.
+   ========================================== */
+
+#bpoTable thead th {
+  border-bottom: 1px solid var(--border);
+}
+
+/* ✅ Pagination — component .premium-pagination/.pg-* เดียวกับหน้า Assign
+   Employees (css/7-page-assign-employees.css) แต่ id คนละตัว
+   (#bpoPagination ไม่ใช่ #pagination) เลยต้องประกาศ justify-content:center
+   เองที่นี่ (ของเดิมผูก selector ไว้กับ id #pagination ตรงๆ) */
+#bpoPagination.pagination {
+  justify-content: center;
+}
+
+/* ✅ Drag-to-scroll (enableDragScrollEl ใน app.js) — บอก user ด้วย cursor
+   ว่าตารางลากได้ */
+#bpoTableWrap {
+  cursor: grab;
+}
+
+.bpo-filter-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted, #94a3b8);
+  font-size: 11px;
+  margin-left: 4px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.bpo-filter-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.bpo-filter-popover {
+  z-index: 1000;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  min-width: 200px;
+  max-width: 260px;
+  padding: 8px;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 13px;
+}
+
+.bpo-filter-popover-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.bpo-filter-popover-actions button {
+  background: none;
+  border: none;
+  color: var(--accent, #3b82f6);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+}
+
+.bpo-filter-popover-list {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.bpo-filter-popover-list label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 2px 0;
+  word-break: break-word;
+}
+.bpo-filter-popover-empty {
+  color: var(--muted, #94a3b8);
+  padding: 8px 0;
+  text-align: center;
+}
+
+.bpo-filter-popover-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+.bpo-filter-popover-footer button {
+  padding: 4px 14px;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  #bpoTableWrap { max-height: 70vh; }
+}

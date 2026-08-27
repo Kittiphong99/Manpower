@@ -1,0 +1,174 @@
+/*
+ * ============================================================
+ *  EMPTRACK — Design Tokens
+ *  ไฟล์: css/1-variables.css
+ *  ไม่มีการเปลี่ยนแปลงจากต้นฉบับ
+ * ============================================================
+ */
+
+/* ── Dark Mode (default) ─────────────────────────────────── */
+:root, [data-theme="dark"] {
+  /* Background layers */
+  --bg0:      #16181d;   /* หน้าหลัก */
+  --bg1:      #1e2128;   /* Card, Modal */
+  --bg2:      #252830;   /* Row hover, Input bg */
+  --bg3:      #2c2f3a;   /* Active surface */
+
+  /* Text */
+  --t0:       #ffffff;   /* ข้อความหลัก */
+  --t1:       #8a90a0;   /* ข้อความรอง */
+  --t2:       #545b6a;   /* ข้อความ muted */
+
+  /* Accent — "Halo" ice-blue/violet (2026-08-20). --a1 uses the darker
+     stop of the reference's own ice gradient (#4FC7BC, not its lighter
+     #6FE3D9 glow-text tone) — this app fills solid buttons/tabs/badges
+     with --a1 + white text everywhere, and the lighter tone reads as
+     near-invisible at that contrast, so the deeper stop keeps parity
+     with the old teal's contrast while still reading as "ice blue". */
+  --a1:       #4FC7BC;   /* Primary ice-blue */
+  --a1d:      color-mix(in srgb, var(--a1) 10%, transparent);  /* Ice dim bg — derived so it tracks --a1 */
+  --a2:       #8B7CF6;   /* Violet accent */
+
+  /* Semantic */
+  --ok:       #6abf7b;   /* Success/ทำงาน */
+  --warn:     #c9a84c;   /* Warning/แจ้งเตือน */
+  --danger:   #c96b72;   /* Error/ลบ */
+  --info:     #6b9fd4;   /* Information */
+
+  /* 🆕 Precomputed tints (แทน color-mix(in srgb, var(--ok/--danger) X%, ...) รันไทม์)
+     บางเบราว์เซอร์/เอนจินไม่ repaint ผลลัพธ์ของ color-mix() ที่อ้างอิง custom
+     property ทันทีตอนสลับ data-theme (ต้องรอ reflow อื่น เช่น รีเฟรชหรือ
+     สลับเมนู ถึงจะอัปเดต) — ค่า rgb()/rgba() ตรงๆ ไม่มีปัญหานี้เพราะเป็นแค่
+     var() lookup ธรรมดา ไม่ใช่ฟังก์ชันคำนวณสีที่ต้องรัน — ค่าด้านล่างคำนวณ
+     ให้เท่ากับ color-mix() เดิมเป๊ะ (14%/30%/32% ผสมกับ --surface หรือ
+     transparent ตามแต่ละจุดที่เคยใช้ใน 7-page-assign-employees.css) */
+  --ok-30:            rgba(106,191,123,.30);   /* was color-mix(ok 30%, transparent) */
+  --ok-tint-bg:        rgb(41,55,52);            /* was color-mix(ok 14%, surface) */
+  --ok-tint-border:    rgba(106,191,123,.32);   /* was color-mix(ok 32%, transparent) */
+  --danger-tint-bg:     rgb(54,43,50);            /* was color-mix(danger 14%, surface) */
+  --danger-tint-border: rgba(201,107,114,.32);   /* was color-mix(danger 32%, transparent) */
+  --danger-14:          rgba(201,107,114,.14);   /* was color-mix(danger 14%, transparent) */
+
+  /* Border */
+  --b0:       rgba(255,255,255,.06);
+  --b1:       rgba(255,255,255,.10);
+
+  /* Surface aliases (ใช้ใน component) */
+  --surface:  var(--bg1);
+  --surface2: var(--bg2);
+  --surface3: var(--bg3);
+  --border:   var(--b0);
+  --text:     var(--t0);
+  --muted:    var(--t2);
+  --accent:   var(--a1);
+  --accent2:  var(--a2);
+
+  /* Shadow */
+  --s1: 0 1px 4px rgba(0,0,0,.25);
+  --s2: 0 2px 12px rgba(0,0,0,.30);
+  --s3: 0 4px 20px rgba(0,0,0,.35);
+  --s4: 0 8px 40px rgba(0,0,0,.45);
+
+  /* Border radius */
+  --r1: 6px;
+  --r2: 10px;
+  --r3: 12px;
+  --r4: 18px;
+
+  /* Sidebar width */
+  --sw: 236px;
+
+  /* Transition */
+  --tr: .18s ease;
+
+  /* 🆕 Categorical chip colors (Shift/POSType/สถานะ ในตาราง Manpower Planning
+     และ Assign Employees — ดู table-mode-colors.js) เดิม hardcode สีเดียวตายตัว
+     ไม่มีเวอร์ชัน dark เลย ทำให้ตอนสลับ Light/Dark ใน Settings สี pill พวกนี้
+     ไม่ขยับตามธีมเหมือนส่วนอื่นของแอป — กำหนดคู่ bg/text แยก dark/light ที่นี่
+     ให้ table-mode-colors.js อ้างอิง var() แทน hex ตรงๆ */
+  --bg-blue:    rgba(96,165,250,.16);   --text-blue:   #93c5fd;
+  --bg-amber:   rgba(245,158,11,.16);   --text-amber:  #fcd34d;
+  --bg-green:   rgba(74,222,128,.16);   --text-green:  #86efac;
+  --bg-indigo:  rgba(129,140,248,.18);  --text-indigo: #a5b4fc;
+  --bg-purple:  rgba(192,132,252,.18);  --text-purple: #d8b4fe;
+  --bg-teal:    rgba(45,212,191,.16);   --text-teal:   #5eead4;
+  --bg-cyan:    rgba(34,211,238,.16);   --text-cyan:   #67e8f9;
+  --bg-slate:   rgba(148,163,184,.16);  --text-slate:  #cbd5e1;
+  --bg-pink:    rgba(244,114,182,.16);  --text-pink:   #f9a8d4;
+  --bg-red:     rgba(248,113,113,.16);  --text-red:    #fca5a5;
+  --bg-sky:     rgba(56,189,248,.16);   --text-sky:    #7dd3fc;
+  --bg-yellow:  rgba(250,204,21,.16);   --text-yellow: #fde047;
+}
+
+/* ── Light Mode ──────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg0:      #f0f2f7;
+  --bg1:      #ffffff;
+  --bg2:      #f5f7fa;
+  --bg3:      #e8ecf4;
+
+  --t0:       #0d0d0e;
+  --t1:       #252627;
+  --t2:       #7a8096;
+
+  --a1:       #12897C;
+  --a1d:      color-mix(in srgb, var(--a1) 10%, transparent);
+  --a2:       #6C5CE0;
+
+  --ok:       #2e7d32;
+  --warn:     #f57f17;
+  --danger:   #c62828;
+  --info:     #1565c0;
+
+  --ok-30:            rgba(46,125,50,.30);
+  --ok-tint-bg:        rgb(226,237,226);
+  --ok-tint-border:    rgba(46,125,50,.32);
+  --danger-tint-bg:     rgb(247,225,225);
+  --danger-tint-border: rgba(198,40,40,.32);
+  --danger-14:          rgba(198,40,40,.14);
+
+  --b0:       rgba(0,0,0,.08);
+  --b1:       rgba(0,0,0,.14);
+
+  --s1: 0 1px 4px rgba(0,0,0,.08);
+  --s2: 0 2px 12px rgba(0,0,0,.10);
+  --s3: 0 4px 20px rgba(0,0,0,.12);
+  --s4: 0 8px 40px rgba(0,0,0,.16);
+
+  /* 🆕 Categorical chip colors — เวอร์ชัน Light (ดูคอมเมนต์ในบล็อก dark ด้านบน) */
+  --bg-blue:    #dbeafe;  --text-blue:   #1d4ed8;
+  --bg-amber:   #fef3c7;  --text-amber:  #b45309;
+  --bg-green:   #dcfce7;  --text-green:  #15803d;
+  --bg-indigo:  #e0e7ff;  --text-indigo: #4338ca;
+  --bg-purple:  #f3e8ff;  --text-purple: #7e22ce;
+  --bg-teal:    #ccfbf1;  --text-teal:   #0f766e;
+  --bg-cyan:    #cffafe;  --text-cyan:   #0e7490;
+  --bg-slate:   #f1f5f9;  --text-slate:  #475569;
+  --bg-pink:    #fce7f3;  --text-pink:   #be185d;
+  --bg-red:     #fee2e2;  --text-red:    #b91c1c;
+  --bg-sky:     #e0f2fe;  --text-sky:    #075985;
+  --bg-yellow:  #fef9c3;  --text-yellow: #854d0e;
+}
+
+/* ══ Global background fix — บังคับให้ body/container ตามธีมเสมอ ══ */
+/* 🆕 2026-08-20: เพิ่ม soft glow (ice-blue มุมซ้ายบน / violet มุมขวาบน) ทาบบน
+   --bg0 เดิม ตาม "Halo" reference ที่ผู้ใช้ส่งมา — ผู้ใช้ยืนยันชัดเจนว่าอยาก
+   ได้พื้นหลังแบบนี้ "ทั้งระบบ" ไม่ใช่แค่หน้า Manpower Dashboard เดียว (เคยลอง
+   ทำเฉพาะหน้าเดียวก่อน แต่กลายเป็นรอยต่อสีที่ sidebar เพราะ sidebar/
+   main-content-area ทาสีทึบของตัวเองทับอยู่คนละสี) วาง background-attachment:
+   fixed ไว้ที่ body เดียว แล้วเอาสีทึบของ .app-container/.main-content-area/
+   .sidebar ออก (ดู 3-layout.css) ให้ทุกหน้า + sidebar โชว์ gradient เดียวกัน
+   ต่อเนื่องกันจริงๆ แทนที่จะเป็นคนละกล่องคนละ gradient แยกกัน */
+html, body {
+  background:
+    radial-gradient(1000px 520px at 14% -10%, color-mix(in srgb, var(--a1) 10%, transparent), transparent 60%),
+    radial-gradient(900px 520px at 100% -5%, color-mix(in srgb, var(--a2) 9%, transparent), transparent 55%),
+    var(--bg0) !important;
+  background-attachment: fixed;
+  color: var(--text) !important;
+}
+
+.app-container,
+.main-content-area {
+  background: transparent !important;
+}

@@ -1,0 +1,358 @@
+/* ══════════════════════════════════════════════════
+   MANPOWER ANALYTICS PAGE (#page-report-analytics)
+   ไฟล์: css/9-page-analytics.css (เดิมชื่อ 8-analytics-page.css)
+
+   ไม่มีการเปลี่ยนแปลง logic ใดๆ — ไฟล์นี้เขียนดีอยู่แล้ว
+   ใช้ var() ครบถ้วน และ scope ด้วย #page-report-analytics
+   ทำให้ชนะโค้ดซ้ำซ้อนที่เคยหลงอยู่ใน 3-layout.css (.topbar,
+   .brand, .fselect, .sbtn, .panel-btn แบบ unscoped) อยู่แล้ว
+   โดยอัตโนมัติจาก CSS specificity — โค้ดซ้ำซ้อนเหล่านั้นถูกย้าย
+   ไปเก็บใน 99-legacy-unused.css แล้ว (ดู CHANGELOG.md)
+   ══════════════════════════════════════════════════ */
+
+.app     { display: flex; flex-direction: column; min-height: 100vh; }
+.content { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; width: 100%; }
+
+/* ── Topbar ── — glass "floating card" treatment (matches the
+   Manpower Dashboard's toolbar skin: translucent surface + blur, r4
+   rounding, soft ambient shadow) instead of the old full-width sticky
+   bar with a hard bottom border. */
+#page-report-analytics .topbar {
+  background: color-mix(in srgb, var(--surface2) 68%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--r4);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 16px 40px -24px rgba(0,0,0,0.4);
+  padding: 16px 22px;
+  /* .topbar เป็น <header> อยู่นอก .content (พี่น้องกัน ไม่ใช่ลูกของกัน)
+     ส่วน .content มี padding ซ้าย-ขวา 24px ของตัวเองอยู่แล้ว (บรรทัดบนสุด
+     ของไฟล์นี้) — ถ้า .topbar ไม่มี margin ซ้าย-ขวาเท่ากัน มันจะกว้างกว่า
+     การ์ด/panel ข้างล่าง 24px ทั้งสองฝั่ง ทำให้ขอบไม่ตรงกัน (เอียงไปทางขวา
+     มากกว่า การ์ด KPI แถวล่าง) ต้องใส่ margin ให้เท่ากับ padding ของ .content
+     เป๊ะๆ เพื่อให้ขอบซ้าย-ขวาของทุก block บนหน้านี้ตรงกันเป็นเส้นเดียว */
+  margin: 0 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+#page-report-analytics .brand      { display: flex; align-items: center; gap: 10px; }
+#page-report-analytics .brand-mark { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); flex-shrink: 0; }
+#page-report-analytics .brand-name { font-size: 17px; font-weight: 700; color: var(--text); }
+#page-report-analytics .brand-sub  { font-size: 11.5px; color: var(--muted); margin-top: 3px; margin-left: 15px; }
+
+/* ── Filters ── */
+#page-report-analytics .filters { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+#page-report-analytics .fg,
+.modal-bg .fg      { display: flex; flex-direction: column; gap: 3px; }
+#page-report-analytics .flabel,
+.modal-bg .flabel  { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+#page-report-analytics .fselect,
+.modal-bg .fselect {
+  font-size: 12px;
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: var(--r1);
+  padding: 6px 26px 6px 10px;
+  color: var(--text);
+  background: var(--surface2);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 12px;
+  cursor: pointer;
+  transition: border-color var(--tr);
+}
+#page-report-analytics .fselect:focus,
+.modal-bg .fselect:focus { outline: none; border-color: var(--accent); }
+#page-report-analytics .fselect:hover,
+.modal-bg .fselect:hover { border-color: var(--b1); }
+
+#page-report-analytics .shift-group {
+  display: flex;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r1);
+  padding: 2px;
+  gap: 2px;
+}
+#page-report-analytics .sbtn {
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--muted);
+  border: none;
+  background: transparent;
+  transition: all var(--tr);
+  font-family: inherit;
+}
+#page-report-analytics .sbtn:hover  { color: var(--text); }
+#page-report-analytics .sbtn.active { background: var(--accent); color: #fff; font-weight: 700; }
+
+/* ── Report Adjustment CTA (top-right corner of topbar) ──
+   margin-left:auto pushes it to the far edge of #page-report-analytics
+   .filters, so it reads as a separate, standalone action rather than
+   another filter control. Solid accent fill (vs. the ghost .panel-btn
+   style used by Refresh) marks it as the primary action in this header. */
+#page-report-analytics .btn-report-adjustment {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 9px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  border-radius: var(--r1);
+  cursor: pointer;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+  transition: all var(--tr);
+}
+#page-report-analytics .btn-report-adjustment:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--accent) 70%, transparent);
+  transform: translateY(-1px);
+}
+#page-report-analytics .btn-report-adjustment:active { transform: translateY(0); }
+
+/* ── Section row ── */
+#page-report-analytics .section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+#page-report-analytics .section-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+#page-report-analytics .section-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  flex-shrink: 0;
+}
+#page-report-analytics .total-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--a1d);
+  border: 1px solid var(--border);
+  padding: 5px 13px;
+  border-radius: 20px;
+}
+
+/* ── Panel ── — same glass skin as the topbar/KPI cards */
+#page-report-analytics .panel {
+  background: color-mix(in srgb, var(--surface2) 68%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--r4);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 16px 40px -24px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+#page-report-analytics .panel-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+#page-report-analytics .panel-title { font-size: 13px; font-weight: 500; color: var(--text); }
+#page-report-analytics .panel-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+#page-report-analytics .legend      { display: flex; flex-wrap: wrap; gap: 10px; }
+#page-report-analytics .legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--muted); }
+#page-report-analytics .legend-dot  { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+#page-report-analytics .chart-wrap  { padding: 16px 18px; height: 200px; position: relative; }
+
+#page-report-analytics .panel-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--r1);
+  cursor: pointer;
+  transition: all var(--tr);
+}
+#page-report-analytics .panel-btn:hover { background: var(--surface2); border-color: var(--b1); }
+
+/* ── Table ── */
+#page-report-analytics .tbl-wrap { overflow-x: auto; }
+#page-report-analytics table     { width: 100%; border-collapse: collapse; font-size: 12px; }
+#page-report-analytics thead th {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: 10px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+#page-report-analytics tbody td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--t1);
+  white-space: nowrap;
+}
+#page-report-analytics tbody tr:last-child td { border-bottom: none; }
+#page-report-analytics tbody tr:hover td      { background: var(--surface2); }
+#page-report-analytics .tr-total td             { background: var(--surface2); font-weight: 500; border-top: 1px solid var(--b1); }
+#page-report-analytics .tr-total td:first-child { color: var(--accent); }
+
+.ta-r { text-align: right; }
+.ta-c { text-align: center; }
+
+/* Numeric-column cells — monospace, matching the KPI values so figures
+   read consistently across the page (mockup's .num treatment). */
+#page-report-analytics .tr-total td,
+#page-report-analytics td:has(.tag-up),
+#page-report-analytics td:has(.tag-dn),
+#page-report-analytics td:has(.tag-nt) {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Badges — tinted pills (bg = category color at 15% opacity, text =
+   full color) instead of solid fills, matching the mockup's softer
+   status-badge/type-pill/change-pill look. ── */
+.badge        { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 100px; display: inline-block; }
+.badge-new    { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+.badge-res    { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
+.badge-new-lg { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); font-size: 11.5px; font-weight: 700; padding: 5px 12px; border-radius: 100px; }
+.badge-res-lg { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); font-size: 11.5px; font-weight: 700; padding: 5px 12px; border-radius: 100px; }
+
+.tag-up { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 100px; }
+.tag-dn { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 100px; }
+.tag-nt { background: var(--track, var(--surface2)); color: var(--muted); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 100px; }
+.up     { color: var(--ok); }
+.dn     { color: var(--danger); }
+
+.code-link { color: var(--accent); font-weight: 500; }
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ── Modal (Detailed breakdown) ── */
+.modal-bg {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.modal-bg.open { display: flex; }
+.modal-bg .modal {
+  background: var(--surface);
+  border-radius: var(--r4);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 900px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal-head {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface2);
+  flex-shrink: 0;
+}
+.modal-title { font-size: 15px; font-weight: 500; color: var(--text); }
+.modal-sub   { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.modal-body  { overflow-y: auto; flex: 1; }
+.modal-foot  { padding: 12px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; flex-shrink: 0; }
+
+.btn-close-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  padding: 2px;
+  border-radius: 6px;
+  transition: color var(--tr);
+}
+.btn-close-icon:hover { color: var(--text); }
+.btn-close {
+  padding: 7px 18px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  background: var(--surface2);
+  border: none;
+  border-radius: var(--r1);
+  cursor: pointer;
+  color: var(--t1);
+  transition: background var(--tr);
+}
+.btn-close:hover { background: var(--surface3); }
+
+.sub-row      { display: none; }
+.sub-row.open { display: table-row; }
+.sub-row td   { background: var(--surface2); padding: 7px 16px; font-size: 11px; color: var(--muted); border-bottom: 1px solid var(--border); }
+.code-group-row td              { background: var(--a1d); font-weight: 500; }
+.code-group-row td:first-child  { color: var(--accent); }
+
+.expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 11px;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+/* 🆕 Table density — หน้า Manpower Analytics */
+[data-density="compact"] #page-report-analytics thead th {
+  padding: 6px 12px;
+}
+[data-density="compact"] #page-report-analytics tbody td {
+  padding: 6px 12px;
+}

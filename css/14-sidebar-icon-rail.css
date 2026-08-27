@@ -1,0 +1,235 @@
+/* =====================================================================
+   SIDEBAR — โหมดพับเป็นแถบไอคอน (Pulsr style) สำหรับจอกว้างเท่านั้น
+   ---------------------------------------------------------------------
+   ของเดิมใน 3-layout.css ให้ .sidebar.collapsed = หายไปทั้งแผง
+   (transform: translateX(-100%)) ไฟล์นี้ override เฉพาะพฤติกรรมนั้น
+   ที่จอ >900px ให้ย่อเหลือแถบไอคอนกว้าง 76px แทน โดยไม่แตะพฤติกรรม
+   มือถือ (≤900px ยังคงซ่อนทั้งแผงแบบเดิมทุกอย่าง เพราะจอแคบเกินจะ
+   โชว์คอลัมน์ไอคอนได้พอดี)
+
+   ⚠️ สำคัญ: ต้องโหลดไฟล์นี้ "หลัง" 3-layout.css และ 4-components.css
+   ใน <head> เสมอ (วางต่อท้ายกลุ่ม css/*.css ทั้งหมดก็ได้ ปลอดภัยสุด)
+   ไม่งั้นค่า !important ชนกันแล้วอาจแพ้ลำดับโหลดได้
+
+   ไม่ต้องแก้ JS ใดๆ เพิ่ม — app.js เดิม (ที่แพตช์ไปแล้ว) toggle
+   class "collapsed"/"expanded" ถูกต้องอยู่แล้ว ไฟล์นี้แค่เปลี่ยนว่า
+   สอง class นั้นหน้าตาเป็นยังไงตอนแสดงผลเท่านั้น
+   ===================================================================== */
+
+@media (min-width: 901px) {
+
+  /* ---- ตัวแผงเอง: ย่อความกว้างแทนที่จะเลื่อนหาย ---- */
+  .sidebar.collapsed {
+    transform: none !important;
+    width: 76px !important;
+    overflow-x: hidden;
+  }
+
+  /* โหมดมืด: พื้นแถบไอคอนเข้มไปจนกลืนกับไอคอน ยกพื้นขึ้นชัดเจน
+     (bg3 แทน bg1 — ต่างกันเห็นชัด ไม่ใช่ bg2 ที่ต่างกันแค่นิดเดียว
+     จนตาแทบสังเกตไม่ทัน) และไอคอนสว่างขึ้นแรงกว่าเดิมมาก */
+  [data-theme="dark"] .sidebar.collapsed,
+  body.dark .sidebar.collapsed {
+    background: var(--bg3);
+    border-right: 1px solid var(--b1);
+  }
+  [data-theme="dark"] .sidebar.collapsed .nav-icon img,
+  body.dark .sidebar.collapsed .nav-icon img {
+    filter: brightness(1.9) saturate(1.3);
+  }
+  [data-theme="dark"] .sidebar.collapsed .nav-tab:hover,
+  body.dark .sidebar.collapsed .nav-tab:hover {
+    background: var(--bg2);
+  }
+
+  /* เนื้อหาหลัก: เว้นที่ให้แถบไอคอน 76px แทนการขยายเต็ม 0 */
+  .main-content-area.expanded {
+    margin-left: 76px !important;
+  }
+
+  /* ---- Brand header: ซ่อนโลโก้ เหลือแค่ปุ่มพับตรงกลาง (ไม่ใช้ปุ่มลอย
+     ซ้อนแล้ว เพราะแถบไอคอนยังมองเห็น/กดได้อยู่แล้ว) ---- */
+  .sidebar.collapsed .sidebar-brand {
+    justify-content: center;
+    gap: 0;
+    padding: 16px 0;
+  }
+  .sidebar.collapsed .sidebar-logo {
+    display: none;
+  }
+  .sidebar.collapsed .sidebar-brand > div:not(.sidebar-logo) {
+    display: none; /* ซ่อนกล่อง ManPower + subtitle ทั้งก้อน */
+  }
+  .sidebar.collapsed #sidebarCollapseBtn {
+    margin: 0 !important; /* inline style เดิมมี margin-left:auto ติดมา
+      (ไว้ดันปุ่มชิดขวาตอนมีโลโก้+ตัวหนังสืออยู่ข้างๆ) ต้อง !important
+      ถึงจะทับ inline style ได้ ไม่งั้นปุ่มจะยังถูกดันไปทางขวาอยู่ */
+  }
+  /* ปุ่มลอย #sidebarOpenBtn ใช้เฉพาะตอนมือถือที่ sidebar หายไปทั้งแผง
+     เท่านั้น — ตอนพับเป็นแถบไอคอนที่จอกว้าง ไม่ต้องโชว์ซ้อนกับ
+     sidebar-logo/ปุ่มพับที่ยังมองเห็นอยู่แล้ว (แก้ที่ JS ด้วย ดู
+     app-sidebar-patch.js เวอร์ชันล่าสุด) */
+  #sidebarOpenBtn {
+    display: none !important;
+  }
+
+  /* ---- Section label ("เมนูหลัก" / "ระบบ") ---- */
+  .sidebar.collapsed .sidebar-section-label {
+    display: none;
+  }
+
+  /* ---- Nav tabs: เหลือแค่ไอคอน จัดกึ่งกลางแน่นอน ---- */
+  .sidebar.collapsed .nav-tab {
+    justify-content: center !important; /* !important เพราะบางปุ่มมี
+      inline style="justify-content:space-between" (Reports/DB Manager) */
+    gap: 0 !important;
+    padding: 10px 0;
+    position: relative;
+  }
+  .sidebar.collapsed .nav-tab .nav-label {
+    display: none;
+  }
+  /* Reports / Database Manager มี <div> ครอบ icon+label อีกชั้นแบบ
+     inline style="gap:10px" ต้องบังคับด้วย !important ถึงจะซ้อนทับได้
+     และบังคับให้ div นั้นกึ่งกลางเต็มความกว้างแทนที่จะ shrink-to-fit
+     เอียงข้างใดข้างหนึ่ง */
+  .sidebar.collapsed .nav-tab > div {
+    gap: 0 !important;
+    width: 100%;
+    justify-content: center !important;
+  }
+  .sidebar.collapsed .nav-tab #reports-chevron,
+  .sidebar.collapsed .nav-tab #dbmanager-chevron {
+    display: none;
+  }
+  /* บังคับให้กล่องไอคอนกึ่งกลางเป๊ะ ไม่พึ่ง inline-block ของ <img> เอง */
+  .sidebar.collapsed .nav-icon {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* เส้น accent ของแท็บ active เดิมชิดขอบซ้ายสุด (left:0) ซึ่งพอไอคอน
+     กึ่งกลางแล้วจะดูเอียง — ย้ายเส้นมาไว้กึ่งกลางด้านล่างของไอคอนแทน */
+  .sidebar.collapsed .nav-tab.active::before {
+    left: 50%;
+    top: auto;
+    bottom: 4px;
+    width: 18px;
+    height: 2px;
+    transform: translateX(-50%);
+  }
+  /* พับอยู่ห้ามให้ submenu ค้างเปิด ไม่งั้นล้นออกนอกแถบ 76px */
+  .sidebar.collapsed #reports-submenu,
+  .sidebar.collapsed #dbmanager-submenu {
+    display: none !important;
+  }
+
+  /* ---- Footer: ไอคอนล้วน จัดกึ่งกลาง ---- */
+  .sidebar.collapsed .sidebar-live,
+  .sidebar.collapsed .sidebar-user {
+    justify-content: center;
+    gap: 0;
+  }
+  .sidebar.collapsed .sidebar-live span:not(.live-dot),
+  .sidebar.collapsed .sidebar-user span,
+  .sidebar.collapsed .sidebar-user > div:not(.live-dot) {
+    display: none;
+  }
+  .sidebar.collapsed .sidebar-actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px !important; /* inline style เดิม justify-content:space-between ต้องทับด้วย !important */
+    justify-content: center !important;
+  }
+  /* pill กว้างเกิน 76px ของแถบไอคอน — ซ่อนตอนพับ (ยังสลับธีมได้ผ่าน
+     Settings modal ตามปกติ) */
+  .sidebar.collapsed .theme-toggle {
+    display: none;
+  }
+  /* กลุ่มไอคอน (แจ้งเตือน/ตั้งค่า/ออกจากระบบ) เดิมเป็น flex แนวนอน
+     ตอนพับต้องสลับเป็นแนวตั้งด้วย ไม่งั้นล้นแถบ 76px */
+  .sidebar.collapsed .sidebar-action-icons {
+    flex-direction: column;
+    gap: 12px !important;
+  }
+}
+
+/* =====================================================================
+   FLYOUT SUBMENU — ตอนพับ (ไอคอนอย่างเดียว) กด Reports / Database
+   Manager แล้วให้ submenu ลอยออกมาเป็นการ์ดด้านข้างแทนการโชว์แบบ
+   ย่อหน้าเดิม (ซึ่งจะแตกแถวยาวจนล้นแถบ 76px) ต้องใช้คู่กับ JS
+   เพิ่มเติมใน app-reports-flyout-patch.js (เพิ่ม class "flyout-open"
+   และคำนวณตำแหน่ง top/left ให้)
+   ===================================================================== */
+@media (min-width: 901px) {
+  .sidebar.collapsed #reports-submenu.flyout-open,
+  .sidebar.collapsed #dbmanager-submenu.flyout-open {
+    position: fixed;
+    display: flex !important;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px;
+    min-width: 210px;
+    background: var(--surface, #fff);
+    border: 1px solid var(--b0, #e2e8f0);
+    border-radius: 12px;
+    box-shadow: var(--s3, 0 8px 24px rgba(0,0,0,.18));
+    z-index: 300;
+    animation: flyoutIn .14s ease both;
+  }
+  @keyframes flyoutIn {
+    from { opacity: 0; transform: translateX(-4px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .sidebar.collapsed #reports-submenu.flyout-open .nav-sub-tab,
+  .sidebar.collapsed #dbmanager-submenu.flyout-open .nav-sub-tab {
+    padding: 9px 12px;
+  }
+}
+
+/* =====================================================================
+   TOOLTIP — โชว์ชื่อเมนูตอนเมาส์ชี้
+   ---------------------------------------------------------------------
+   ใช้ position:fixed + JS คำนวณตำแหน่งเอา (เหมือน flyout submenu)
+   แทนการทำ ::after แบบ position:absolute เดิม เพราะ .sidebar มี
+   overflow-x:hidden (ทั้งจาก 3-layout.css เดิม และที่ผมเพิ่มตอนพับ)
+   ซึ่งจะตัดของที่ล้นออกไปนอกกรอบ 76px ทิ้งทันที — position:fixed
+   ไม่โดน overflow ของพ่อตัดกั้น เลยใช้ได้แน่นอน (ต้องคู่กับ JS ใน
+   app-tooltip-patch.js เวอร์ชันใหม่)
+   ===================================================================== */
+#sidebarTooltip {
+  position: fixed;
+  background: #1a1d23;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-50%);
+  transition: opacity .12s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+}
+#sidebarTooltip.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* =====================================================================
+   SUBMENU LAYOUT — บังคับให้เรียงลงมาแนวตั้งเสมอ ไม่ขึ้นอยู่กับความยาว
+   ข้อความ (ของเดิม Reports เรียงพอดีเพราะข้อความยาวบังเอิญเต็มแถว
+   แต่ Database Manager ข้อความสั้นกว่าเลยขึ้นแถวเดียวกัน 2 อันได้)
+   ===================================================================== */
+#reports-submenu,
+#dbmanager-submenu {
+  flex-direction: column !important;
+}
+#reports-submenu .nav-sub-tab,
+#dbmanager-submenu .nav-sub-tab {
+  width: 100%;
+}

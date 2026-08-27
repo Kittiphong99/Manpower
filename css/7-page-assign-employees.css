@@ -1,0 +1,1169 @@
+/*
+ * ============================================================
+ *  EMPTRACK — PAGE: Assign Employees (#page-emp)
+ *  ไฟล์: css/7-page-assign-employees.css
+ *
+ *  🧹 รวมมาจาก 3 แหล่งเดิมที่กระจัดกระจาย:
+ *  1) inline <style> ที่ฝังอยู่ใน <head> ของ index.html
+ *  2) ก้อนโค้ดที่แปะต่อท้าย css/3-layout.css (.status-card,
+ *     .card-emerald-dark, .total-sub-card, .header-dark ฯลฯ)
+ *  3) css/Custom-render.css (.line-dropdown, .subline-dropdown)
+ *
+ *  ทุกสีถูกแปลงจาก hex ตรงๆ เป็น var() ทั้งหมดแล้ว
+ *  → ไม่ต้องมีไฟล์ dark-theme-fix.css แยกอีกต่อไป
+ *  ทั้ง light/dark mode ทำงานถูกต้องในตัวเอง
+ * ============================================================
+ */
+
+/* ── Panel container ─────────────────────────────────────── */
+.left-panel,
+.left-panel-summay {
+  margin-top: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--s1);
+  width: 100%;
+  max-width: 100%;
+}
+
+.summary-page { width: 100%; }
+.summary-container {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* ── Section title / header row ──────────────────────────── */
+.table-main-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* ⚠️ scope ด้วย #page-emp เพราะหน้า Monthly Manpower ก็มี
+   .section-title ของตัวเอง (คนละสเปกภาพ) — ถ้าไม่ scope จะชนกัน */
+#page-emp .section-title {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+
+.filter-badge {
+  background-color: var(--surface2);
+  color: var(--ok);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  border: 1px solid var(--ok-30);
+}
+
+/* ── SHIFT control box ────────────────────────────────────── */
+.shift-control-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: var(--surface2);
+  padding: 6px;
+  border-radius: 16px;
+  align-self: flex-end;
+  border: 1px solid var(--border);
+}
+.shift-label {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--muted);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.shift-btn-group { display: flex; gap: 4px; }
+.shift-control-box .shift-btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  background-color: var(--surface);
+  color: var(--t1);
+  border: 1px solid var(--border);
+  transition: all .2s;
+}
+.shift-control-box .shift-btn:hover:not(.active) {
+  background-color: var(--surface3);
+}
+.shift-control-box .shift-btn.active {
+  background-color: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+/* ── Content grid: ซ้าย (In/Off Line) | ขวา (Total + Pending) ── */
+.summary-content-grid {
+  display: grid;
+  grid-template-columns: 3.2fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 1300px) {
+  .summary-content-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .summary-content-grid { grid-template-columns: 1fr; gap: 16px; }
+  .summary-header-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .shift-control-box { align-self: flex-end; }
+}
+
+.left-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Status cards: POS of CT / Diff. POS / POS / OPE / GL /
+   Spare / POS free / Other / คนท้อง / คนป่วย ─────────────── */
+.cards-row-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 768px) {
+  .cards-row-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* การ์ด Off Line มี 6 ใบแล้ว (เพิ่ม "คนลาออก") ต่างจากแถว In Line ที่มี 5 ใบ
+   — ใช้ modifier class แยกเฉพาะ ไม่แตะ .cards-row-grid หลักที่ Manpower
+   Planning ก็ใช้ร่วมอยู่ (ยังคง 5 คอลัมน์เหมือนเดิมที่นั่น) */
+.cards-row-grid-6col { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+@media (max-width: 768px) {
+  .cards-row-grid-6col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* 🔧 แก้ไข: เอารูปทรง/การตกแต่งมาจาก mockup "Nordic Pastel" ที่ผู้ใช้ส่งมา —
+   border-radius กลมมนขึ้นมาก (10px→16px), จุดสีกลม (dot tag) มุมขวาบนของ
+   การ์ด, เส้นคั่น meta แบบประ (dashed) แทนเส้นทึบ, ตัวเลขใหญ่/หนาขึ้น — ใช้
+   ร่วมกับหน้า Manpower Planning ด้วย (class นี้ scope ข้ามหน้า ไม่ใช่แค่
+   Assign Employees)
+   🔧 สำคัญ: ไม่ได้ copy สี hex ตายตัวจาก mockup มาตรงๆ (mockup เป็น light
+   mode ล้วน ไม่รองรับ Dark mode เลย) — .card-emerald-dark/light (เขียว),
+   .card-rose (แดง/coral คู่กับ "accent-red" ใน mockup), .card-gray (เทา)
+   ที่มีอยู่แล้วใช้ token ที่สลับ Dark/Light อัตโนมัติอยู่แล้ว (--ok-tint-bg/
+   --danger-tint-bg/--surface2 ฯลฯ ใน 1-variables.css) และโทนใกล้เคียงกับ
+   mint/coral ของ mockup อยู่แล้วในตัว เลยใช้ต่อได้เลยไม่ต้องสร้างชุดสีใหม่ —
+   เปลี่ยนแค่ "รูปทรง/การตกแต่ง" ตามที่ตกลง ไม่ใช้ปุ่มสลับพาเลตแบบใน mockup */
+/* 🔧 แก้ไข: ย่อขนาดลงอีกให้ความสูงใกล้เคียงการ์ด .stat-card ของหน้า Report
+   Adjustment (padding 12px 14px, border-radius 10px, ตัวเลข 19px, label
+   11px, ไม่มี min-height ตายตัว — ปล่อยให้สูงตามเนื้อหาเหมือน RA แทนที่จะ
+   บังคับ 80px) รูปทรง/dot-tag/เส้นประยังคงตามรอบก่อนหน้า แค่ลดสเกลลง */
+.status-card {
+  position: relative;
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--s2);
+  transition: background .3s ease, border-color .3s ease;
+}
+/* จุดสีกลมมุมขวาบน (ตาม .tag ของ mockup) — สีเปลี่ยนตาม variant ด้านล่าง
+   ค่า default (การ์ดไม่มี variant) ใช้สี muted เป็นกลาง */
+.status-card::after {
+  content: '';
+  position: absolute;
+  top: 10px; right: 12px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.status-card-title { font-size: 11px; font-weight: 600; margin: 0 14px 0 0; color: var(--muted); }
+.status-card-value { font-size: 19px; font-weight: 700; margin: 2px 0; color: var(--text); line-height: 1; }
+.status-card-footer {
+  font-size: 10px;
+  border-top: 1px dashed var(--border);
+  padding-top: 6px;
+  margin-top: 6px;
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+}
+
+/* พื้นเขียว: POS of CT, POS (การ์ดเข้ม) และ Spare/POS free/Other/
+   คนท้อง/คนป่วย (การ์ดอ่อน) — ต้นฉบับใช้สีเดียวกัน รวมเป็น
+   selector เดียว */
+.card-emerald-dark,
+.card-emerald-light {
+  background-color: var(--ok-tint-bg);
+  border: 1px solid var(--ok-tint-border);
+}
+.card-emerald-dark .status-card-title,
+.card-emerald-light .status-card-title,
+.card-emerald-dark .status-card-value,
+.card-emerald-light .status-card-value {
+  color: var(--ok);
+}
+.card-emerald-dark::after,
+.card-emerald-light::after { background: var(--ok); }
+
+/* พื้นแดง: Diff. POS */
+.card-rose {
+  background-color: var(--danger-tint-bg);
+  border: 1px solid var(--danger-tint-border);
+  justify-content: center;
+}
+.card-rose .status-card-title,
+.card-rose .status-card-value {
+  color: var(--danger);
+}
+.card-rose::after { background: var(--danger); }
+
+/* พื้นเทา: OPE, GL */
+.card-gray {
+  background-color: var(--surface2);
+  border: 1px solid var(--border);
+}
+.card-gray .status-card-title { color: var(--muted); }
+.card-gray .status-card-value { color: var(--text); }
+.card-gray::after { background: var(--muted); }
+
+/* ── Right panel: Total/Men/Women + New/Pending ─────────────── */
+.right-total-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cards-row-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.total-sub-card {
+  background-color: var(--surface2);
+  border-radius: 8px;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+  min-height: 75px;
+  box-sizing: border-box;
+}
+.total-card-title { font-size: 11px; font-weight: bold; color: var(--t1); }
+.total-card-value { font-size: 18px; font-weight: bold; color: var(--text); }
+.total-card-footer {
+  font-size: 8px;
+  color: var(--muted);
+  padding-top: 4px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  line-height: 1.2;
+}
+
+/* หัวแถบ "New / Pending" */
+.header.header-dark {
+  background-color: var(--danger);
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 12px 12px 0 0;
+  margin-bottom: -1px;
+}
+.header.header-dark h3 { margin: 0; font-size: 13px; font-weight: 600; }
+
+.right-total-panel .status-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0 0 12px 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+.status-number { font-size: 24px; font-weight: 800; color: var(--danger); line-height: 1; }
+.status-label  { font-size: 13px; color: var(--text); margin: 2px 0 0; font-weight: 700; }
+
+.stats-box {
+  background-color: var(--surface);
+  border-radius: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.status-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; color: var(--t1);
+}
+.status-value {
+  font-weight: bold; color: var(--danger);
+  background-color: var(--danger-14);
+  padding: 1px 5px; border-radius: 4px;
+}
+
+.button-group { display: flex; flex-direction: column; gap: 5px; }
+.button-group button {
+  width: 100%; padding: 8px; font-size: 11px; font-weight: 600;
+  border-radius: 6px; border: none; cursor: pointer; transition: opacity .2s;
+}
+.button-group button:hover { opacity: .9; }
+
+/* ── Action bar: search + filter toggle + add/save buttons ──── */
+.action-bar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.search-wrapper { position: relative; flex: 1; max-width: 320px; }
+.search-wrapper input {
+  width: 100%;
+  padding: 8px 36px 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  background-color: var(--surface2);
+  color: var(--text);
+}
+.search-wrapper .search-icon-inside {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--muted); pointer-events: none;
+}
+
+.filter-trigger-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer; transition: all .2s;
+}
+.filter-trigger-btn:hover { background: var(--surface2); border-color: var(--b1); }
+
+/* dropdown filter grid ("ตัวกรอง" ที่กดเปิดจากปุ่ม filter-trigger-btn)
+   ⚠️ scope ด้วย #page-emp เพราะชื่อ .filters ชนกับ topbar filters
+   ของหน้า Manpower Analytics (คนละความหมาย คนละ layout) */
+#page-emp .filters {
+  background: var(--surface);
+}
+
+/* ── Standby modal ("+ เพิ่มพนักงาน") ─────────────────────────
+   หมายเหตุ: ใน index.html เดิม element นี้ยัง inline-style สี
+   ขาวตรงๆ (style="background:white...") แนะนำเปลี่ยน HTML เป็น
+   class="standby-modal-overlay" / "standby-modal-box" แทน
+   (ดู CHANGELOG.md หัวข้อ HTML diff) ──────────────────────── */
+.standby-modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+}
+.standby-modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  width: 700px;
+  max-width: 92vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--s4);
+  color: var(--text);
+}
+.standby-modal-box h3 { color: var(--accent); margin: 0; }
+
+/* ── Right pending card ("ใหม่ / รอดำเนินการ" ทั้งกล่อง) ─────── */
+.right-pending-card {
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--s2);
+  overflow: hidden;
+}
+.pending-card-header {
+  padding: 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 600; color: var(--text);
+}
+.pending-card-body { padding: 24px; text-align: center; }
+.big-pending-number { font-size: 48px; font-weight: 700; color: var(--danger); line-height: 1; margin-bottom: 4px; }
+.pending-sub-title {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--muted); font-weight: 600; margin-bottom: 20px;
+}
+.pending-details-list { text-align: left; margin-bottom: 20px; }
+.pending-detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13px;
+}
+.pending-detail-row:last-child { border-bottom: none; }
+.pending-detail-label { display: flex; align-items: center; gap: 6px; color: var(--t1); }
+.pending-detail-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--danger); }
+.pending-detail-value { font-weight: 600; color: var(--text); }
+.view-incomplete-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--accent); text-decoration: none;
+  font-weight: 500; margin-bottom: 16px; cursor: pointer;
+}
+.view-incomplete-link:hover { text-decoration: underline; }
+
+.action-lock-submit-btn {
+  width: 100%; padding: 12px;
+  background: var(--accent); color: #ffffff;
+  border: none; border-radius: 8px; font-weight: 600; font-size: 14px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  gap: 8px; transition: background .2s;
+}
+.action-lock-submit-btn:hover {
+  background: color-mix(in srgb, var(--accent) 80%, black);
+}
+
+/* ── Main employee table ─────────────────────────────────── */
+.main-data-table {
+  width: 100%;
+  /* 🔧 แก้ไข: เดิม border-collapse:collapse ทำให้ position:sticky บน
+     <th> เพี้ยน — แถวข้อมูล (tbody) เลื่อนทะลุขึ้นไป "โผล่เหนือ" หัวตาราง
+     แทนที่จะถูกซ่อนไว้ข้างหลังตามปกติ (บั๊กที่รู้จักกันดีของเบราว์เซอร์
+     เวลาใช้ sticky ร่วมกับ border-collapse บนตาราง) เปลี่ยนเป็น separate
+     + border-spacing:0 แทน — เพราะตารางนี้ใช้แค่ border-bottom (ไม่มี
+     border บนคอลัมน์ซ้าย/ขวา/บน) จึงไม่มีปัญหาเส้นซ้อนคู่ หน้าตาเหมือนเดิม
+     ทุกอย่าง แต่ sticky ทำงานถูกต้องแล้ว */
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  text-align: left;
+}
+.main-data-table th {
+  background: var(--surface2);
+  color: var(--muted);
+  font-weight: 600;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.main-data-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  white-space: nowrap;
+}
+.table-wrap { overflow-x: auto; width: 100%; }
+
+/* dropdown ในตาราง (สร้างโดย custom-render.js — ย้ายมาจาก
+   css/Custom-render.css เดิม) */
+.line-dropdown,
+.subline-dropdown {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--text);
+  font-family: 'Sarabun', sans-serif;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+.line-dropdown:hover,
+.subline-dropdown:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--a1d);
+}
+.line-dropdown:focus,
+.subline-dropdown:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--a1d);
+}
+
+/* ── Scrollbars เฉพาะตารางหน้านี้ ─────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: var(--surface2); }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.table-wrap::-webkit-scrollbar { height: 14px; }
+.table-wrap::-webkit-scrollbar-track { background: var(--bg2); border-radius: 8px; }
+.table-wrap::-webkit-scrollbar-thumb {
+  background: var(--border); border-radius: 8px; border: 2px solid transparent;
+}
+.table-wrap::-webkit-scrollbar-thumb:hover { background: var(--t2); }
+
+#fakeScrollbar::-webkit-scrollbar { height: 14px; }
+#fakeScrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+#fakeScrollbar::-webkit-scrollbar-track { background: var(--bg2); }
+
+/* 🆕 Table density — หน้า Assign Employees */
+[data-density="compact"] .main-data-table th {
+  padding: 6px 10px;
+}
+[data-density="compact"] .main-data-table td {
+  padding: 5px 10px;
+}
+[data-density="compact"] .status-card {
+  padding: 5px 8px;
+  min-height: 60px;
+}
+[data-density="compact"] .status-card-value {
+  font-size: 15px;
+}
+.summary-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--surface2, #f1f5f9);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text, #334155);
+    transition: all 0.2s ease;
+    padding: 0;
+}
+.summary-toggle-btn:hover { background: #e2e8f0; }
+.summary-content-grid {
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+    max-height: 1000px;
+    opacity: 1;
+}
+.summary-content-grid.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+}
+
+
+/* panel ตอนพับ ให้เตี้ยลงพอดีกับแถบ SHIFT */
+.left-panel.summary-collapsed {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+.left-panel.summary-collapsed .summary-header-row {
+    margin-bottom: 0;
+}
+
+.summary-mini-strip {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    flex: 1;
+    padding-right: 12px;
+    scrollbar-width: thin;
+}
+.left-panel.summary-collapsed .summary-mini-strip {
+    display: flex;
+}
+/* ════════════════════════════════════════════════════════════
+   PREMIUM PAGINATION — #pagination .premium-pagination
+   ใช้ตัวแปรสี/ธีมเดียวกับทั้งไฟล์ (var(--surface), var(--accent) ฯลฯ)
+   จึงรองรับทั้ง light/dark mode โดยอัตโนมัติเหมือนส่วนอื่นของหน้านี้
+   ════════════════════════════════════════════════════════════ */
+#pagination.pagination{
+    display: flex;
+    justify-content: center;/* จัดให้อยู่ตรงกลาง */
+    /*justify-content: flex-end; /* ชิดขวา */
+}
+
+.premium-pagination{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 10px;
+    box-shadow: var(--s1);
+    flex-wrap: wrap;
+}
+
+.pg-arrow,
+.pg-page{
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Sarabun', sans-serif;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease, transform .15s ease;
+}
+.pg-arrow{ color: var(--muted); font-size: 15px; }
+
+.pg-arrow:hover:not(:disabled),
+.pg-page:hover:not(.active){
+    background: var(--surface2);
+}
+.pg-page:active:not(.active),
+.pg-arrow:active:not(:disabled){
+    transform: scale(.92);
+}
+.pg-arrow:disabled{
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+.pg-page.active{
+    color: #fff;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+    font-weight: 700;
+}
+
+.pg-dots{
+    color: var(--muted);
+    padding: 0 2px;
+    user-select: none;
+    font-size: 13px;
+}
+
+.pg-divider{
+    width: 1px;
+    height: 22px;
+    background: var(--border);
+    margin: 0 4px;
+}
+
+.pg-select{
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 12.5px;
+    color: var(--text);
+    outline: none;
+    cursor: pointer;
+}
+
+.pg-goto-label{
+    font-size: 12.5px;
+    color: var(--muted);
+    white-space: nowrap;
+    font-family: 'Sarabun', sans-serif;
+}
+
+.pg-goto-input{
+    width: 46px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 8px;
+    text-align: center;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 12.5px;
+    color: var(--text);
+    outline: none;
+    transition: border-color .2s ease;
+}
+.pg-goto-input:focus{
+    border-color: var(--accent);
+}
+/* ซ่อนลูกศร spinner ของ input[type=number] ให้ดูสะอาดขึ้น */
+.pg-goto-input::-webkit-outer-spin-button,
+.pg-goto-input::-webkit-inner-spin-button{
+    -webkit-appearance: none;
+    margin: 0;
+}
+.pg-goto-input[type=number]::-webkit-inner-spin-button,
+.pg-goto-input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+@media (max-width: 640px){
+    .premium-pagination{
+        justify-content: center;
+        border-radius: 16px;
+    }
+    .pg-goto-label:first-of-type,
+    .pg-goto-input,
+    .pg-goto-label + .pg-goto-label{
+        display: none;
+    }
+}
+
+/* ── #filterCode — Multi-select + ค้นหาได้ (เดิมเป็น <select> เดี่ยว) ─────────
+   pattern เดียวกับ .ie-gl-multiselect ใน css/11-page-ie-monthly-report.css
+   (ปุ่ม + panel ลอยแปะที่ body) แค่ชื่อ class แยกกันเพราะเป็นคนละ widget instance
+   และเพิ่มช่องค้นหาที่ตัวนั้นไม่มี ────────────────────────────────────────── */
+.code-multiselect { min-width: 220px; width: 100%; }
+
+.code-ms-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'Sarabun', sans-serif;
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--tr, .15s);
+}
+.code-ms-btn:hover { border-color: var(--accent); }
+.code-multiselect.open .code-ms-btn { border-color: var(--accent); }
+
+.code-ms-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.code-ms-caret { width: 14px; height: 14px; flex-shrink: 0; opacity: .7; transition: transform var(--tr, .15s); }
+.code-multiselect.open .code-ms-caret { transform: rotate(180deg); }
+
+.code-ms-panel {
+  display: none;
+  position: fixed;
+  z-index: 100010;
+  min-width: 240px;
+  max-width: 360px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--s4, 0 10px 30px rgba(0,0,0,.2));
+  overflow: hidden;
+}
+.code-ms-panel.open { display: block; }
+
+.code-ms-search { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.code-ms-search input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface2);
+  color: var(--text);
+  font-family: 'Sarabun', sans-serif;
+  font-size: 12px;
+  outline: none;
+}
+.code-ms-search input:focus { border-color: var(--accent); }
+
+.code-ms-actions {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.code-ms-actions button {
+  flex: 1;
+  border: none;
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 11px;
+  font-family: 'Sarabun', sans-serif;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.code-ms-actions button:hover { filter: brightness(0.95); background: var(--border); }
+
+.code-ms-list { max-height: 240px; overflow-y: auto; padding: 4px 0; }
+.code-ms-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-family: 'Sarabun', sans-serif;
+  color: var(--text);
+  cursor: pointer;
+}
+.code-ms-item:hover { background: var(--surface2); }
+.code-ms-item input[type="checkbox"] { cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
+
+/* ── "GL Sub Line" (ตัวหาร headcount ของ GL หลาย Sub Line) — พอร์ตมาจาก
+   หน้า IE Monthly Report (2026-08-27) ใช้ .code-ms-* ข้างบนนี้ร่วมกันทั้งชุด
+   (ปุ่ม/panel/รายการ) เพิ่มแค่ icon ในปุ่ม + สถานะ active ของปุ่มสลับขอบเขต
+   "ใน Code นี้ / ทั้ง Division" ────────────────────────────────────────── */
+.gl-subline-ms { min-width: 150px; }
+.gl-subline-ms-icon { width: 14px; height: 14px; flex-shrink: 0; opacity: .75; }
+.gl-subline-ms-scope { border-bottom: 1px solid var(--border); }
+.gl-subline-scope-btn.active { background: var(--accent); color: #fff; }
+.gl-subline-scope-btn.active:hover { filter: none; background: var(--accent); }
+
+/* ══════════════════════════════════════════════════════════════
+   Board · Assign to Line — โหมดลากวางแบบเดียวกับ Board ของหน้า
+   Manpower Planning (ดู css/13-page-planning.css บรรทัด 235-483) —
+   ก็อป CSS มาเป๊ะๆ (ใช้ .plan-board-* class เดิม เพราะ scope ด้วย
+   #page-emp อยู่แล้ว ไม่ชนกับ #page-Planning) เปลี่ยนแค่ prefix
+   #page-Planning -> #page-emp ทุกจุด ต่างจาก Planning ตรงที่หน้านี้ไม่มี
+   side drawer ของตัวเอง (เดิม PHASE 7b ใน 13-page-planning.css) — คลิก
+   การ์ดเปิด openEditEmpModal() ที่มีอยู่แล้วแทน (ดู custom-render.js)
+   จึงพอร์ตมาแค่ CSS ของไอคอนแก้ไขเล็กๆ มุมการ์ด (hover affordance)
+   ไม่พอร์ต .plan-board-drawer-* ที่เหลือของ Planning
+   ══════════════════════════════════════════════════════════════ */
+#page-emp .board-wrap { margin-top: 12px; }
+
+#page-emp .plan-board-header {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 8px; margin-bottom: 14px;
+}
+#page-emp .plan-board-header-hint { font-size: 11.5px; color: var(--muted); }
+
+#page-emp .plan-board-layout {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 16px;
+  align-items: start;
+}
+#page-emp .plan-board-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ── การ์ด Line แต่ละไลน์ ── */
+#page-emp .plan-board-line {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+#page-emp .plan-board-line-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+#page-emp .plan-board-line-name { font-size: 14px; font-weight: 700; color: var(--text); }
+#page-emp .plan-board-line-count { font-size: 11px; color: var(--muted); }
+
+/* ── สายพาน Process แนวนอน + ลูกศรเชื่อมทุกขั้น ── */
+#page-emp .plan-board-flow-track { display: flex; align-items: flex-start; gap: 0; overflow-x: auto; padding-bottom: 8px; cursor: grab; }
+#page-emp .plan-board-node { flex: 0 0 210px; position: relative; padding-right: 28px; }
+#page-emp .plan-board-node:last-child { padding-right: 0; }
+#page-emp .plan-board-node:not(:last-child)::after {
+  content: '\f054'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute;
+  right: 6px; top: 24px; color: var(--b1, #a7b6b0); font-size: 12px;
+}
+#page-emp .plan-board-node-card {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 11px; height: 100%;
+}
+#page-emp .plan-board-node-card-gl { background: var(--accent-light, rgba(5, 150, 105, .1)); border-color: transparent; }
+#page-emp .plan-board-node-head {
+  display: flex; align-items: center; gap: 7px; margin-bottom: 9px; font-size: 11px; font-weight: 700; color: var(--t1);
+}
+#page-emp .plan-board-node-n {
+  width: 17px; height: 17px; border-radius: 50%; background: var(--accent); color: #fff;
+  font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+#page-emp .plan-board-node-n.gl { background: #fff; color: var(--accent); }
+
+/* ── คอลัมน์ย่อยตาม Shift ภายในแต่ละ node (Kanban) ── */
+#page-emp .plan-board-shift-cols { display: flex; flex-direction: column; gap: 7px; }
+#page-emp .plan-board-shift-col { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 7px; }
+#page-emp .plan-board-shift-col-head { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+#page-emp .plan-board-shift-col-title { font-size: 9.5px; font-weight: 700; color: var(--muted); }
+#page-emp .plan-board-shift-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: #2563eb; }
+/* สีจุด Shift ไล่ตามลำดับคอลัมน์ (ไม่ผูกกับชื่อ Shift ตรงๆ เพราะ config ตั้งชื่อเองได้) */
+#page-emp .plan-board-shift-col:nth-of-type(1) .plan-board-shift-dot,
+#page-emp .plan-board-shift-col:nth-of-type(1) .plan-board-shift-col-title { color: #2563eb; }
+#page-emp .plan-board-shift-col:nth-of-type(1) .plan-board-shift-dot { background: #2563eb; }
+#page-emp .plan-board-shift-col:nth-of-type(2) .plan-board-shift-dot,
+#page-emp .plan-board-shift-col:nth-of-type(2) .plan-board-shift-col-title { color: #d97706; }
+#page-emp .plan-board-shift-col:nth-of-type(2) .plan-board-shift-dot { background: #d97706; }
+#page-emp .plan-board-shift-col:nth-of-type(3) .plan-board-shift-dot,
+#page-emp .plan-board-shift-col:nth-of-type(3) .plan-board-shift-col-title { color: var(--accent); }
+#page-emp .plan-board-shift-col:nth-of-type(3) .plan-board-shift-dot { background: var(--accent); }
+#page-emp .plan-board-shift-col:nth-of-type(n+4) .plan-board-shift-dot,
+#page-emp .plan-board-shift-col:nth-of-type(n+4) .plan-board-shift-col-title { color: var(--muted); }
+#page-emp .plan-board-shift-col:nth-of-type(n+4) .plan-board-shift-dot { background: var(--b1, #a7b6b0); }
+
+#page-emp .plan-board-legend { display: flex; gap: 14px; font-size: 10px; color: var(--muted); margin-top: 12px; }
+#page-emp .plan-board-legend span { display: flex; align-items: center; gap: 5px; }
+#page-emp .plan-board-legend-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--b1, #a7b6b0); }
+#page-emp .plan-board-legend span:nth-child(1) .plan-board-legend-dot { background: #2563eb; }
+#page-emp .plan-board-legend span:nth-child(2) .plan-board-legend-dot { background: #d97706; }
+#page-emp .plan-board-legend span:nth-child(3) .plan-board-legend-dot { background: var(--accent); }
+
+/* ── ช่อง (dropzone) — อยู่ในแต่ละ shift-col ── */
+#page-emp .plan-board-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 34px;
+  transition: background-color .12s ease, box-shadow .12s ease, border-radius .12s ease;
+}
+#page-emp .plan-board-cell.drag-over {
+  background: var(--accent-light, rgba(5, 150, 105, .1));
+  box-shadow: inset 0 0 0 1px var(--accent);
+  border-radius: 6px;
+}
+#page-emp .plan-board-cell-empty {
+  font-size: 10px; color: var(--b1, #a7b6b0); text-align: center; padding: 8px 0;
+  border: 1px dashed var(--border); border-radius: 6px;
+}
+#page-emp .plan-board-cell-empty i { opacity: .7; }
+
+/* ── กลุ่ม "Off Line" พับ/กางได้ ภายในแต่ละ Shift column ── */
+#page-emp .plan-board-off-group {
+  margin-top: 6px; border: 1px dashed var(--off-bg, #fdecec); border-radius: 8px; overflow: hidden;
+}
+#page-emp .plan-board-off-group-head {
+  display: flex; align-items: center; gap: 5px; padding: 5px 7px; background: var(--off-bg, #fdecec);
+  cursor: pointer; user-select: none;
+}
+#page-emp .plan-board-off-group-head i.fa-circle-exclamation { color: var(--off, #c62828); font-size: 9px; }
+#page-emp .plan-board-off-group-label { font-size: 9px; font-weight: 700; color: var(--off, #c62828); }
+#page-emp .plan-board-off-group-cnt {
+  font-size: 8.5px; font-weight: 700; color: var(--off, #c62828); background: #fff;
+  padding: 0 6px; border-radius: 999px;
+}
+#page-emp .plan-board-off-group-chev { margin-left: auto; color: var(--off, #c62828); font-size: 9px; transition: transform .15s ease; }
+#page-emp .plan-board-off-group.collapsed .plan-board-off-group-chev { transform: rotate(-90deg); }
+#page-emp .plan-board-off-group-body { padding: 6px; background: var(--surface); display: flex; flex-direction: column; gap: 5px; }
+#page-emp .plan-board-off-group.collapsed .plan-board-off-group-body { display: none; }
+
+/* ── ตัวปรับสำหรับกล่อง "Off Line ทั้งไลน์" (รวมทุก node ท้าย Line block) ── */
+#page-emp .plan-board-off-group.plan-board-off-group-line { margin-top: 16px; border-radius: 12px; }
+#page-emp .plan-board-off-group-line .plan-board-off-group-head { padding: 10px 14px; }
+#page-emp .plan-board-off-group-line .plan-board-off-group-head i.fa-circle-exclamation { font-size: 12px; }
+#page-emp .plan-board-off-group-line .plan-board-off-group-label { font-size: 12px; }
+#page-emp .plan-board-off-group-line .plan-board-off-group-cnt { font-size: 10px; padding: 2px 9px; }
+#page-emp .plan-board-off-group-line .plan-board-off-group-chev { font-size: 11px; }
+#page-emp .plan-board-off-group-line .plan-board-off-group-body {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; padding: 14px;
+}
+#page-emp .plan-board-off-group-line.collapsed .plan-board-off-group-body { display: none; }
+
+#page-emp .plan-board-off-shiftgroup-head {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+#page-emp .plan-board-off-shiftgroup-head span:nth-child(2) { font-size: 11px; font-weight: 700; color: var(--t1); }
+#page-emp .plan-board-off-shiftgroup-cnt { margin-left: auto; font-size: 9.5px; color: var(--muted); }
+#page-emp .plan-board-off-shiftgroup .plan-board-card { margin-bottom: 6px; }
+#page-emp .plan-board-off-shiftgroup .plan-board-card:last-child { margin-bottom: 0; }
+
+/* ── tag เล็กบอก process ต้นทาง (โชว์เฉพาะการ์ดในกล่อง Off Line ทั้งไลน์) ── */
+#page-emp .plan-board-card-proctag {
+  font-size: 8px; font-weight: 700; color: var(--muted); background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 5px; padding: 0 5px; margin-right: 5px;
+}
+
+/* ── การ์ดพนักงาน — กะทัดรัด: ID+tag บรรทัดเดียว / ชื่อ / Position+Status ── */
+#page-emp .plan-board-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 6px;
+  cursor: grab;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+  transition: box-shadow .12s ease, transform .12s ease, border-color .12s ease;
+}
+#page-emp .plan-board-card:hover { box-shadow: 0 3px 10px rgba(0, 0, 0, .08); transform: translateY(-1px); border-color: var(--b1); }
+#page-emp .plan-board-card:active { cursor: grabbing; }
+#page-emp .plan-board-card.dragging { opacity: .4; }
+
+#page-emp .plan-board-card-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; flex-wrap: wrap; row-gap: 2px; }
+#page-emp .plan-board-card-id { font-size: 9.5px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+#page-emp .plan-board-card-name {
+  font-size: 10.5px; color: var(--text); margin-top: 2px; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+#page-emp .plan-board-card-bottom {
+  display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: 3px; flex-wrap: wrap; row-gap: 2px;
+}
+#page-emp .plan-board-card-position {
+  font-size: 9px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+#page-emp .plan-board-tag {
+  font-size: 8px; font-weight: 700; padding: 0px 5px; border-radius: 999px;
+  background: var(--surface2); color: var(--muted); border: 1px solid var(--border);
+  white-space: nowrap;
+}
+#page-emp .plan-board-tag.accent {
+  background: var(--accent-light, rgba(5, 150, 105, .1)); color: var(--accent); border-color: transparent;
+}
+#page-emp .plan-board-tag.status-in { background: #e7f6ee; color: #0f7a44; border-color: transparent; }
+#page-emp .plan-board-tag.status-off { background: #fdecec; color: #c62828; border-color: transparent; }
+
+/* พนักงานลาออกแล้ว (Status_Sync='Resign') ที่ยังไม่ถูก auto-exclude ออกจากรอบ
+   Assign (ยังไม่เคย Save ยืนยันหลังลาออก) — เน้นตัวหนังสือทั้งแถวเป็นสีแดง
+   ให้เห็นชัดคู่กับ badge "ลาออก" (ดู custom-render.js renderTable) */
+#page-emp #tableBody tr.row-resigned td { color: var(--danger) !important; }
+
+/* ── พูลรอจัด ── */
+#page-emp .plan-board-pool {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  position: sticky;
+  top: 12px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+#page-emp .plan-board-pool-head {
+  font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px;
+}
+#page-emp .plan-board-pool-head i { color: var(--accent); }
+#page-emp .plan-board-pool-count {
+  margin-left: auto; font-size: 10.5px; font-weight: 700; color: var(--accent);
+  background: var(--accent-light, rgba(5, 150, 105, .1)); padding: 2px 9px; border-radius: 999px;
+}
+#page-emp .plan-board-pool-search {
+  width: 100%; box-sizing: border-box; padding: 7px 10px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text);
+  font-family: 'Sarabun', sans-serif; font-size: 12.5px; outline: none; margin-bottom: 8px;
+}
+#page-emp .plan-board-pool-search:focus { border-color: var(--accent); }
+#page-emp .plan-board-pool-list {
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; min-height: 120px;
+  border: 1px dashed var(--border); border-radius: 8px; padding: 8px;
+}
+#page-emp .plan-board-pool-list.drag-over {
+  background: var(--accent-light, rgba(5, 150, 105, .08)); border-color: var(--accent); border-style: solid;
+}
+
+#page-emp .plan-board-empty { text-align: center; padding: 30px; color: var(--muted); font-size: 12.5px; }
+#page-emp .plan-board-fallback-note {
+  background: var(--surface2);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+#page-emp .plan-board-fallback-note i { color: var(--warn); }
+#page-emp .plan-board-lines > .plan-board-fallback-note,
+#page-emp .plan-board-lines > .plan-board-empty { grid-column: 1 / -1; }
+
+@media (max-width: 1100px) {
+  #page-emp .plan-board-layout { grid-template-columns: 1fr; }
+  #page-emp .plan-board-pool { position: static; max-height: none; }
+  #page-emp .plan-board-header { flex-direction: column; align-items: flex-start; }
+}
+
+/* ── ไอคอนแก้ไขเล็กๆ มุมการ์ด (hover affordance) — คลิกการ์ดเปิด
+   openEditEmpModal() ที่มีอยู่แล้วของหน้านี้ ไม่ใช่ side drawer แบบ Planning ── */
+#page-emp .plan-board-card { position: relative; }
+#page-emp .plan-board-card-edit-icon {
+  position: absolute; top: 4px; right: 4px; font-size: 8px; color: var(--b1);
+  opacity: 0; transition: opacity .12s ease;
+}
+#page-emp .plan-board-card:hover .plan-board-card-edit-icon { opacity: 1; }
+
+/* ══════════════════════════════════════════════════════════
+   Export Excel modal — self-contained (.emp-* prefix), mirrors
+   .mpd-modal-overlay/.mpd-modal/.mpd-export-* in
+   css/15-page-manpower-dashboard.css almost verbatim (same
+   ice-blue/violet accent glow badges), just renamed for this page
+   and using <i> FontAwesome icons instead of inline <svg> to match
+   this page's own icon convention. display:none lives here in the
+   CSS itself (not just inline on the element) so the overlay can
+   never fall back to display:block and break the flex-centering
+   below — the same fix already applied on the dashboard page.
+   ══════════════════════════════════════════════════════════ */
+.emp-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+}
+.emp-modal-overlay.show { display: flex; }
+.emp-modal {
+  background: var(--surface2, #fff);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  margin: 0;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.emp-modal h2 { margin: 0 0 4px; font-size: 18px; color: var(--text); font-family: 'Sarabun', sans-serif; }
+.emp-export-modal-sub { margin: 0 0 16px; font-size: 12.5px; color: var(--muted); }
+.emp-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+.emp-modal-actions .btn-cancel {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 9px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: 'Sarabun', sans-serif;
+}
+.emp-export-options { display: flex; flex-direction: column; gap: 10px; }
+.emp-export-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Sarabun', sans-serif;
+  transition: border-color .15s ease, background-color .15s ease, transform .15s ease;
+}
+.emp-export-option:hover { border-color: var(--accent); background: var(--surface2); transform: translateY(-1px); }
+.emp-export-option:active { transform: scale(.99); }
+.emp-export-icon {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 14px;
+}
+.emp-export-icon.ice    { background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 60%, black)); box-shadow: 0 4px 12px -3px color-mix(in srgb, var(--accent) 55%, transparent); }
+.emp-export-icon.violet { background: linear-gradient(135deg, var(--accent2), color-mix(in srgb, var(--accent2) 60%, black)); box-shadow: 0 4px 12px -3px color-mix(in srgb, var(--accent2) 55%, transparent); }
+.emp-export-option-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.emp-export-option-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.emp-export-option-sub { font-size: 11.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.code-ms-empty { padding: 12px; font-size: 12px; color: var(--text-muted); text-align: center; }

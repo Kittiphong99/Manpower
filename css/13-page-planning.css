@@ -1,0 +1,533 @@
+/*
+ * ============================================================
+ *  EMPTRACK — PAGE: Manpower Planning (#page-Planning)
+ *  ไฟล์: css/13-page-planning.css
+ *
+ *  ย้ายมาจากไฟล์ mockup "Manpower Planning — Mockup (Discuss)"
+ *  แปลง scope จาก #page-planning (lowercase, ของไฟล์ mockup เดิม
+ *  ที่มี div ครอบเองต่างหาก) เป็น #page-Planning (capital P) ให้
+ *  ตรงกับ id จริงของ <div class="page" id="page-Planning"> และ
+ *  data-page="Planning" ในปุ่มเมนู sidebar — ไม่งั้น selector จะ
+ *  ไม่ match เพราะ id ใน CSS/getElementById เป็น case-sensitive
+ *
+ *  class ทั่วไปที่ใช้ร่วม (.left-panel, .status-card, .btn,
+ *  .main-data-table, .line-dropdown, .subline-dropdown,
+ *  .table-main-title, .action-bar-row, .filter-label ฯลฯ) ไม่ต้อง
+ *  ประกาศซ้ำที่นี่ เพราะมีอยู่แล้วใน 4-components.css /
+ *  7-page-assign-employees.css
+ * ============================================================
+ */
+
+/* ── Sub-tabs บนสุดของหน้า (รายการแผน / สร้าง-แก้ไข / Compare) ── */
+#page-Planning { padding: 24px 32px; }
+
+#page-Planning .plan-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+#page-Planning .plan-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+#page-Planning .plan-tab:hover { border-color: var(--b1); color: var(--text); }
+#page-Planning .plan-tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ── Sub-view container (list / create / compare) ─────────── */
+#page-Planning .plan-view { display: none; animation: pageIn .2s ease both; }
+#page-Planning .plan-view.active { display: block; }
+
+/* ── VIEW 1: Toolbar + Plan cards grid ─────────────────────── */
+#page-Planning .plan-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+#page-Planning .plan-toolbar .filter-group { display: flex; gap: 12px; align-items: flex-end; }
+
+#page-Planning select.plan-select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--text);
+  font-family: 'Sarabun', sans-serif;
+  font-size: 13px;
+  min-width: 220px;
+}
+
+#page-Planning .plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+#page-Planning .plan-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color .15s;
+}
+#page-Planning .plan-card:hover { border-color: var(--b1); }
+#page-Planning .plan-card-current {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+#page-Planning .plan-card-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 999px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+#page-Planning .plan-card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+#page-Planning .plan-card-meta { font-size: 11px; color: var(--muted); }
+#page-Planning .plan-card-stats {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--t1);
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+#page-Planning .plan-card-stats b { color: var(--text); font-size: 15px; display: block; }
+/* 🔧 แก้ไข: เดิม flex:1 ตัวเดียวรองรับแค่ 3 ปุ่ม — พอเพิ่มปุ่ม "ลบ" เป็นตัวที่ 4
+   การ์ดกว้างขั้นต่ำแค่ 240px (ดู .plan-grid grid-template-columns ด้านบน) หาร 4
+   ปุ่มไม่พอที่จะโชว์ไอคอน+ข้อความครบ (ตัวหนังสือ/ไอคอนถูกบีบจนโดนตัด) — เปลี่ยน
+   เป็น wrap 2 ปุ่มต่อแถวแทน ให้แต่ละปุ่มมีที่พอแสดงครบทั้งไอคอนและข้อความ */
+#page-Planning .plan-card-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+#page-Planning .plan-card-actions .btn {
+  flex: 1 1 calc(50% - 3px);
+  padding: 6px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#page-Planning .plan-card-new {
+  border: 1.5px dashed var(--border);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--muted);
+  cursor: pointer;
+  min-height: 150px;
+}
+#page-Planning .plan-card-new:hover { border-color: var(--accent); color: var(--accent); }
+#page-Planning .plan-card-new i { font-size: 22px; margin-bottom: 6px; display: block; }
+
+/* ── VIEW 2: Create/Edit plan ───────────────────────────────── */
+#page-Planning .page-title-row {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;
+}
+#page-Planning .page-title-row h1 { font-size: 18px; font-weight: 700; color: var(--text); margin: 0; }
+#page-Planning .page-title-row p { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+
+#page-Planning .plan-form-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+#page-Planning .plan-form-row .form-group { flex: 1; min-width: 200px; }
+#page-Planning .plan-form-row label {
+  display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 5px;
+}
+#page-Planning .plan-form-row input,
+#page-Planning .plan-form-row textarea {
+  width: 100%; box-sizing: border-box;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 10px; color: var(--text); font-family: 'Sarabun', sans-serif; font-size: 13px;
+}
+
+/* 🔧 ใหม่: Summary เต็มรูปแบบพอร์ตมาจากหน้า Assign Employees (POS of CT ฯลฯ) —
+   .summary-content-grid/.cards-row-grid/.status-card/.right-total-panel/
+   .total-sub-card ใช้สไตล์ global จาก css/7-page-assign-employees.css ตรงๆ
+   (ไม่ scope ด้วย #page-emp) เหลือแค่ .section-title ที่ทุกหน้า scope เอง
+   (กันชนกับ Monthly Manpower/Analytics ที่มี .section-title ของตัวเอง) */
+#page-Planning .section-title {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+
+/* ── VIEW 3: Compare data ───────────────────────────────────── */
+#page-Planning .compare-header {
+  display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+}
+#page-Planning .compare-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+#page-Planning .compare-cards .status-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+#page-Planning .compare-cards .status-card-title { font-size: 11px; color: var(--muted); margin: 0 0 4px; }
+#page-Planning .compare-cards .status-card-value { font-size: 22px; font-weight: 700; margin: 0; }
+
+#page-Planning .compare-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+#page-Planning .compare-table th {
+  text-align: right; padding: 8px 10px; color: var(--muted); font-weight: 600; font-size: 11px;
+  border-bottom: 1px solid var(--border);
+}
+#page-Planning .compare-table th:first-child { text-align: left; }
+#page-Planning .compare-table td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+#page-Planning .compare-table td:first-child { text-align: left; }
+#page-Planning .compare-table tfoot td { font-weight: 700; border-top: 1px solid var(--b1); border-bottom: none; }
+#page-Planning .compare-table tr.diff-highlight td { background: rgba(201, 168, 76, .12); color: var(--warn); }
+#page-Planning .diff-up   { color: var(--ok); }
+#page-Planning .diff-down { color: var(--danger); }
+
+#page-Planning .diff-people-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+#page-Planning .diff-people-card { background: var(--surface2); border-radius: 8px; padding: 12px; }
+#page-Planning .diff-people-card .hdr { font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+#page-Planning .diff-people-card .hdr.add { color: var(--ok); }
+#page-Planning .diff-people-card .hdr.remove { color: var(--danger); }
+#page-Planning .diff-row { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px dashed var(--border); color: var(--t1); }
+#page-Planning .diff-row:last-child { border-bottom: none; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  #page-Planning .compare-cards { grid-template-columns: 1fr; }
+  #page-Planning .diff-people-grid { grid-template-columns: 1fr; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   VIEW 2 เพิ่มเติม — โหมด "Board" (Process Master Board)
+   มุมมองทางเลือกของตาราง #planTableWrap เดิม สลับได้จากแท็บ "Board ·
+   จัดคนลงไลน์" ใน #planModeTabs (ปุ่มแท็บใช้ .emp-mode-tab ที่ inject
+   มาจาก ensurePlanTableModeStyle() ใน planning-manager.js อยู่แล้ว
+   ไม่ต้องประกาศซ้ำที่นี่) render/DnD logic ทั้งหมดอยู่ใน
+   planning-manager.js PHASE 7 (renderPlanBoard/attachPlanBoardDnD/
+   boardAssignEmployee)
+
+   ดีไซน์นี้เป็นการผสม 2 แนวคิดที่คุยกันไว้ก่อนทำ (ดู mockup):
+   "Flow Strip" — Process ไหลเป็นสายพานแนวนอน มีลูกศรเชื่อมทุกขั้น +
+   "Kanban by Shift" — แต่ละขั้นแตกเป็นคอลัมน์ย่อยตาม Shift ข้างใน
+   แถว GL เดิม กลายเป็น node แรกสุดของสายพาน (ก่อน Process แรก)
+   ตัดธีมฟ้า-กรมท่าแบบ Excel ออก ใช้โทนเดียวกับธีมหลักแอป (var(--accent))
+   ══════════════════════════════════════════════════════════════ */
+#page-Planning .board-wrap { margin-top: 12px; }
+
+/* ── header bar เหนือบอร์ด ── */
+#page-Planning .plan-board-header {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 8px; margin-bottom: 14px;
+}
+#page-Planning .plan-board-header-hint { font-size: 11.5px; color: var(--muted); }
+
+#page-Planning .plan-board-layout {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 16px;
+  align-items: start;
+}
+#page-Planning .plan-board-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ── การ์ด Line แต่ละไลน์ ── */
+#page-Planning .plan-board-line {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+#page-Planning .plan-board-line-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+#page-Planning .plan-board-line-name { font-size: 14px; font-weight: 700; color: var(--text); }
+#page-Planning .plan-board-line-count { font-size: 11px; color: var(--muted); }
+
+/* ── สายพาน Process แนวนอน + ลูกศรเชื่อมทุกขั้น ── */
+#page-Planning .plan-board-flow-track { display: flex; align-items: flex-start; gap: 0; overflow-x: auto; padding-bottom: 8px; cursor: grab; }
+#page-Planning .plan-board-node { flex: 0 0 210px; position: relative; padding-right: 28px; }
+#page-Planning .plan-board-node:last-child { padding-right: 0; }
+#page-Planning .plan-board-node:not(:last-child)::after {
+  content: '\f054'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute;
+  right: 6px; top: 24px; color: var(--b1, #a7b6b0); font-size: 12px;
+}
+#page-Planning .plan-board-node-card {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 11px; height: 100%;
+}
+#page-Planning .plan-board-node-card-gl { background: var(--accent-light, rgba(5, 150, 105, .1)); border-color: transparent; }
+#page-Planning .plan-board-node-head {
+  display: flex; align-items: center; gap: 7px; margin-bottom: 9px; font-size: 11px; font-weight: 700; color: var(--t1);
+}
+#page-Planning .plan-board-node-n {
+  width: 17px; height: 17px; border-radius: 50%; background: var(--accent); color: #fff;
+  font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+#page-Planning .plan-board-node-n.gl { background: #fff; color: var(--accent); }
+
+/* ── คอลัมน์ย่อยตาม Shift ภายในแต่ละ node (Kanban) ── */
+#page-Planning .plan-board-shift-cols { display: flex; flex-direction: column; gap: 7px; }
+#page-Planning .plan-board-shift-col { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 7px; }
+#page-Planning .plan-board-shift-col-head { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+#page-Planning .plan-board-shift-col-title { font-size: 9.5px; font-weight: 700; color: var(--muted); }
+#page-Planning .plan-board-shift-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: #2563eb; }
+/* สีจุด Shift ไล่ตามลำดับคอลัมน์ (ไม่ผูกกับชื่อ Shift ตรงๆ เพราะ config ตั้งชื่อเองได้) */
+#page-Planning .plan-board-shift-col:nth-of-type(1) .plan-board-shift-dot,
+#page-Planning .plan-board-shift-col:nth-of-type(1) .plan-board-shift-col-title { color: #2563eb; }
+#page-Planning .plan-board-shift-col:nth-of-type(1) .plan-board-shift-dot { background: #2563eb; }
+#page-Planning .plan-board-shift-col:nth-of-type(2) .plan-board-shift-dot,
+#page-Planning .plan-board-shift-col:nth-of-type(2) .plan-board-shift-col-title { color: #d97706; }
+#page-Planning .plan-board-shift-col:nth-of-type(2) .plan-board-shift-dot { background: #d97706; }
+#page-Planning .plan-board-shift-col:nth-of-type(3) .plan-board-shift-dot,
+#page-Planning .plan-board-shift-col:nth-of-type(3) .plan-board-shift-col-title { color: var(--accent); }
+#page-Planning .plan-board-shift-col:nth-of-type(3) .plan-board-shift-dot { background: var(--accent); }
+#page-Planning .plan-board-shift-col:nth-of-type(n+4) .plan-board-shift-dot,
+#page-Planning .plan-board-shift-col:nth-of-type(n+4) .plan-board-shift-col-title { color: var(--muted); }
+#page-Planning .plan-board-shift-col:nth-of-type(n+4) .plan-board-shift-dot { background: var(--b1, #a7b6b0); }
+
+#page-Planning .plan-board-legend { display: flex; gap: 14px; font-size: 10px; color: var(--muted); margin-top: 12px; }
+#page-Planning .plan-board-legend span { display: flex; align-items: center; gap: 5px; }
+#page-Planning .plan-board-legend-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--b1, #a7b6b0); }
+#page-Planning .plan-board-legend span:nth-child(1) .plan-board-legend-dot { background: #2563eb; }
+#page-Planning .plan-board-legend span:nth-child(2) .plan-board-legend-dot { background: #d97706; }
+#page-Planning .plan-board-legend span:nth-child(3) .plan-board-legend-dot { background: var(--accent); }
+
+/* ── ช่อง (dropzone) — อยู่ในแต่ละ shift-col ── */
+#page-Planning .plan-board-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 34px;
+  transition: background-color .12s ease, box-shadow .12s ease, border-radius .12s ease;
+}
+#page-Planning .plan-board-cell.drag-over {
+  background: var(--accent-light, rgba(5, 150, 105, .1));
+  box-shadow: inset 0 0 0 1px var(--accent);
+  border-radius: 6px;
+}
+#page-Planning .plan-board-cell-empty {
+  font-size: 10px; color: var(--b1, #a7b6b0); text-align: center; padding: 8px 0;
+  border: 1px dashed var(--border); border-radius: 6px;
+}
+#page-Planning .plan-board-cell-empty i { opacity: .7; }
+
+/* ── กลุ่ม "Off Line" พับ/กางได้ ภายในแต่ละ Shift column ── */
+#page-Planning .plan-board-off-group {
+  margin-top: 6px; border: 1px dashed var(--off-bg, #fdecec); border-radius: 8px; overflow: hidden;
+}
+#page-Planning .plan-board-off-group-head {
+  display: flex; align-items: center; gap: 5px; padding: 5px 7px; background: var(--off-bg, #fdecec);
+  cursor: pointer; user-select: none;
+}
+#page-Planning .plan-board-off-group-head i.fa-circle-exclamation { color: var(--off, #c62828); font-size: 9px; }
+#page-Planning .plan-board-off-group-label { font-size: 9px; font-weight: 700; color: var(--off, #c62828); }
+#page-Planning .plan-board-off-group-cnt {
+  font-size: 8.5px; font-weight: 700; color: var(--off, #c62828); background: #fff;
+  padding: 0 6px; border-radius: 999px;
+}
+#page-Planning .plan-board-off-group-chev { margin-left: auto; color: var(--off, #c62828); font-size: 9px; transition: transform .15s ease; }
+#page-Planning .plan-board-off-group.collapsed .plan-board-off-group-chev { transform: rotate(-90deg); }
+#page-Planning .plan-board-off-group-body { padding: 6px; background: var(--surface); display: flex; flex-direction: column; gap: 5px; }
+#page-Planning .plan-board-off-group.collapsed .plan-board-off-group-body { display: none; }
+
+/* ── ตัวปรับสำหรับกล่อง "Off Line ทั้งไลน์" (รวมทุก node ท้าย Line block) ── */
+#page-Planning .plan-board-off-group.plan-board-off-group-line { margin-top: 16px; border-radius: 12px; }
+#page-Planning .plan-board-off-group-line .plan-board-off-group-head { padding: 10px 14px; }
+#page-Planning .plan-board-off-group-line .plan-board-off-group-head i.fa-circle-exclamation { font-size: 12px; }
+#page-Planning .plan-board-off-group-line .plan-board-off-group-label { font-size: 12px; }
+#page-Planning .plan-board-off-group-line .plan-board-off-group-cnt { font-size: 10px; padding: 2px 9px; }
+#page-Planning .plan-board-off-group-line .plan-board-off-group-chev { font-size: 11px; }
+#page-Planning .plan-board-off-group-line .plan-board-off-group-body {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; padding: 14px;
+}
+#page-Planning .plan-board-off-group-line.collapsed .plan-board-off-group-body { display: none; }
+
+#page-Planning .plan-board-off-shiftgroup-head {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+#page-Planning .plan-board-off-shiftgroup-head span:nth-child(2) { font-size: 11px; font-weight: 700; color: var(--t1); }
+#page-Planning .plan-board-off-shiftgroup-cnt { margin-left: auto; font-size: 9.5px; color: var(--muted); }
+#page-Planning .plan-board-off-shiftgroup .plan-board-card { margin-bottom: 6px; }
+#page-Planning .plan-board-off-shiftgroup .plan-board-card:last-child { margin-bottom: 0; }
+
+/* ── tag เล็กบอก process ต้นทาง (โชว์เฉพาะการ์ดในกล่อง Off Line ทั้งไลน์) ── */
+#page-Planning .plan-board-card-proctag {
+  font-size: 8px; font-weight: 700; color: var(--muted); background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 5px; padding: 0 5px; margin-right: 5px;
+}
+
+/* ── การ์ดพนักงาน — กะทัดรัด: ID+tag บรรทัดเดียว / ชื่อ / Position+Status ── */
+#page-Planning .plan-board-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 6px;
+  cursor: grab;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+  transition: box-shadow .12s ease, transform .12s ease, border-color .12s ease;
+}
+#page-Planning .plan-board-card:hover { box-shadow: 0 3px 10px rgba(0, 0, 0, .08); transform: translateY(-1px); border-color: var(--b1); }
+#page-Planning .plan-board-card:active { cursor: grabbing; }
+#page-Planning .plan-board-card.dragging { opacity: .4; }
+
+#page-Planning .plan-board-card-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; flex-wrap: wrap; row-gap: 2px; }
+#page-Planning .plan-board-card-id { font-size: 9.5px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+#page-Planning .plan-board-card-name {
+  font-size: 10.5px; color: var(--text); margin-top: 2px; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+#page-Planning .plan-board-card-bottom {
+  display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: 3px; flex-wrap: wrap; row-gap: 2px;
+}
+#page-Planning .plan-board-card-position {
+  font-size: 9px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+#page-Planning .plan-board-tag {
+  font-size: 8px; font-weight: 700; padding: 0px 5px; border-radius: 999px;
+  background: var(--surface2); color: var(--muted); border: 1px solid var(--border);
+  white-space: nowrap;
+}
+#page-Planning .plan-board-tag.accent {
+  background: var(--accent-light, rgba(5, 150, 105, .1)); color: var(--accent); border-color: transparent;
+}
+#page-Planning .plan-board-tag.status-in { background: #e7f6ee; color: #0f7a44; border-color: transparent; }
+#page-Planning .plan-board-tag.status-off { background: #fdecec; color: #c62828; border-color: transparent; }
+
+/* ── พูลรอจัด ── */
+#page-Planning .plan-board-pool {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  position: sticky;
+  top: 12px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+#page-Planning .plan-board-pool-head {
+  font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px;
+}
+#page-Planning .plan-board-pool-head i { color: var(--accent); }
+#page-Planning .plan-board-pool-count {
+  margin-left: auto; font-size: 10.5px; font-weight: 700; color: var(--accent);
+  background: var(--accent-light, rgba(5, 150, 105, .1)); padding: 2px 9px; border-radius: 999px;
+}
+#page-Planning .plan-board-pool-search {
+  width: 100%; box-sizing: border-box; padding: 7px 10px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text);
+  font-family: 'Sarabun', sans-serif; font-size: 12.5px; outline: none; margin-bottom: 8px;
+}
+#page-Planning .plan-board-pool-search:focus { border-color: var(--accent); }
+#page-Planning .plan-board-pool-list {
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; min-height: 120px;
+  border: 1px dashed var(--border); border-radius: 8px; padding: 8px;
+}
+#page-Planning .plan-board-pool-list.drag-over {
+  background: var(--accent-light, rgba(5, 150, 105, .08)); border-color: var(--accent); border-style: solid;
+}
+
+#page-Planning .plan-board-empty { text-align: center; padding: 30px; color: var(--muted); font-size: 12.5px; }
+#page-Planning .plan-board-fallback-note {
+  background: var(--surface2);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+#page-Planning .plan-board-fallback-note i { color: var(--warn); }
+#page-Planning .plan-board-lines > .plan-board-fallback-note,
+#page-Planning .plan-board-lines > .plan-board-empty { grid-column: 1 / -1; }
+
+@media (max-width: 1100px) {
+  #page-Planning .plan-board-layout { grid-template-columns: 1fr; }
+  #page-Planning .plan-board-pool { position: static; max-height: none; }
+  #page-Planning .plan-board-header { flex-direction: column; align-items: flex-start; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PHASE 7b — Side drawer แก้ไขการ์ด (คลิกการ์ดบนบอร์ด) ครบทุกฟิลด์เท่า
+   ตาราง render/logic ทั้งหมดอยู่ใน planning-manager.js
+   (openBoardCardDrawer/saveBoardCardDrawer/closeBoardCardDrawer)
+   ══════════════════════════════════════════════════════════════ */
+#page-Planning .plan-board-card { position: relative; }
+#page-Planning .plan-board-card-edit-icon {
+  position: absolute; top: 4px; right: 4px; font-size: 8px; color: var(--b1);
+  opacity: 0; transition: opacity .12s ease;
+}
+#page-Planning .plan-board-card:hover .plan-board-card-edit-icon { opacity: 1; }
+
+.plan-board-drawer-backdrop {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, .4);
+  display: flex; justify-content: flex-end; z-index: 1100;
+}
+.plan-board-drawer {
+  width: 100%; max-width: 340px; height: 100%; background: var(--surface);
+  box-shadow: -8px 0 28px rgba(0, 0, 0, .18);
+  display: flex; flex-direction: column;
+  animation: planBoardDrawerIn .18s ease;
+}
+@keyframes planBoardDrawerIn {
+  from { transform: translateX(24px); opacity: .4; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+.plan-board-drawer-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 16px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.plan-board-drawer-id { font-size: 13px; font-weight: 700; color: var(--accent); }
+.plan-board-drawer-name { font-size: 12.5px; color: var(--text); margin-top: 2px; }
+.plan-board-drawer-close {
+  background: none; border: none; font-size: 15px; color: var(--muted); cursor: pointer;
+  padding: 3px 7px; border-radius: 6px; line-height: 1; flex-shrink: 0;
+}
+.plan-board-drawer-close:hover { background: var(--surface2); color: var(--text); }
+
+.plan-board-drawer-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
+.plan-board-drawer-field { margin-bottom: 13px; }
+.plan-board-drawer-field label {
+  display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 5px;
+}
+.plan-board-drawer-field select,
+.plan-board-drawer-field input {
+  width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text);
+  font-family: 'Sarabun', sans-serif; font-size: 13px; outline: none;
+}
+.plan-board-drawer-field select:focus,
+.plan-board-drawer-field input:focus { border-color: var(--accent); }
+.plan-board-drawer-readonly {
+  padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--t1); font-size: 13px; font-weight: 600;
+}
+.plan-board-drawer-hint { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+.plan-board-drawer-foot {
+  display: flex; justify-content: flex-end; gap: 10px; padding: 14px 18px;
+  border-top: 1px solid var(--border); flex-shrink: 0;
+}
