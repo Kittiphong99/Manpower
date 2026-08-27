@@ -1,0 +1,321 @@
+<div class="page" id="page-report-ie">
+
+  <!-- Header -->
+  <div class="ie-header">
+    <div>
+      <h1 class="ie-title" data-i18n="ie_title">IE Monthly Report</h1>
+      <p class="ie-subtitle" data-i18n="ie_subtitle">สรุปรายเดือน grouped by Division พร้อม Reason Diff</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="ie-filters">
+    <div class="ie-fg">
+      <label class="ie-flabel" data-i18n="ie_filter_division">Division</label>
+      <select class="fselect" id="rpt-division" style="min-width:160px;height:34px">
+        <option value="" data-i18n="opt_all_division">All Division</option>
+      </select>
+    </div>
+    <div class="ie-fg">
+      <label class="ie-flabel" data-i18n="ie_filter_month">Month</label>
+      <select class="fselect" id="rpt-month-sel" style="min-width:160px;height:34px"></select>
+    </div>
+    <div class="ie-fg">
+      <label class="ie-flabel" data-i18n="ie_filter_update_date">Update date</label>
+      <input type="date" id="rpt-update-date" class="fselect"
+        style="min-width:150px;height:34px">
+    </div>
+    <!-- 🔧 เพิ่มใหม่: ปุ่มคำนวณ — เปลี่ยนจาก auto-render ทุกครั้งที่เปลี่ยน filter
+         มาเป็นต้องกดปุ่มนี้ก่อนถึงจะโหลด/แสดงข้อมูล (Division/Update date filter
+         ทั้งสองตัวเป็น client-side filter ที่ยังต้องกดปุ่มนี้ซ้ำเพื่อ apply) -->
+    <div class="ie-fg" style="align-self:flex-end">
+      <button id="rpt-calc-btn" class="ie-calc-btn" onclick="calcRptReport()" data-i18n="btn_calculate">คำนวณ</button>
+    </div>
+    <!-- 🔧 เพิ่มใหม่: ปุ่ม Export ข้อมูลตาราง Summary หน้านี้เป็น .xlsx จัดสไตล์แล้ว (ดู _downloadStyledXlsx ใน ie-monthly-report.js) -->
+    <div class="ie-fg" style="align-self:flex-end;margin-left:auto">
+      <button id="rpt-export-btn" class="ie-export-btn" onclick="exportRptSummary()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4-4m4 4l4-4M4 20h16"/></svg><span data-i18n="btn_export">Export</span></button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div style="padding:16px 32px">
+    <div class="ie-table-card">
+      <div style="overflow-x:auto">
+        <table class="ie-summary-table">
+          <thead>
+            <tr>
+              <th class="ie-th" data-i18n="ie_filter_division">Division</th>
+              <th class="ie-th" data-i18n="ie_filter_month">Month</th>
+              <th class="ie-th" data-i18n="ie_filter_update_date">Update date</th>
+              <th class="ie-th ie-th-center" data-i18n="th_diff_pos_ct">Diff. POS with CT</th>
+              <th class="ie-th ie-th-center ie-th-green">OPE</th>
+              <th class="ie-th ie-th-center ie-th-green">GL</th>
+              <th class="ie-th ie-th-center ie-th-green">Spare</th>
+              <th class="ie-th ie-th-center ie-th-green" data-i18n="th_pregnant_full">คนท้อง</th>
+              <th class="ie-th ie-th-center ie-th-red" data-i18n="th_sick_full">คนป่วย</th>
+              <th class="ie-th ie-th-center ie-th-green" data-i18n="th_free">Free</th>
+              <th class="ie-th ie-th-center">Other</th>
+              <th class="ie-th ie-th-center ie-th-strong" data-i18n="th_total_ie">Tottle</th>
+              <th class="ie-th" style="width:140px"></th>
+            </tr>
+          </thead>
+          <tbody id="rpt-tbody-summary">
+            <tr>
+              <td colspan="13" class="ie-empty" data-i18n="ie_empty_select_month">กรุณาเลือก Month แล้วกดปุ่ม "คำนวณ" เพื่อดูข้อมูล</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Modal Report by IE -->
+  <div id="rpt-modal-bg" class="ie-modal-bg" onclick="if(event.target===this)closeRptModal()">
+    <div class="ie-modal">
+
+      <div class="ie-modal-head">
+        <div>
+          <div class="ie-modal-title" id="rpt-modal-title" data-i18n="ie_modal_default_title">Report by IE</div>
+          <div class="ie-modal-sub" id="rpt-modal-sub">—</div>
+        </div>
+        <!-- 🔧 แก้ไข: เหลือแค่ปุ่มปิดชิดขวาสุดของแถวหัว modal — ย้ายปุ่มสลับกะ
+             ไปต่อท้าย Toggle "Code"/"Div" ในแถวรองด้านล่างแทนแล้ว (ดู
+             .ie-modal-subhead) ให้ตัวควบคุมตารางทั้งหมดอยู่แถวเดียวกัน -->
+        <div class="ie-modal-head-right">
+          <button onclick="closeRptModal()" class="ie-modal-close">✕</button>
+        </div>
+      </div>
+
+      <!-- 🔧 จัดระเบียบใหม่: แถวรองใต้หัว modal — ฝั่งซ้ายเป็นแท็บสลับวิธีรวมยอด
+           "ราย Code" (เดิม) กับ "รวมตาม Sub Line" ต่อท้ายด้วยเส้นคั่นแล้วตามด้วย
+           Toggle ขอบเขต GL Sub Line "Code"/"Div" ต่อท้ายด้วยเส้นคั่นแล้วตามด้วย
+           ปุ่มสลับกะ ALL/A/B/C (ย้ายมาจากแถวหัวด้านบน) ฝั่งขวาเป็นปุ่ม Export -->
+      <div class="ie-modal-subhead">
+        <div class="ie-subhead-left">
+          <div class="ie-group-tabs" id="rpt-modal-group-tabs">
+            <button class="ie-group-tab-btn active" data-mode="detail" onclick="setRptModalGroupMode('detail', this)" data-i18n="ie_group_tab_detail">ราย Code</button>
+            <button class="ie-group-tab-btn" data-mode="subline" onclick="setRptModalGroupMode('subline', this)" data-i18n="ie_group_tab_subline">รวมตาม Sub Line</button>
+          </div>
+          <span class="ie-subhead-divider" aria-hidden="true"></span>
+          <!-- 🔧 ย้ายมาจาก .ie-modal-head ด้านบน: Toggle ขอบเขตการเลือก "GL Sub
+               Line" ตอนเปิด Detail Drill-down จาก modal นี้ — "Code" (ค่าเริ่มต้น)
+               จำกัดตัวเลือกไว้แค่ Sub Line ของ Code เดียวกับ GL, "Div" ขยายให้
+               เลือก Sub Line ข้าม Code ได้ทั่วทั้ง Division นี้ (ดู
+               setRptModalGlScope ใน ie-monthly-report.js) -->
+          <div class="ie-shift-toggle" id="rpt-modal-glscope-toggle" title="ขอบเขต Sub Line ที่ GL เลือกได้ตอนเปิดดูรายละเอียดพนักงาน">
+            <button class="ie-shift-btn active" data-scope="code" onclick="setRptModalGlScope('code', this)" data-i18n="ie_glscope_code">Code</button>
+            <button class="ie-shift-btn" data-scope="div" onclick="setRptModalGlScope('div', this)" data-i18n="ie_glscope_div">Div</button>
+          </div>
+          <span class="ie-subhead-divider" aria-hidden="true"></span>
+          <!-- 🔧 ย้ายมาจาก .ie-modal-head ด้านบน: ปุ่มสลับกะ — MAX POS/DIFF POS
+               คำนวณต่างกันตามโหมด (ALL = maxPosRaw × จำนวนกะที่มีข้อมูลจริง,
+               A/B/C = maxPosRaw ดิบ) สลับแบบ instant ฝั่ง client ไม่ยิง API ซ้ำ
+               (ข้อมูลทุกกะมาครบแล้วในการ fetch เดียวผ่าน shiftBreakdown) -->
+          <div class="ie-shift-toggle" id="rpt-modal-shift-toggle">
+            <button class="ie-shift-btn active" data-shift="ALL" onclick="setRptModalShift('ALL', this)">ALL</button>
+            <button class="ie-shift-btn" data-shift="A" onclick="setRptModalShift('A', this)">A</button>
+            <button class="ie-shift-btn" data-shift="B" onclick="setRptModalShift('B', this)">B</button>
+            <button class="ie-shift-btn" data-shift="C" onclick="setRptModalShift('C', this)">C</button>
+          </div>
+        </div>
+        <div class="ie-export-wrap">
+          <button class="ie-modal-export-btn" onclick="toggleModalExportMenu()">
+            <span data-i18n="btn_export">Export</span><span class="ie-export-caret">▾</span>
+          </button>
+          <div id="rpt-modal-export-menu" class="ie-export-menu">
+            <button onclick="exportRptModalByMode('detail')" data-i18n="ie_export_choose_detail">Export ตามราย Code</button>
+            <button onclick="exportRptModalByMode('subline')" data-i18n="ie_export_choose_subline">Export ตามรวม Sub Line</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🔧 เพิ่มใหม่: แถบ Filter — ปุ่ม Filter สถานะ (multi-select, OR กัน)
+           + Filter สายย่อยแบบ dropdown+multiselect (ใช้ widget เดียวกับ "GL Sub
+           Line" ใน Detail Drill-down — ดู _glMsOpen/_glMsSyncLabel ใน
+           ie-monthly-report.js, แยกจากอันนั้นด้วย data-field="rptSubLineFilter")
+           กรองแถวในตารางด้านล่างทั้ง 2 โหมด "ราย Code"/"รวมตาม Sub Line" พร้อมกัน
+           (ดู renderRptModal/_rptModalLinePasses) — ทั้งกลุ่ม Filter ชิดซ้าย
+           ปุ่ม "ล้าง Filter" ชิดขวา -->
+      <div class="ie-modal-filterbar">
+        <div class="ie-filterbar-group">
+          <span class="ie-filterbar-label" data-i18n="ie_filter_status_label">กรองตามสถานะ</span>
+          <div class="ie-filter-status-group" id="rpt-modal-status-filter">
+            <button type="button" class="ie-filter-status-btn" data-status="ope" onclick="toggleRptModalStatusFilter('ope', this)">OPE</button>
+            <button type="button" class="ie-filter-status-btn" data-status="gl" onclick="toggleRptModalStatusFilter('gl', this)">GL</button>
+            <button type="button" class="ie-filter-status-btn" data-status="spare" onclick="toggleRptModalStatusFilter('spare', this)">Spare</button>
+            <button type="button" class="ie-filter-status-btn ie-filter-status-btn-danger" data-status="sick" onclick="toggleRptModalStatusFilter('sick', this)" data-i18n="th_sick_full">คนป่วย</button>
+            <button type="button" class="ie-filter-status-btn" data-status="pregnant" onclick="toggleRptModalStatusFilter('pregnant', this)" data-i18n="th_pregnant_full">คนท้อง</button>
+            <button type="button" class="ie-filter-status-btn" data-status="posFree" onclick="toggleRptModalStatusFilter('posFree', this)" data-i18n="th_free">Free</button>
+            <button type="button" class="ie-filter-status-btn" data-status="other" onclick="toggleRptModalStatusFilter('other', this)">Other</button>
+          </div>
+          <div class="ie-gl-multiselect" id="rpt-modal-subline-filter" data-field="rptSubLineFilter" data-selected="" data-options="">
+            <button type="button" class="ie-gl-ms-btn" onclick="_glMsOpen(this)">
+              <span class="ie-gl-ms-label" data-i18n="ie_gl_subline_placeholder">เลือก Sub Line</span>
+              <svg class="ie-gl-ms-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </div>
+        <button type="button" class="ie-filter-clear-btn" onclick="clearRptModalFilters()" data-i18n="ie_filter_clear">ล้าง Filter</button>
+      </div>
+
+      <div class="ie-modal-body">
+        <table class="ie-detail-table">
+          <thead>
+            <tr>
+              <th class="ie-th" data-i18n="ie_th_div">Div.</th>
+              <th class="ie-th" data-i18n="ie_th_prod_code">Prod. Code</th>
+              <!-- 🔧 แก้ไข: เปลี่ยนจาก "Line" เป็น "Sub Line" — ตารางนี้ group ด้วย
+                   SubLine แล้ว (เดิม group ด้วย LineName) คลิกที่แถวเพื่อดู/แก้ไข
+                   รายชื่อพนักงานใน sub line นั้น -->
+              <th class="ie-th" data-i18n="ie_th_subline">Sub Line</th>
+              <th class="ie-th ie-th-center ie-th-amber" data-i18n="th_maxpos">MAX POS</th>
+              <th class="ie-th ie-th-center ie-th-red" data-i18n="th_diffpos">Diff POS</th>
+              <th class="ie-th ie-th-center ie-th-blue">POS (OPE+GL)</th>
+              <th class="ie-th ie-th-center ie-th-green">OPE</th>
+              <th class="ie-th ie-th-center ie-th-green">GL</th>
+              <th class="ie-th ie-th-center ie-th-green">Spare</th>
+              <th class="ie-th ie-th-center ie-th-green" data-i18n="th_pregnant_full">คนท้อง</th>
+              <th class="ie-th ie-th-center ie-th-red" data-i18n="th_sick_full">คนป่วย</th>
+              <th class="ie-th ie-th-center ie-th-green">POS Free</th>
+              <th class="ie-th ie-th-center">Other</th>
+              <th class="ie-th ie-th-accent" data-i18n="ie_th_reason_this">Reason This month</th>
+              <th class="ie-th" data-i18n="ie_th_reason_last">Reason Last month</th>
+            </tr>
+          </thead>
+          <tbody id="rpt-modal-tbody">
+            <tr>
+              <td colspan="15" class="ie-empty">Loading…</td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- 🔧 เพิ่ม: hint ให้ผู้ใช้รู้ว่าคลิกแถวได้ -->
+        <p style="padding:8px 4px 0;margin:0;font-size:12px;color:var(--text-muted)" data-i18n="ie_click_row_hint">
+          คลิกที่แถวเพื่อดูและแก้ไขรายชื่อพนักงานในสายนี้
+        </p>
+      </div>
+
+      <div class="ie-modal-foot">
+        <button onclick="closeRptModal()" class="ie-modal-close-btn" data-i18n="btn_close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔧 เพิ่มใหม่: Modal Detail Drill-down — ดูและแก้ไขพนักงานราย Sub Line
+       (snapshot ของ Employee_History_Detail เดือนที่เลือกเท่านั้น ไม่กระทบ
+       ตาราง Employee จริง) จำกัดแก้ไขเฉพาะ admin/superadmin -->
+  <div id="rpt-detail-modal-bg" class="ie-modal-bg" onclick="if(event.target===this)closeRptDetailDrilldown()">
+    <div class="ie-modal">
+
+      <div class="ie-modal-head">
+        <div>
+          <div class="ie-modal-title" id="rpt-detail-modal-title" data-i18n="ie_detail_modal_title">Employee Detail</div>
+          <div class="ie-modal-sub" data-i18n="ie_detail_modal_sub">แก้ไขเฉพาะข้อมูล Snapshot ของเดือนนี้เท่านั้น</div>
+        </div>
+        <!-- 🔧 เพิ่มใหม่: ปุ่มสลับกะ — กรองรายชื่อพนักงานตามกะ (client-side
+             จากข้อมูลที่ดึงมาแล้ว ไม่ยิง API ซ้ำ) -->
+        <div class="ie-shift-toggle" id="rpt-detail-modal-shift-toggle">
+          
+          <button class="ie-shift-btn active" data-shift="ALL" onclick="setDetailModalShift('ALL', this)">ALL</button>
+          <button class="ie-shift-btn" data-shift="A" onclick="setDetailModalShift('A', this)">A</button>
+          <button class="ie-shift-btn" data-shift="B" onclick="setDetailModalShift('B', this)">B</button>
+          <button class="ie-shift-btn" data-shift="C" onclick="setDetailModalShift('C', this)">C</button>
+        </div>
+        <button onclick="closeRptDetailDrilldown()" class="ie-modal-close">✕</button>
+      </div>
+
+      <div class="ie-modal-body">
+        <table class="ie-detail-table">
+          <!-- 🔧 เพิ่มใหม่: colgroup กำหนดความกว้างคอลัมน์ตายตัว (ใช้คู่กับ
+               table-layout:fixed) แก้ปัญหาข้อมูลทับซ้อนกัน — เดิมใช้
+               table-layout:auto + min-width กระจายอยู่ในแต่ละ input/select
+               ทำให้ browser คำนวณความกว้างคอลัมน์ไม่นิ่ง (ขึ้นกับเนื้อหาที่
+               ยาวที่สุดในคอลัมน์ ณ ขณะนั้น) พอ input โฟกัส/มีเนื้อหายาว
+               คอลัมน์ถัดไปเลยขยับ/ถูกบังได้ ตอนนี้ทุกคอลัมน์ความกว้างคงที่
+               เสมอไม่ว่าจะพิมพ์อะไรหรือโฟกัสช่องไหนอยู่ -->
+          <colgroup>
+            <col style="width:48px">
+            <col style="width:110px">
+            <col style="width:170px">
+            <col style="width:130px">
+            <col style="width:170px">
+            <col style="width:170px">
+            <col style="width:130px">
+            <col style="width:80px">
+            <col style="width:70px">
+            <col style="width:90px">
+            <col style="width:100px">
+            <col style="width:70px">
+            <col style="width:110px">
+            <col style="width:130px">
+            <col style="width:130px">
+            <col style="width:210px">
+            <col style="width:180px">
+            <col style="width:150px">
+            <col style="width:150px">
+            <col style="width:110px">
+            <col style="width:200px">
+            <col style="width:70px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="ie-th ie-th-center" data-i18n="ie_th_no">No.</th>
+              <th class="ie-th" data-i18n="ie_th_emp_code">Emp Code</th>
+              <th class="ie-th" data-i18n="ie_th_full_name">Full Name</th>
+              <th class="ie-th" data-i18n="ie_th_position">Position</th>
+              <th class="ie-th" data-i18n="ie_th_line">Line</th>
+              <th class="ie-th" data-i18n="ie_th_subline">Sub Line</th>
+              <th class="ie-th" data-i18n="ie_th_process">Process</th>
+              <th class="ie-th" data-i18n="th_code">Code</th>
+              <th class="ie-th ie-th-center" data-i18n="ie_th_shift">Shift</th>
+              <th class="ie-th ie-th-center" data-i18n="ie_th_status">Status</th>
+              <th class="ie-th ie-th-center" data-i18n="ie_th_position_type">Position Type</th>
+              <th class="ie-th ie-th-center" data-i18n="ie_th_gender">Gender</th>
+              <th class="ie-th" data-i18n="ie_th_work_status">Work Status</th>
+              <th class="ie-th" data-i18n="ie_th_risk_factor">Risk Factor</th>
+              <th class="ie-th" data-i18n="ie_th_detail">Detail</th>
+              <th class="ie-th" data-i18n="ie_th_note">Note</th>
+              <th class="ie-th" data-i18n="ie_th_gl_subline">GL Sub Line</th>
+              <th class="ie-th" data-i18n="ie_th_start">Start</th>
+              <th class="ie-th" data-i18n="ie_th_end">End</th>
+              <th class="ie-th" data-i18n="ie_th_need">Need</th>
+              <th class="ie-th" data-i18n="ie_th_reason_need">Reason Need</th>
+              <th class="ie-th" style="width:90px"></th>
+            </tr>
+          </thead>
+          <tbody id="rpt-detail-modal-tbody">
+            <tr>
+              <td colspan="22" class="ie-empty">Loading…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="ie-modal-foot">
+        <button onclick="closeRptDetailDrilldown()" class="ie-modal-close-btn" data-i18n="btn_close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔧 เพิ่มใหม่: กล่องกรอกเหตุผลการแก้ไข (แทน window.prompt ที่หน้าตาไม่สวย) -->
+  <div id="ie-reason-modal-bg">
+    <div class="ie-reason-modal-box">
+      <div class="ie-reason-modal-head">
+        <div class="ie-reason-modal-title" data-i18n="ie_reason_modal_title">ระบุเหตุผลการแก้ไข</div>
+        <div class="ie-reason-modal-sub" data-i18n="ie_reason_modal_sub">เหตุผลนี้จะถูกบันทึกไว้ในประวัติการแก้ไขข้อมูล</div>
+      </div>
+      <div class="ie-reason-modal-body">
+        <textarea id="ie-reason-modal-input" class="ie-reason-modal-input"
+          placeholder="เช่น แก้ไขตำแหน่งให้ตรงกับข้อมูลจริง"></textarea>
+        <div class="ie-reason-modal-error" id="ie-reason-modal-error" data-i18n="ie_edit_reason_required">
+          ต้องระบุเหตุผลก่อนบันทึก
+        </div>
+      </div>
+      <div class="ie-reason-modal-foot">
+        <button class="ie-reason-modal-btn ie-reason-modal-btn-cancel" id="ie-reason-modal-cancel" data-i18n="btn_cancel">ยกเลิก</button>
+        <button class="ie-reason-modal-btn ie-reason-modal-btn-confirm" id="ie-reason-modal-confirm" data-i18n="btn_save">บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>

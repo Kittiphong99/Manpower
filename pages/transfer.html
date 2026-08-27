@@ -1,0 +1,109 @@
+<div class="page" id="page-transfer">
+  <div class="adm-header">
+    <div class="adm-header-row">
+      <div class="adm-page-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg></div>
+      <div>
+        <h1 class="adm-title">Transfer System</h1>
+        <p class="adm-subtitle" data-i18n="subtitle_transfer_system">จัดการและตรวจสอบสถานะการย้ายสายงานพนักงานในระบบ</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; padding:18px 32px 0; flex-wrap:wrap;">
+    <div style="display:flex; gap:6px;">
+      <button id="tabTransferred" onclick="showTransferTab('transferred')" class="adm-tab adm-tab-active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M5 12l4 4 10-10"/></svg>
+        <span data-i18n="tab_transferred">Transferred</span>
+      </button>
+      <button id="tabWaiting" onclick="showTransferTab('waiting')" class="adm-tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>
+        <span data-i18n="tab_waiting_room">Waiting Room</span>
+      </button>
+    </div>
+    <!-- 🆕 เพิ่มใหม่: toggle "รอ Sync เท่านั้น" (ค่าเริ่มต้น) vs "ประวัติทั้งหมด"
+         (รวมคนที่ HR AutoSync-Job ยืนยันแล้ว/Status='Cleaned') — คู่กับ
+         showCleanedHistory ใน transfer.js และ ?includeCleaned=true ฝั่ง backend
+         แสดงเฉพาะตอนอยู่แท็บ Transferred เพราะ Waiting Room ไม่มีแนวคิด Cleaned
+         (ข้อความปุ่มนี้ set จาก refreshCleanedHistoryToggleLabel() ใน transfer.js
+         ผ่าน tr() แล้ว ไม่ต้องใส่ data-i18n ตรงนี้ซ้ำ) -->
+    <!-- 🔧 แก้ไข (2026-08): เดิมปุ่ม toggle กับ Export เป็น sibling แยกกันใน
+         container ที่ใช้ justify-content:space-between (3 ตัว: กลุ่มแท็บ, toggle,
+         Export) ทำให้ปุ่มสองอันขวาสุดถูกดันห่างกันไปคนละฝั่ง — ครอบด้วย div เดียว
+         กันไว้ ให้อยู่ติดกัน แล้วเปลี่ยนจาก inline style ธรรมดามาใช้
+         .adm-btn-secondary/.adm-btn-primary ที่มีอยู่แล้วในโปรเจกต์ (มี shine-sweep
+         hover effect ให้ดูพรีเมียมขึ้น แทนปุ่ม outline เรียบๆ เดิม) -->
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button id="btnToggleCleanedHistory" onclick="toggleCleanedHistory()" class="adm-btn-secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+        <span id="btnToggleCleanedHistoryLabel">ดูประวัติทั้งหมด</span>
+      </button>
+      <button onclick="exportTransferredCSV()" class="adm-btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M12 4v11m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+        <span data-i18n="btn_export_csv">Export</span>
+      </button>
+    </div>
+  </div>
+
+  <div style="padding:16px 32px;">
+    <div class="adm-card">
+      <div id="tab-transferred-content" style="overflow:auto; flex:1;">
+        <!-- 🆕 เพิ่มใหม่ (2026-08): Filter เดือน / Code ปัจจุบัน / Code ที่ย้ายไป
+             (option แรกของแต่ละ select set จาก populateTransferFilters() ใน
+             transfer.js ผ่าน tr() อยู่แล้ว ค่าตรงนี้เป็นแค่ placeholder ก่อน JS รัน) -->
+        <div style="display:flex; gap:8px; flex-wrap:wrap; padding:14px 4px;">
+          <select id="filterTransferMonth" onchange="onTransferFilterChange()"
+            style="padding:7px 10px; border:1px solid var(--border, #cbd5e1); border-radius:8px;
+                   background:var(--surface, #fff); color:var(--text, #334155); font-size:13px; cursor:pointer;">
+            <option value="" data-i18n="opt_all_months">ทุกเดือน</option>
+          </select>
+          <select id="filterTransferSourceCode" onchange="onTransferFilterChange()"
+            style="padding:7px 10px; border:1px solid var(--border, #cbd5e1); border-radius:8px;
+                   background:var(--surface, #fff); color:var(--text, #334155); font-size:13px; cursor:pointer; max-width:220px;">
+            <option value="" data-i18n="opt_all_source_codes">ทุก Code ปัจจุบัน</option>
+          </select>
+          <select id="filterTransferTargetCode" onchange="onTransferFilterChange()"
+            style="padding:7px 10px; border:1px solid var(--border, #cbd5e1); border-radius:8px;
+                   background:var(--surface, #fff); color:var(--text, #334155); font-size:13px; cursor:pointer; max-width:220px;">
+            <option value="" data-i18n="opt_all_target_codes">ทุก Code ที่ย้ายไป</option>
+          </select>
+        </div>
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th class="adm-th" style="text-align:center; width:60px;" data-i18n="ie_th_no">No.</th>
+              <th class="adm-th" data-i18n="ie_th_emp_code">Emp Code</th>
+              <th class="adm-th" data-i18n="th_fullname">ชื่อ-สกุล</th>
+              <th class="adm-th" data-i18n="th_source_code">Code ปัจจุบัน</th>
+              <th class="adm-th" data-i18n="th_target_code">Code ที่ย้ายไป</th>
+              <th class="adm-th" data-i18n="th_status">Status</th>
+              <th class="adm-th" data-i18n="th_transferred_by">Transferred By</th>
+              <th class="adm-th" data-i18n="th_transferred_date">Transferred Date</th>
+              <th class="adm-th" style="text-align:right" data-i18n="th_actions">Action</th>
+            </tr>
+          </thead>
+          <tbody id="transferredTableBody">
+            <tr><td colspan="9" class="adm-empty">⏳ <span data-i18n="loading">กำลังโหลดข้อมูล...</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="tab-waiting-content" style="display:none; overflow:auto; flex:1;">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th class="adm-th" style="text-align:center; width:60px;" data-i18n="ie_th_no">No.</th>
+              <th class="adm-th" data-i18n="ie_th_emp_code">Emp Code</th>
+              <th class="adm-th" data-i18n="th_fullname">ชื่อ-สกุล</th>
+              <th class="adm-th" data-i18n="th_status">Status</th>
+              <th class="adm-th" data-i18n="th_released_date">Released Date</th>
+              <th class="adm-th" style="text-align:right" data-i18n="th_actions">Action</th>
+            </tr>
+          </thead>
+          <tbody id="waitingRoomTableBody">
+            <tr><td colspan="6" class="adm-empty">⏳ <span data-i18n="loading">กำลังโหลดข้อมูล...</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
