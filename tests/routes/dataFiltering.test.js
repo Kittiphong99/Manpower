@@ -80,7 +80,7 @@ describe('GET /api/lines — role filtering', () => {
             .set('x-test-role', 'superadmin');
 
         expect(res.status).toBe(200);
-        expect(lastQueryText).not.toContain('AND RTRIM(Code) IN');
+        expect(lastQueryText).not.toContain('AND RTRIM(l.Code) IN');
     });
 
     test('admin: ต้องถูกกรองด้วย codes เหมือน role อื่น (นี่คือบั๊กที่เคยแก้ไปแล้วจริงตาม MAINTENANCE.md)', async () => {
@@ -90,7 +90,7 @@ describe('GET /api/lines — role filtering', () => {
             .set('x-test-codes', 'E012,E013');
 
         expect(res.status).toBe(200);
-        expect(lastQueryText).toContain('AND RTRIM(Code) IN');
+        expect(lastQueryText).toContain('AND RTRIM(l.Code) IN');
     });
 
     test('manager ที่ไม่มี codes เลย -> คืน [] ทันที', async () => {

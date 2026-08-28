@@ -85,7 +85,9 @@ const ENDPOINTS = [
     { method: 'delete', path: '/api/config/:key', allowedRoles: ['superadmin', 'admin'] },
 
     // employees.js
-    { method: 'post',   path: '/api/employees/import', allowedRoles: ['superadmin', 'admin', 'manager', 'hr'] },
+    // 🔧 POST /api/employees/import ถูกตัดออกจากระบบแล้ว (ดู routes/employees.js
+    //    หัวไฟล์) — ไล่เช็คแล้วไม่มีโค้ดใน js/ หรือ pages/ เรียก endpoint นี้อีก
+    //    เอาออกจาก matrix ตามไปด้วย ไม่งั้นเทสจะได้ 404 แทน 401/403 ตลอด
     { method: 'get',    path: '/api/manpower-records', allowedRoles: null },
     { method: 'get',    path: '/api/employees', allowedRoles: null },
     { method: 'post',   path: '/api/employees', allowedRoles: ['superadmin', 'admin', 'manager', 'hr', 'viewer'] },
