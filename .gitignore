@@ -1,0 +1,20 @@
+# Secrets — ห้าม commit เด็ดขาด (DB password, JWT secret, AD config)
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Test output
+coverage/
