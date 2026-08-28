@@ -75,7 +75,24 @@ if (process.env.TRUST_PROXY) {
 
 applySecurityMiddleware(app);
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../Manpower-frontend/wwwroot')));
+// 🔧 แก้ไข: เดิมชี้ไป '../Manpower-frontend/wwwroot' — โฟลเดอร์พี่น้อง "นอก" repo
+// สมัยที่ frontend กับ backend แยกกันคนละที่ ตอนนี้ทั้งสองส่วนอยู่ใน repo เดียวกัน
+// แล้ว (frontend อยู่ที่ root) path เดิมเลยไม่มีอยู่จริง ทำให้ GET / กับ
+// /App.html ได้ 404 ทั้งที่ API ทำงานปกติ
+//
+// ⚠️ ไม่ใช้ express.static(__dirname) ตรงๆ เพราะ root ของ repo นี้มีโค้ดฝั่ง
+// server ปนอยู่ด้วย — จะกลายเป็นว่าใครก็โหลด /server.js, /routes/employees.js,
+// /middleware/auth.js, /config/db.js, /package-lock.json ไปอ่านได้หมด
+// (ไม่หลุด .env เพราะ serve-static ไม่เสิร์ฟ dotfile เป็นค่าเริ่มต้น แต่ logic
+// การเช็คสิทธิ์กับ SQL ทุกตัวหลุดหมด) — ระบุเฉพาะโฟลเดอร์ของ frontend แทน
+// ถ้าเพิ่มโฟลเดอร์ asset ใหม่ให้หน้าเว็บ ต้องมาเพิ่มชื่อในลิสต์นี้ด้วย
+const FRONTEND_DIRS = ['css', 'js', 'pages', 'img'];
+FRONTEND_DIRS.forEach(dir => {
+    app.use('/' + dir, express.static(path.join(__dirname, dir)));
+});
+app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/index.html', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/App.html', (_req, res) => res.sendFile(path.join(__dirname, 'App.html')));
 
 app.use(require('./routes/health'));
 app.use(require('./routes/authRoutes'));
